@@ -378,50 +378,180 @@ class AdminController
 
     public function actionCards()
     {
-        $productId = (int)arr_get($_GET, 'product_id');
-        $page = max(1, (int)arr_get($_GET, 'page', 1));
-        $per = 50;
         $where = '1';
         $params = [];
+        $productId = (int)arr_get($_GET, 'product_id');
         if ($productId > 0) {
             $where .= ' AND c.product_id = ?';
             $params[] = $productId;
         }
+        $exact = trim(arr_get($_GET, 'exact'));
+        if ($exact !== '') {
+            $where .= ' AND c.content = ?';
+            $params[] = $exact;
+        }
+        $fuzzy = trim(arr_get($_GET, 'fuzzy'));
+        if ($fuzzy !== '') {
+            $where .= ' AND c.content LIKE ?';
+            $params[] = '%' . $fuzzy . '%';
+        }
+        $status = arr_get($_GET, 'status', '');
+        if ($status !== '') {
+            $where .= ' AND c.status = ?';
+            $params[] = (int)$status;
+        }
+        $from = trim(arr_get($_GET, 'date_from'));
+        if ($from !== '' && ($ts = strtotime($from)) > 0) {
+            $where .= ' AND c.created_at >= ?';
+            $params[] = $ts;
+        }
+        $to = trim(arr_get($_GET, 'date_to'));
+        if ($to !== '' && ($ts = strtotime($to)) > 0) {
+            $where .= ' AND c.created_at <= ?';
+            $params[] = $ts + 86399;
+        }
+        $page = max(1, (int)arr_get($_GET, 'page', 1));
+        $per = 50;
         $total = (int)DB::value("SELECT COUNT(*) FROM cards c WHERE {$where}", $params);
         $list = DB::fetchAll(
             "SELECT c.*, p.name AS product_name FROM cards c LEFT JOIN products p ON p.id = c.product_id
              WHERE {$where} ORDER BY c.id DESC LIMIT {$per} OFFSET " . (($page - 1) * $per), $params);
+        $stats = [
+            'total' => (int)DB::value('SELECT COUNT(*) FROM cards'),
+            'unsold' => (int)DB::value('SELECT COUNT(*) FROM cards WHERE status = 0'),
+            'sold' => (int)DB::value('SELECT COUNT(*) FROM cards WHERE status = 1'),
+            'locked' => (int)DB::value('SELECT COUNT(*) FROM cards WHERE status = 2'),
+        ];
         View::admin('cards', [
             'list' => $list,
             'total' => $total,
             'page' => $page,
             'per' => $per,
             'productId' => $productId,
+            'stats' => $stats,
             'products' => DB::fetchAll('SELECT id, name FROM products ORDER BY id DESC LIMIT 200'),
         ]);
+    }
+
+    /** 导出筛选卡密(CSV, 最多5000条) */
+    public function actionCardsExport()
+    {
+        $where = '1';
+        $params = [];
+        $productId = (int)arr_get($_GET, 'product_id');
+        if ($productId > 0) { $where .= ' AND c.product_id = ?'; $params[] = $productId; }
+        $exact = trim(arr_get($_GET, 'exact'));
+        if ($exact !== '') { $where .= ' AND c.content = ?'; $params[] = $exact; }
+        $fuzzy = trim(arr_get($_GET, 'fuzzy'));
+        if ($fuzzy !== '') { $where .= ' AND c.content LIKE ?'; $params[] = '%' . $fuzzy . '%'; }
+        $status = arr_get($_GET, 'status', '');
+        if ($status !== '') { $where .= ' AND c.status = ?'; $params[] = (int)$status; }
+        $rows = DB::fetchAll(
+            "SELECT c.*, p.name AS product_name FROM cards c LEFT JOIN products p ON p.id = c.product_id
+             WHERE {$where} ORDER BY c.id DESC LIMIT 5000", $params);
+        $stMap = [0 => '未出售', 1 => '已出售', 2 => '已锁定'];
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="cards-' . date('Ymd-His') . '.csv"');
+        $out = fopen('php://output', 'w');
+        fwrite($out, "\xEF\xBB\xBF");
+        fputcsv($out, ['ID', '卡密内容', '商品', '状态', '备注', '订单号', '入库时间', '出售时间']);
+        foreach ($rows as $c) {
+            fputcsv($out, [
+                $c['id'], $c['content'], $c['product_name'], $stMap[(int)$c['status']] ?? (string)$c['status'],
+                $c['note'], $c['order_id'] > 0 ? $c['order_id'] : '',
+                date('Y-m-d H:i:s', $c['created_at']),
+                $c['sold_at'] > 0 ? date('Y-m-d H:i:s', $c['sold_at']) : '',
+            ]);
+        }
+        exit;
     }
 
     public function actionCardsImport()
     {
         $productId = (int)arr_get($_POST, 'product_id');
         $cards = trim(arr_get($_POST, 'cards'));
+        $note = mb_substr(trim(arr_get($_POST, 'note')), 0, 200);
+        $dedup = arr_get($_POST, 'dedup') === '1';
         if ($productId <= 0) json_out(['code' => 1, 'msg' => '请选择商品']);
         if ($cards === '') json_out(['code' => 1, 'msg' => '请输入卡密内容']);
-        $n = $this->importCards($productId, $cards);
+        $n = $this->importCards($productId, $cards, $note, $dedup);
         json_out(['code' => 0, 'msg' => '成功导入 ' . $n . ' 张卡密']);
     }
 
-    protected function importCards($productId, $text)
+    protected function importCards($productId, $text, $note = '', $dedup = false)
     {
         $n = 0;
         $now = now();
+        $exists = [];
+        if ($dedup) {
+            foreach (DB::fetchAll('SELECT content FROM cards WHERE product_id = ?', [$productId]) as $r) {
+                $exists[$r['content']] = true;
+            }
+        }
         foreach (preg_split('/\r\n|\r|\n/', $text) as $line) {
             $line = trim($line);
             if ($line === '') continue;
-            DB::insert('cards', ['product_id' => $productId, 'content' => $line, 'created_at' => $now]);
+            if ($dedup) {
+                if (isset($exists[$line])) continue;
+                $exists[$line] = true;
+            }
+            DB::insert('cards', ['product_id' => $productId, 'content' => $line, 'note' => $note, 'created_at' => $now]);
             $n++;
         }
         return $n;
+    }
+
+    /** 卡密锁定/解锁/标记已售 */
+    public function actionCardLock()
+    {
+        $id = (int)arr_get($_POST, 'id');
+        $op = trim(arr_get($_POST, 'op'));
+        $card = DB::fetch('SELECT * FROM cards WHERE id = ?', [$id]);
+        if (!$card) json_out(['code' => 1, 'msg' => '卡密不存在']);
+        if ($op === 'lock') {
+            if ((int)$card['status'] !== 0) json_out(['code' => 1, 'msg' => '仅未出售的卡密可锁定']);
+            DB::update('cards', ['status' => 2], 'id = ?', [$id]);
+            json_out(['code' => 0, 'msg' => '已锁定(暂不出库)']);
+        }
+        if ($op === 'unlock') {
+            if ((int)$card['status'] !== 2) json_out(['code' => 1, 'msg' => '该卡密未锁定']);
+            DB::update('cards', ['status' => 0], 'id = ?', [$id]);
+            json_out(['code' => 0, 'msg' => '已解锁']);
+        }
+        json_out(['code' => 1, 'msg' => '无效操作']);
+    }
+
+    public function actionCardsBatch()
+    {
+        $op = trim(arr_get($_POST, 'op'));
+        $ids = array_values(array_filter(array_map('intval', is_array($_POST['ids'] ?? null) ? $_POST['ids'] : [])));
+        if (!$ids) json_out(['code' => 1, 'msg' => '未选择卡密']);
+        $in = implode(',', $ids);
+        if ($op === 'lock') {
+            $n = DB::exec("UPDATE cards SET status = 2 WHERE id IN ({$in}) AND status = 0");
+            json_out(['code' => 0, 'msg' => '已锁定 ' . $n . ' 张卡密']);
+        }
+        if ($op === 'unlock') {
+            $n = DB::exec("UPDATE cards SET status = 0 WHERE id IN ({$in}) AND status = 2");
+            json_out(['code' => 0, 'msg' => '已解锁 ' . $n . ' 张卡密']);
+        }
+        if ($op === 'marksold') {
+            $n = DB::exec("UPDATE cards SET status = 1, sold_at = " . now() . " WHERE id IN ({$in}) AND status IN (0, 2)");
+            json_out(['code' => 0, 'msg' => '已将 ' . $n . ' 张卡密标记为已出售']);
+        }
+        if ($op === 'delete') {
+            $done = 0;
+            $skip = 0;
+            foreach ($ids as $id) {
+                $cnt = (int)DB::value('SELECT COUNT(*) FROM cards WHERE id = ? AND status = 1', [$id]);
+                if ($cnt > 0) { $skip++; continue; }
+                DB::exec('DELETE FROM cards WHERE id = ?', [$id]);
+                $done++;
+            }
+            $msg = '已移除 ' . $done . ' 张卡密' . ($skip > 0 ? ', ' . $skip . ' 张已出售卡密已跳过' : '');
+            json_out(['code' => $done > 0 ? 0 : 1, 'msg' => $msg]);
+        }
+        json_out(['code' => 1, 'msg' => '无效操作']);
     }
 
     public function actionCardDel()

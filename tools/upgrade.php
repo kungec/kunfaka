@@ -76,6 +76,15 @@ if ((int)$stmt->fetchColumn() === 0) {
     echo "SKIP: categories.status 已存在\n";
 }
 
+// cards 表补 note 列(v2.11.0 卡密备注)
+$stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cards' AND COLUMN_NAME = 'note'");
+if ((int)$stmt->fetchColumn() === 0) {
+    $pdo->exec("ALTER TABLE `cards` ADD COLUMN `note` varchar(200) NOT NULL DEFAULT '' COMMENT '备注信息'");
+    echo "OK: cards 表已添加 note 列\n";
+} else {
+    echo "SKIP: cards.note 已存在\n";
+}
+
 // 系统日志表(v1.4→v1.5)
 $pdo->exec("CREATE TABLE IF NOT EXISTS `logs` (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
