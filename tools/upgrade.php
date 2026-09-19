@@ -113,6 +113,13 @@ if ((int)$stmt->fetchColumn() === 0) {
 } else {
     echo "SKIP: products.group_id 已存在\n";
 }
+$stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'products' AND COLUMN_NAME = 'icon'");
+if ((int)$stmt->fetchColumn() === 0) {
+    $pdo->exec("ALTER TABLE `products` ADD COLUMN `icon` varchar(255) NOT NULL DEFAULT '' COMMENT '商品图标(上传路径)'");
+    echo "OK: products 表已添加 icon 列\n";
+} else {
+    echo "SKIP: products.icon 已存在\n";
+}
 
 // 管理员系统(v2.14.0): 多管理员/角色/启停/登录记录
 foreach ([

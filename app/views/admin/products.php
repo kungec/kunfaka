@@ -138,7 +138,7 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
                     </label>
                 </td>
                 <td class="actions">
-                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$p['id'], 'category_id' => (int)$p['category_id'], 'group_id' => (int)$p['group_id'], 'name' => $p['name'], 'price' => nf($p['price']), 'min_num' => (int)$p['min_num'], 'max_num' => (int)$p['max_num'], 'description' => (string)$p['description'], 'sort' => (int)$p['sort'], 'status' => $sid], JSON_UNESCAPED_UNICODE)) ?>'>✏ 编辑</button>
+                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$p['id'], 'category_id' => (int)$p['category_id'], 'group_id' => (int)$p['group_id'], 'icon' => (string)$p['icon'], 'name' => $p['name'], 'price' => nf($p['price']), 'min_num' => (int)$p['min_num'], 'max_num' => (int)$p['max_num'], 'description' => (string)$p['description'], 'sort' => (int)$p['sort'], 'status' => $sid], JSON_UNESCAPED_UNICODE)) ?>'>✏ 编辑</button>
                     <a class="btn sm gray" href="<?= au('cards', ['product_id' => $p['id']]) ?>">卡密</a>
                     <button class="btn sm red" data-del="<?= (int)$p['id'] ?>" data-confirm="确定移除商品 <?= e($p['name']) ?> ?<?= (int)$p['stock'] > 0 ? ' 该商品还有 ' . (int)$p['stock'] . ' 张未售卡密, 需先清空库存!' : '' ?>">移除</button>
                 </td>
@@ -162,6 +162,16 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
             <button class="close" id="drawerClose" title="关闭">✕</button>
         </div>
         <div class="p-db on" data-pane="base">
+            <label>商品图标(可选, 上传后前台商品卡与详情页展示; 不传则用默认样式)</label>
+            <input type="hidden" id="f-icon_current" value="">
+            <input type="hidden" id="f-icon_reset" value="0">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px">
+                <span id="iconPrev" style="width:56px;height:56px;border-radius:10px;border:1.5px dashed var(--input-border);display:inline-flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;flex:none;background:var(--input-bg)">🎁</span>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                    <input type="file" id="f-icon_file" accept=".jpg,.jpeg,.png,.webp,.gif" style="font-size:12px;max-width:230px">
+                    <button type="button" class="btn sm gray" id="iconResetBtn" style="align-self:flex-start;display:none">↺ 恢复默认图标</button>
+                </div>
+            </div>
             <label>商品分类</label>
             <select id="f-category_id">
                 <option value="0">未分类</option>
@@ -239,6 +249,20 @@ var mask = document.getElementById('pMask');
 function openDrawer(data) {
     document.getElementById('f-category_id').value = data ? data.category_id : 0;
     document.getElementById('f-group_id').value = data ? (data.group_id || 0) : 0;
+    // 图标预览与状态
+    var icon = data ? (data.icon || '') : '';
+    document.getElementById('f-icon_current').value = icon;
+    document.getElementById('f-icon_reset').value = '0';
+    document.getElementById('f-icon_file').value = '';
+    var prev = document.getElementById('iconPrev');
+    var rst = document.getElementById('iconResetBtn');
+    if (icon !== '') {
+        prev.innerHTML = '<img src="<?= e(site_url("")) ?>' + icon + '" style="width:100%;height:100%;object-fit:cover" alt="">';
+        if (rst) rst.style.display = 'inline-flex';
+    } else {
+        prev.innerHTML = '🎁';
+        if (rst) rst.style.display = 'none';
+    }
     document.getElementById('f-name').value = data ? data.name : '';
     document.getElementById('f-price').value = data ? data.price : '0.00';
     document.getElementById('f-sort').value = data ? data.sort : 0;
@@ -265,6 +289,19 @@ document.getElementById('addBtn').addEventListener('click', function () {
     openDrawer(null);
     document.getElementById('saveId').value = 0;
 });
+/* 图标选择预览 + 恢复默认 */
+document.getElementById('f-icon_file').addEventListener('change', function () {
+    var f = this.files && this.files[0];
+    if (!f) return;
+    document.getElementById('f-icon_reset').value = '0';
+    document.getElementById('iconPrev').innerHTML = '<img src="' + URL.createObjectURL(f) + '" style="width:100%;height:100%;object-fit:cover" alt="">';
+});
+document.getElementById('iconResetBtn').addEventListener('click', function () {
+    document.getElementById('f-icon_file').value = '';
+    document.getElementById('f-icon_reset').value = '1';
+    document.getElementById('iconPrev').innerHTML = '🎁';
+    this.style.display = 'none';
+});
 mask.addEventListener('click', function (ev) { if (ev.target === mask) mask.classList.remove('on'); });
 document.getElementById('drawerSave').addEventListener('click', function () {
     var fd = new FormData();
@@ -278,6 +315,9 @@ document.getElementById('drawerSave').addEventListener('click', function () {
     fd.append('description', document.getElementById('f-description').value);
     fd.append('min_num', document.getElementById('f-min_num').value || '1');
     fd.append('max_num', document.getElementById('f-max_num').value || '1');
+    var iconFile = document.getElementById('f-icon_file').files[0];
+    if (iconFile) fd.append('icon_file', iconFile);
+    fd.append('icon_reset', document.getElementById('f-icon_reset').value);
     var cards = document.getElementById('f-cards_import').value.trim();
     if (cards !== '') fd.append('cards_import', cards);
     yfPost('<?= au('product_save') ?>', fd).then(function (d) {

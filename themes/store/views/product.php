@@ -1,7 +1,13 @@
 <?php /** 云商城主题 商品详情/下单: 左视觉右表单 */ ?>
 <div class="product-grid">
     <div class="product-visual">
-        <div class="pv-stage gv-0"><span>🎁</span></div>
+        <div class="pv-stage gv-0">
+            <?php if (!empty($product['icon'])): ?>
+                <img src="<?= e(site_url($product['icon'])) ?>" alt="<?= e($product['name']) ?>" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">
+            <?php else: ?>
+                <span>🎁</span>
+            <?php endif; ?>
+        </div>
         <div class="pv-desc"><?= nl2br(e($product['description'])) ?></div>
     </div>
     <div class="buy-panel">

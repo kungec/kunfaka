@@ -55,7 +55,11 @@
         <?php foreach ($products as $i => $p): $s = isset($stock[$p['id']]) ? $stock[$p['id']] : 0; $gi = $i % 8; ?>
             <div class="goods-card">
                 <div class="goods-visual gv-<?= $gi ?>">
-                    <span><?= ['🎁','💎','🎮','📱','🎧','⭐','🔥','🛒'][$gi] ?></span>
+                    <?php if (!empty($p['icon'])): ?>
+                        <img src="<?= e(site_url($p['icon'])) ?>" alt="<?= e($p['name']) ?>" style="width:100%;height:100%;object-fit:cover">
+                    <?php else: ?>
+                        <span><?= ['🎁','💎','🎮','📱','🎧','⭐','🔥','🛒'][$gi] ?></span>
+                    <?php endif; ?>
                     <span class="gv-stock<?= $s > 0 ? '' : ' soldout' ?>"><?= $s > 0 ? '有货' : '缺货' ?></span>
                 </div>
                 <div class="goods-body">

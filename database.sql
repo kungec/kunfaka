@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `products` (
   `sort` int NOT NULL DEFAULT 0,
   `sales` int unsigned NOT NULL DEFAULT 0,
   `group_id` int unsigned NOT NULL DEFAULT 0 COMMENT '商品分组(0=不分组)',
+  `icon` varchar(255) NOT NULL DEFAULT '' COMMENT '商品图标(上传路径)',
   `created_at` int unsigned NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

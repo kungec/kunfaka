@@ -4,6 +4,7 @@ data/install.lock
 data/*.db
 data/*.sqlite
 *.log
+uploads/
 
 # 本地开发
 .idea/

@@ -26,7 +26,7 @@
         <?php foreach ($products as $p): $s = isset($stock[$p['id']]) ? $stock[$p['id']] : 0; ?>
             <div class="goods-card">
                 <div class="goods-head">
-                    <span class="goods-cat"><?= e($p['name']) ?></span>
+                    <span class="goods-cat"><?php if (!empty($p['icon'])): ?><img src="<?= e(site_url($p['icon'])) ?>" alt="" style="width:16px;height:16px;object-fit:cover;border-radius:4px;vertical-align:-3px;margin-right:5px"><?php endif; ?><?= e($p['name']) ?></span>
                     <span class="goods-badge<?= $s > 0 ? '' : ' soldout' ?>"><?= $s > 0 ? '有货' : '缺货' ?></span>
                 </div>
                 <div class="goods-desc"><?= nl2br(e(mb_substr(trim(strip_tags($p['description'])), 0, 60))) ?: '快速发货 · 支付即到' ?></div>

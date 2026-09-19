@@ -348,6 +348,7 @@ class AdminController
     public function actionProductSave()
     {
         $id = (int)arr_get($_POST, 'id');
+        $old = $id > 0 ? DB::fetch('SELECT icon FROM products WHERE id = ?', [$id]) : null;
         $data = [
             'category_id' => (int)arr_get($_POST, 'category_id'),
             'group_id' => (int)arr_get($_POST, 'group_id'),
@@ -360,6 +361,25 @@ class AdminController
             'sort' => (int)arr_get($_POST, 'sort'),
         ];
         if ($data['name'] === '') json_out(['code' => 1, 'msg' => '商品名称不能为空']);
+        // 商品图标上传(jpg/png/webp/gif, ≤5MB)
+        $iconReset = arr_get($_POST, 'icon_reset') === '1';
+        if (!empty($_FILES['icon_file']['tmp_name']) && $_FILES['icon_file']['error'] === UPLOAD_ERR_OK) {
+            $f = $_FILES['icon_file'];
+            if ($f['size'] > 5 * 1024 * 1024) json_out(['code' => 1, 'msg' => '图标图片不能超过5MB']);
+            $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) json_out(['code' => 1, 'msg' => '仅支持 jpg/png/webp/gif 图片']);
+            $info = @getimagesize($f['tmp_name']);
+            if ($info === false) json_out(['code' => 1, 'msg' => '图标文件不是有效图片']);
+            $dir = YF_ROOT . '/uploads';
+            if (!is_dir($dir)) @mkdir($dir, 0755, true);
+            $fname = 'p_' . bin2hex(random_bytes(8)) . '.' . $ext;
+            if (!move_uploaded_file($f['tmp_name'], $dir . '/' . $fname)) json_out(['code' => 1, 'msg' => '图标保存失败, 请检查目录权限']);
+            if ($old && (string)$old['icon'] !== '' && strpos($old['icon'], 'uploads/') === 0) @unlink(YF_ROOT . '/' . $old['icon']);
+            $data['icon'] = 'uploads/' . $fname;
+        } elseif ($iconReset) {
+            if ($old && (string)$old['icon'] !== '' && strpos($old['icon'], 'uploads/') === 0) @unlink(YF_ROOT . '/' . $old['icon']);
+            $data['icon'] = '';
+        }
         if ($id > 0) {
             DB::update('products', $data, 'id = ?', [$id]);
         } else {
