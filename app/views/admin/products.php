@@ -122,7 +122,7 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
         <?php foreach ($list as $p): $sid = (int)$p['status']; $s = isset($salesMap[(int)$p['id']]) ? $salesMap[(int)$p['id']] : ['today' => 0, 'yesterday' => 0, 'week' => 0]; ?>
             <tr>
                 <td class="p-chk"><input type="checkbox" class="row-chk" value="<?= (int)$p['id'] ?>" style="width:auto"></td>
-                <td class="p-name"><b><?= e($p['name']) ?></b><small>ID <?= (int)$p['id'] ?> · 限购 <?= (int)$p['min_num'] ?>-<?= (int)$p['max_num'] ?></small></td>
+                <td class="p-name"><b><?= e($p['name']) ?></b><small>ID <?= (int)$p['id'] ?> · 限购 <?= (int)$p['min_num'] ?>-<?= (int)$p['max_num'] ?><?= !empty($p['group_name']) ? ' · 分组 ' . e($p['group_name']) : '' ?></small></td>
                 <td class="dim"><?= e($p['cat_name'] ?: '未分类') ?></td>
                 <td class="p-stock"><?= (int)$p['stock'] ?><a class="add" href="<?= au('cards', ['product_id' => $p['id']]) ?>">加卡</a></td>
                 <td><b>¥<?= e(nf($p['price'])) ?></b></td>
@@ -138,7 +138,7 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
                     </label>
                 </td>
                 <td class="actions">
-                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$p['id'], 'category_id' => (int)$p['category_id'], 'name' => $p['name'], 'price' => nf($p['price']), 'min_num' => (int)$p['min_num'], 'max_num' => (int)$p['max_num'], 'description' => (string)$p['description'], 'sort' => (int)$p['sort'], 'status' => $sid], JSON_UNESCAPED_UNICODE)) ?>'>✏ 编辑</button>
+                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$p['id'], 'category_id' => (int)$p['category_id'], 'group_id' => (int)$p['group_id'], 'name' => $p['name'], 'price' => nf($p['price']), 'min_num' => (int)$p['min_num'], 'max_num' => (int)$p['max_num'], 'description' => (string)$p['description'], 'sort' => (int)$p['sort'], 'status' => $sid], JSON_UNESCAPED_UNICODE)) ?>'>✏ 编辑</button>
                     <a class="btn sm gray" href="<?= au('cards', ['product_id' => $p['id']]) ?>">卡密</a>
                     <button class="btn sm red" data-del="<?= (int)$p['id'] ?>" data-confirm="确定移除商品 <?= e($p['name']) ?> ?<?= (int)$p['stock'] > 0 ? ' 该商品还有 ' . (int)$p['stock'] . ' 张未售卡密, 需先清空库存!' : '' ?>">移除</button>
                 </td>
@@ -166,6 +166,11 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
             <select id="f-category_id">
                 <option value="0">未分类</option>
                 <?php foreach ($categories as $c): ?><option value="<?= (int)$c['id'] ?>"><?= e($c['name']) ?></option><?php endforeach; ?>
+            </select>
+            <label>商品分组(可在「会员等级」页设置分组可见的最低等级)</label>
+            <select id="f-group_id">
+                <option value="0">不分组(所有人可见)</option>
+                <?php foreach ($groups as $g): ?><option value="<?= (int)$g['id'] ?>"><?= e($g['name']) ?><?= (int)$g['min_level'] > 0 ? '(需LV' . (int)$g['min_level'] . '+' : '' ?><?= (int)$g['min_level'] > 0 ? ')' : '' ?></option><?php endforeach; ?>
             </select>
             <label>商品名称 *</label>
             <input type="text" id="f-name" maxlength="100" placeholder="如 游戏充值月卡">
@@ -233,6 +238,7 @@ document.addEventListener('change', function (ev) {
 var mask = document.getElementById('pMask');
 function openDrawer(data) {
     document.getElementById('f-category_id').value = data ? data.category_id : 0;
+    document.getElementById('f-group_id').value = data ? (data.group_id || 0) : 0;
     document.getElementById('f-name').value = data ? data.name : '';
     document.getElementById('f-price').value = data ? data.price : '0.00';
     document.getElementById('f-sort').value = data ? data.sort : 0;
@@ -264,6 +270,7 @@ document.getElementById('drawerSave').addEventListener('click', function () {
     var fd = new FormData();
     fd.append('id', document.getElementById('saveId').value);
     fd.append('category_id', document.getElementById('f-category_id').value);
+    fd.append('group_id', document.getElementById('f-group_id').value);
     fd.append('name', document.getElementById('f-name').value.trim());
     fd.append('price', document.getElementById('f-price').value);
     fd.append('sort', document.getElementById('f-sort').value || '0');

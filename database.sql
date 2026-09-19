@@ -33,6 +33,23 @@ CREATE TABLE IF NOT EXISTS `products` (
   `status` tinyint NOT NULL DEFAULT 1 COMMENT '1上架 0下架',
   `sort` int NOT NULL DEFAULT 0,
   `sales` int unsigned NOT NULL DEFAULT 0,
+  `group_id` int unsigned NOT NULL DEFAULT 0 COMMENT '商品分组(0=不分组)',
+  `created_at` int unsigned NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 会员等级(LV数值用于商品分组可见性校验)
+CREATE TABLE IF NOT EXISTS `member_levels` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `name` varchar(50) NOT NULL,
+  `level` int NOT NULL DEFAULT 1 COMMENT '等级数值(越大越高)',
+  `created_at` int unsigned NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 商品分组(可设最低会员等级, 低于该等级的买家不可见/不可购)
+CREATE TABLE IF NOT EXISTS `product_groups` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `name` varchar(100) NOT NULL,
+  `min_level` int NOT NULL DEFAULT 0 COMMENT '可见所需最低等级数值(0=不限制)',
   `created_at` int unsigned NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

@@ -182,6 +182,26 @@ function cat_list() {
     return DB::fetchAll('SELECT * FROM categories WHERE status = 1 ORDER BY sort ASC, id ASC');
 }
 
+/** 当前访客的会员等级数值(游客/无等级为0) */
+function viewer_level() {
+    $uid = current_user_id();
+    if ($uid <= 0) return 0;
+    $v = DB::value('SELECT l.level FROM users u LEFT JOIN member_levels l ON l.id = u.level_id WHERE u.id = ?', [$uid]);
+    return $v ? (int)$v : 0;
+}
+
+/** 商品对指定等级是否可见(所属分组有最低等级要求时校验) */
+function product_visible(array $product, $level = null) {
+    $gid = (int)($product['group_id'] ?? 0);
+    if ($gid <= 0) return true;
+    static $cache = [];
+    if (!isset($cache[$gid])) {
+        $cache[$gid] = (int)DB::value('SELECT min_level FROM product_groups WHERE id = ?', [$gid]);
+    }
+    if ($level === null) $level = viewer_level();
+    return $level >= $cache[$gid];
+}
+
 /** 当前登录前台会员ID(未登录0; 会员功能关闭时视为游客) */
 function current_user_id() {
     if (!member_open()) return 0;

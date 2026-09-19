@@ -12,6 +12,10 @@ class BuyController
             View::theme('error', ['msg' => '商品不存在或已下架', 'pageTitle' => '商品不存在']);
             return;
         }
+        if (!product_visible($product)) {
+            View::theme('error', ['msg' => '该商品未对您当前的会员等级开放', 'pageTitle' => '无法购买']);
+            return;
+        }
         $categories = cat_list();
         $contactTypes = contact_types_enabled();
         $contactPrefill = '';
@@ -46,6 +50,10 @@ class BuyController
         $product = DB::fetch('SELECT * FROM products WHERE id = ? AND status = 1', [$productId]);
         if (!$product) {
             View::theme('error', ['msg' => '商品不存在或已下架', 'pageTitle' => '错误']);
+            return;
+        }
+        if (!product_visible($product)) {
+            View::theme('error', ['msg' => '该商品未对您当前的会员等级开放', 'pageTitle' => '无法购买']);
             return;
         }
         if ($num < (int)$product['min_num']) $num = (int)$product['min_num'];

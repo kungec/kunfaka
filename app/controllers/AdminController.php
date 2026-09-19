@@ -251,9 +251,10 @@ class AdminController
             $params[] = (int)$status;
         }
         $list = DB::fetchAll(
-            "SELECT p.*, c.name AS cat_name,
+            "SELECT p.*, c.name AS cat_name, g.name AS group_name,
              (SELECT COUNT(*) FROM cards cc WHERE cc.product_id = p.id AND cc.status = 0) AS stock
              FROM products p LEFT JOIN categories c ON c.id = p.category_id
+             LEFT JOIN product_groups g ON g.id = p.group_id
              WHERE {$where} ORDER BY p.sort ASC, p.id DESC LIMIT 200", $params);
         $dayStart = strtotime(date('Y-m-d'));
         $yStart = $dayStart - 86400;
@@ -281,6 +282,7 @@ class AdminController
         View::admin('products', [
             'list' => $list,
             'categories' => DB::fetchAll('SELECT * FROM categories ORDER BY sort ASC, id ASC'),
+            'groups' => DB::fetchAll('SELECT * FROM product_groups ORDER BY id ASC'),
             'catId' => $catId,
             'stats' => $stats,
             'salesMap' => $salesMap,
@@ -344,6 +346,7 @@ class AdminController
         $id = (int)arr_get($_POST, 'id');
         $data = [
             'category_id' => (int)arr_get($_POST, 'category_id'),
+            'group_id' => (int)arr_get($_POST, 'group_id'),
             'name' => trim(arr_get($_POST, 'name')),
             'description' => arr_get($_POST, 'description'),
             'price' => round((float)arr_get($_POST, 'price'), 2),
@@ -961,6 +964,60 @@ class AdminController
         }
     }
 
+    // ---------- 会员等级与商品分组 ----------
+
+    public function actionMemberLevels()
+    {
+        $levels = DB::fetchAll('SELECT l.*, (SELECT COUNT(*) FROM users u WHERE u.level_id = l.id) AS members FROM member_levels l ORDER BY l.level ASC, l.id ASC');
+        $groups = DB::fetchAll('SELECT g.*, (SELECT COUNT(*) FROM products p WHERE p.group_id = g.id) AS products FROM product_groups g ORDER BY g.id ASC');
+        View::admin('member_levels', ['levels' => $levels, 'groups' => $groups]);
+    }
+
+    public function actionLevelSave()
+    {
+        $id = (int)arr_get($_POST, 'id');
+        $name = trim(arr_get($_POST, 'name'));
+        $level = max(1, (int)arr_get($_POST, 'level', 1));
+        if ($name === '') json_out(['code' => 1, 'msg' => '等级名称不能为空']);
+        if ($id > 0) {
+            DB::update('member_levels', ['name' => $name, 'level' => $level], 'id = ?', [$id]);
+        } else {
+            DB::insert('member_levels', ['name' => $name, 'level' => $level, 'created_at' => now()]);
+        }
+        json_out(['code' => 0, 'msg' => '保存成功']);
+    }
+
+    public function actionLevelDel()
+    {
+        $id = (int)arr_get($_POST, 'id');
+        DB::update('users', ['level_id' => 0], 'level_id = ?', [$id]);
+        DB::exec('DELETE FROM member_levels WHERE id = ?', [$id]);
+        json_out(['code' => 0, 'msg' => '已删除, 关联会员恢复为无等级']);
+    }
+
+    public function actionGroupSave()
+    {
+        $id = (int)arr_get($_POST, 'id');
+        $name = trim(arr_get($_POST, 'name'));
+        $minLevel = max(0, (int)arr_get($_POST, 'min_level'));
+        if ($name === '') json_out(['code' => 1, 'msg' => '分组名称不能为空']);
+        if ($id > 0) {
+            DB::update('product_groups', ['name' => $name, 'min_level' => $minLevel], 'id = ?', [$id]);
+        } else {
+            DB::insert('product_groups', ['name' => $name, 'min_level' => $minLevel, 'created_at' => now()]);
+        }
+        json_out(['code' => 0, 'msg' => '保存成功']);
+    }
+
+    public function actionGroupDel()
+    {
+        $id = (int)arr_get($_POST, 'id');
+        $count = (int)DB::value('SELECT COUNT(*) FROM products WHERE group_id = ?', [$id]);
+        if ($count > 0) json_out(['code' => 1, 'msg' => '该分组下有 ' . $count . ' 个商品, 请先在商品管理中调整']);
+        DB::exec('DELETE FROM product_groups WHERE id = ?', [$id]);
+        json_out(['code' => 0, 'msg' => '删除成功']);
+    }
+
     // ---------- 会员管理 ----------
 
     public function actionUsers()
@@ -970,8 +1027,10 @@ class AdminController
         $per = 20;
         $total = (int)DB::value("SELECT COUNT(*) FROM users u WHERE {$where}", $params);
         $list = DB::fetchAll(
-            "SELECT u.*, (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id AND o.status = 1) AS orders_count
-             FROM users u WHERE {$where} ORDER BY u.id DESC LIMIT {$per} OFFSET " . (($page - 1) * $per), $params);
+            "SELECT u.*, l.name AS level_name, l.level AS level_num,
+             (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id AND o.status = 1) AS orders_count
+             FROM users u LEFT JOIN member_levels l ON l.id = u.level_id
+             WHERE {$where} ORDER BY u.id DESC LIMIT {$per} OFFSET " . (($page - 1) * $per), $params);
         $todayStart = strtotime(date('Y-m-d'));
         $stats = [
             'total' => (int)DB::value('SELECT COUNT(*) FROM users'),
@@ -979,7 +1038,10 @@ class AdminController
             'banned' => (int)DB::value('SELECT COUNT(*) FROM users WHERE status = 0'),
             'paid_orders' => (int)DB::value('SELECT COUNT(*) FROM orders WHERE status = 1 AND user_id > 0'),
         ];
-        View::admin('users', ['list' => $list, 'total' => $total, 'page' => $page, 'per' => $per, 'stats' => $stats]);
+        View::admin('users', [
+            'list' => $list, 'total' => $total, 'page' => $page, 'per' => $per, 'stats' => $stats,
+            'levels' => DB::fetchAll('SELECT * FROM member_levels ORDER BY level ASC, id ASC'),
+        ]);
     }
 
     /** 会员筛选条件(列表/统计共用) */
@@ -997,6 +1059,8 @@ class AdminController
         if ($ip !== '') { $where .= ' AND u.reg_ip = ?'; $params[] = $ip; }
         $status = arr_get($_GET, 'status', '');
         if ($status !== '') { $where .= ' AND u.status = ?'; $params[] = (int)$status; }
+        $level = arr_get($_GET, 'level', '');
+        if ($level !== '') { $where .= ' AND u.level_id = ?'; $params[] = (int)$level; }
         return [$where, $params];
     }
 
@@ -1020,6 +1084,14 @@ class AdminController
             $n = DB::exec("DELETE FROM users WHERE id IN ({$in})");
             add_log('admin', '管理员批量删除会员 ' . $n . ' 名(历史订单保留)');
             json_out(['code' => 0, 'msg' => '已移除 ' . $n . ' 位会员(历史订单保留)']);
+        }
+        if ($op === 'level') {
+            $levelId = (int)arr_get($_POST, 'level_id');
+            $lvl = DB::fetch('SELECT * FROM member_levels WHERE id = ?', [$levelId]);
+            if (!$lvl) json_out(['code' => 1, 'msg' => '等级不存在']);
+            $n = DB::exec("UPDATE users SET level_id = {$levelId} WHERE id IN ({$in})");
+            add_log('admin', '管理员批量调整会员等级: ' . $n . ' 名 → LV' . $lvl['level'] . ' ' . $lvl['name']);
+            json_out(['code' => 0, 'msg' => '已将 ' . $n . ' 位会员设为 LV' . $lvl['level'] . ' ' . $lvl['name']]);
         }
         json_out(['code' => 1, 'msg' => '无效操作']);
     }

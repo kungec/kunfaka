@@ -85,6 +85,35 @@ if ((int)$stmt->fetchColumn() === 0) {
     echo "SKIP: cards.note 已存在\n";
 }
 
+// 会员等级与商品分组(v2.13.0)
+$pdo->exec("CREATE TABLE IF NOT EXISTS `member_levels` (
+    `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `name` varchar(50) NOT NULL,
+    `level` int NOT NULL DEFAULT 1 COMMENT '等级数值(越大越高)',
+    `created_at` int unsigned NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+$pdo->exec("CREATE TABLE IF NOT EXISTS `product_groups` (
+    `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `name` varchar(100) NOT NULL,
+    `min_level` int NOT NULL DEFAULT 0 COMMENT '可见所需最低等级数值(0=不限制)',
+    `created_at` int unsigned NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+echo "OK: member_levels / product_groups 表就绪\n";
+$stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'level_id'");
+if ((int)$stmt->fetchColumn() === 0) {
+    $pdo->exec("ALTER TABLE `users` ADD COLUMN `level_id` int unsigned NOT NULL DEFAULT 0 COMMENT '会员等级(0=无等级)'");
+    echo "OK: users 表已添加 level_id 列\n";
+} else {
+    echo "SKIP: users.level_id 已存在\n";
+}
+$stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'products' AND COLUMN_NAME = 'group_id'");
+if ((int)$stmt->fetchColumn() === 0) {
+    $pdo->exec("ALTER TABLE `products` ADD COLUMN `group_id` int unsigned NOT NULL DEFAULT 0 COMMENT '商品分组(0=不分组)'");
+    echo "OK: products 表已添加 group_id 列\n";
+} else {
+    echo "SKIP: products.group_id 已存在\n";
+}
+
 // 系统日志表(v1.4→v1.5)
 $pdo->exec("CREATE TABLE IF NOT EXISTS `logs` (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,

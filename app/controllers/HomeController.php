@@ -15,6 +15,11 @@ class HomeController
             $params[] = $catId;
         }
         $products = DB::fetchAll("SELECT * FROM products WHERE {$where} ORDER BY sort ASC, id DESC LIMIT 100", $params);
+        // 分组等级可见性过滤(低于分组最低等级的会员/游客不可见)
+        $level = viewer_level();
+        $products = array_values(array_filter($products, function ($p) use ($level) {
+            return product_visible($p, $level);
+        }));
         $stock = [];
         $catName = [];
         foreach ($categories as $c) $catName[$c['id']] = $c['name'];

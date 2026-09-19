@@ -24,7 +24,7 @@
             <?php if (singlepage_open()): ?><a href="<?= u('notice/page') ?>"><?= e(setting('singlepage_title', '关于我们')) ?></a><?php endif; ?>
             <?php if (current_user_id()): ?>
                 <a href="<?= u('user/orders') ?>">我的订单</a>
-                <span class="nav-user">👋 <?= e(isset($_SESSION['front_user_name']) ? $_SESSION['front_user_name'] : '') ?></span>
+                <span class="nav-user">👋 <?= e(isset($_SESSION['front_user_name']) ? $_SESSION['front_user_name'] : '') ?><?php $vLv = viewer_level(); if ($vLv > 0): ?> <span class="tag blue">LV<?= $vLv ?></span><?php endif; ?></span>
                 <a href="<?= u('user/logout') ?>">退出</a>
             <?php elseif (member_open()): ?>
                 <a href="<?= u('user/login') ?>">登录 / 注册</a>

@@ -29,6 +29,7 @@
             <div class="side-group">经营</div>
             <a href="<?= au('orders') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'orders') ? 'on' : '' ?>"><span class="ico">🧾</span>订单管理</a>
             <a href="<?= au('users') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'users') ? 'on' : '' ?>"><span class="ico">👥</span>会员管理</a>
+            <a href="<?= au('member_levels') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'member_levels') ? 'on' : '' ?>"><span class="ico">🏅</span>会员等级</a>
             <a href="<?= au('products') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'products') ? 'on' : '' ?>"><span class="ico">📦</span>商品管理</a>
             <a href="<?= au('categories') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'categories') ? 'on' : '' ?>"><span class="ico">🗂</span>分类管理</a>
             <a href="<?= au('notices') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'notices') ? 'on' : '' ?>"><span class="ico">📣</span>公告单页</a>

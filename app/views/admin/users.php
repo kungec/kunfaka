@@ -1,8 +1,9 @@
 <?php $activeMenu = 'users'; $pages = max(1, (int)ceil($total / $per));
 $curStatus = isset($_GET['status']) ? (string)$_GET['status'] : '';
+$curLevel = isset($_GET['level']) ? (string)$_GET['level'] : '';
 /* 保留当前筛选条件 */
 $f = [];
-foreach (['username', 'uid', 'email', 'reg_ip', 'status'] as $k) {
+foreach (['username', 'uid', 'email', 'reg_ip', 'status', 'level'] as $k) {
     $v = isset($_GET[$k]) ? (string)$_GET[$k] : '';
     if ($v !== '') $f[$k] = $v;
 }
@@ -31,6 +32,16 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
 .u-empty{text-align:center;padding:34px 0;color:var(--muted)}
 .u-empty .ico{font-size:34px;margin-bottom:6px;opacity:.55}
 .u-total{font-size:12px;color:var(--muted);padding:10px 2px 0}
+/* 等级弹窗 */
+.lvl-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:120;display:none;align-items:flex-start;justify-content:center;padding:100px 16px}
+.lvl-mask.on{display:flex}
+.lvl-modal{background:var(--card);border:1px solid var(--input-border);border-radius:14px;width:100%;max-width:380px;overflow:hidden}
+.lvl-modal .m-head{padding:15px 20px;font-weight:700;font-size:14.5px;border-bottom:1px solid var(--input-border);display:flex;justify-content:space-between}
+.lvl-modal .m-head .x{cursor:pointer;color:var(--muted);font-size:17px;background:none;border:none}
+.lvl-modal .m-body{padding:18px 20px}
+.lvl-modal .m-body label{display:block;font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:5px}
+.lvl-modal .m-body select{width:100%;height:40px;padding:0 12px;font-size:13px}
+.lvl-modal .m-foot{padding:14px 20px;border-top:1px solid var(--input-border);display:flex;gap:9px;justify-content:center}
 </style>
 
 <div class="page-head">
@@ -50,6 +61,7 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
 <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
         <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <button class="btn sm" id="lvlBtn" disabled>🏅 修改会员等级</button>
             <button class="btn sm" id="enableBtn" disabled data-op="enable" data-confirm="确定启用选中的会员?">✓ 启用选中</button>
             <button class="btn sm gray" id="disableBtn" disabled data-op="disable" data-confirm="确定禁用选中的会员? 禁用后其账号将无法登录">🚫 禁用选中</button>
             <button class="btn sm red" id="delBtn" disabled data-op="delete" data-confirm="⚠ 确定移除选中的会员? 账号不可恢复(历史订单保留)">🗑 移除选中用户</button>
@@ -64,6 +76,13 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
             <div class="uf"><label>UID</label><input type="number" name="uid" value="<?= e(arr_get($_GET, 'uid')) ?>"></div>
             <div class="uf"><label>邮箱</label><input type="text" name="email" value="<?= e(arr_get($_GET, 'email')) ?>"></div>
             <div class="uf"><label>注册IP</label><input type="text" name="reg_ip" value="<?= e(arr_get($_GET, 'reg_ip')) ?>"></div>
+            <div class="uf"><label>会员等级</label>
+                <select name="level">
+                    <option value="">全部</option>
+                    <option value="0" <?= $curLevel === '0' ? 'selected' : '' ?>>无等级</option>
+                    <?php foreach ($levels as $lv): ?><option value="<?= (int)$lv['id'] ?>" <?= $curLevel === (string)$lv['id'] ? 'selected' : '' ?>>LV<?= (int)$lv['level'] ?> <?= e($lv['name']) ?></option><?php endforeach; ?>
+                </select>
+            </div>
             <div class="uf"><label>&nbsp;</label><button class="btn" type="submit" style="width:100%">🔍 查询</button></div>
         </div>
     </form>
@@ -81,6 +100,7 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
         <tr>
             <th class="u-chk"><input type="checkbox" id="chkAll" style="width:auto"></th>
             <th>用户名</th>
+            <th>等级</th>
             <th>邮箱</th>
             <th>成功订单</th>
             <th>注册IP</th>
@@ -94,6 +114,7 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
             <tr>
                 <td class="u-chk"><input type="checkbox" class="row-chk" value="<?= (int)$u['id'] ?>" style="width:auto"></td>
                 <td class="u-name"><b><?= e($u['username']) ?></b><small>UID <?= (int)$u['id'] ?></small></td>
+                <td><?php if (!empty($u['level_num'])): ?><span class="tag blue">LV<?= (int)$u['level_num'] ?> <?= e($u['level_name']) ?></span><?php else: ?><span class="tag">—</span><?php endif; ?></td>
                 <td class="dim"><?= e($u['email'] ?: '—') ?></td>
                 <td><?= (int)$u['orders_count'] ?></td>
                 <td class="dim mono"><?= e($u['reg_ip'] ?: '—') ?></td>
@@ -105,7 +126,7 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
                 </td>
             </tr>
         <?php endforeach; ?>
-        <?php if (!$list): ?><tr><td colspan="8"><div class="u-empty"><div class="ico">🗂</div>暂无数据</div></td></tr><?php endif; ?>
+        <?php if (!$list): ?><tr><td colspan="9"><div class="u-empty"><div class="ico">🗂</div>暂无数据</div></td></tr><?php endif; ?>
         </tbody>
     </table>
     <div class="u-total">共 <?= (int)$total ?> 条</div>
@@ -118,12 +139,30 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
     <?php endif; ?>
 </div>
 
+<!-- 修改会员等级弹窗 -->
+<div class="lvl-mask" id="lvlMask">
+    <div class="lvl-modal">
+        <div class="m-head"><span>🏅 修改会员等级</span><button class="x" id="lvlClose" type="button">✕</button></div>
+        <div class="m-body">
+            <label>将选中的 <b id="lvlCount">0</b> 位会员设为:</label>
+            <select id="lvl-select">
+                <option value="0">无等级</option>
+                <?php foreach ($levels as $lv): ?><option value="<?= (int)$lv['id'] ?>">LV<?= (int)$lv['level'] ?> <?= e($lv['name']) ?></option><?php endforeach; ?>
+            </select>
+        </div>
+        <div class="m-foot">
+            <button class="btn" id="lvlSave" style="min-width:110px">💾 确定</button>
+            <button class="btn gray" id="lvlCancel">✕ 取消</button>
+        </div>
+    </div>
+</div>
+
 <script>
 var chkAll = document.getElementById('chkAll');
 function rowChks() { return Array.prototype.slice.call(document.querySelectorAll('.row-chk')); }
 function syncBtns() {
     var n = rowChks().filter(function (c) { return c.checked; }).length;
-    ['enableBtn', 'disableBtn', 'delBtn'].forEach(function (id) {
+    ['lvlBtn', 'enableBtn', 'disableBtn', 'delBtn'].forEach(function (id) {
         var b = document.getElementById(id);
         if (b) b.disabled = n === 0;
     });
@@ -140,6 +179,25 @@ function yfPost(url, fd) {
     return fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function (r) { return r.json(); });
 }
+/* 修改会员等级弹窗 */
+var lvlMask = document.getElementById('lvlMask');
+function checkedIds() { return rowChks().filter(function (c) { return c.checked; }).map(function (c) { return c.value; }); }
+document.getElementById('lvlBtn').addEventListener('click', function () {
+    var ids = checkedIds();
+    if (!ids.length) return;
+    document.getElementById('lvlCount').textContent = String(ids.length);
+    lvlMask.classList.add('on');
+});
+document.getElementById('lvlClose').addEventListener('click', function () { lvlMask.classList.remove('on'); });
+document.getElementById('lvlCancel').addEventListener('click', function () { lvlMask.classList.remove('on'); });
+lvlMask.addEventListener('click', function (ev) { if (ev.target === lvlMask) lvlMask.classList.remove('on'); });
+document.getElementById('lvlSave').addEventListener('click', function () {
+    var fd = new FormData();
+    checkedIds().forEach(function (v) { fd.append('ids[]', v); });
+    fd.append('op', 'level');
+    fd.append('level_id', document.getElementById('lvl-select').value);
+    yfPost('<?= au('users_batch') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+});
 document.addEventListener('click', function (ev) {
     var t = ev.target.closest ? ev.target.closest('[data-toggle],[data-del],[data-op]') : null;
     if (!t) return;
