@@ -23,11 +23,18 @@ class HomeController
         $stock = [];
         $catName = [];
         foreach ($categories as $c) $catName[$c['id']] = $c['name'];
+        // 单次聚合全部分类商品的库存(避免逐商品N+1查询)
+        $stockMap = [];
+        if ($products) {
+            foreach (DB::fetchAll('SELECT product_id, COUNT(*) AS n FROM cards WHERE status = 0 AND product_id IN (' . implode(',', array_map(function ($p) { return (int)$p['id']; }, $products)) . ') GROUP BY product_id') as $r) {
+                $stockMap[(int)$r['product_id']] = (int)$r['n'];
+            }
+        }
         $catCounts = [];
         foreach ($products as &$p) {
             $p['cat_name'] = isset($catName[$p['category_id']]) ? $catName[$p['category_id']] : '商品';
             $catCounts[$p['category_id']] = (isset($catCounts[$p['category_id']]) ? $catCounts[$p['category_id']] : 0) + 1;
-            $stock[$p['id']] = product_stock($p['id']);
+            $stock[$p['id']] = $stockMap[(int)$p['id']] ?? 0;
         }
         unset($p);
         foreach ($categories as $c) {

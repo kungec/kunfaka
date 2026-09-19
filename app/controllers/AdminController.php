@@ -345,16 +345,6 @@ class AdminController
         json_out(['code' => 1, 'msg' => '无效操作']);
     }
 
-    public function actionProductEdit()
-    {
-        $id = (int)arr_get($_GET, 'id');
-        $product = $id > 0 ? DB::fetch('SELECT * FROM products WHERE id = ?', [$id]) : null;
-        View::admin('product_edit', [
-            'product' => $product,
-            'categories' => DB::fetchAll('SELECT * FROM categories ORDER BY sort ASC, id ASC'),
-        ]);
-    }
-
     public function actionProductSave()
     {
         $id = (int)arr_get($_POST, 'id');
@@ -1429,7 +1419,7 @@ class AdminController
             if (!$picked) json_out(['code' => 1, 'msg' => '请至少选择一种下单联系方式']);
             setting_set('contact_types', implode(',', $picked));
         }
-        $keys = ['site_name', 'site_url', 'theme', 'announcement', 'order_timeout', 'contact_qq',
+        $keys = ['site_name', 'site_url', 'theme', 'announcement', 'order_timeout',
             'smtp_open', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_ssl', 'official_api',
             'verify_mode', 'captcha_open', 'turnstile_open', 'turnstile_site_key', 'turnstile_secret_key',
             'geetest_id', 'geetest_key', 'geetest_timeout', 'cdn_mode', 'member_open'];

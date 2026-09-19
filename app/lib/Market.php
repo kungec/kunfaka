@@ -26,7 +26,7 @@ class Market
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $api . '/api/market');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         $res = curl_exec($ch);
         curl_close($ch);
