@@ -701,12 +701,35 @@ class AdminController
     public function actionApps()
     {
         $type = arr_get($_GET, 'type', 'payment') === 'theme' ? 'theme' : 'payment';
-        $list = Market::all($type);
+        $all = Market::all($type);
+        // 作者下拉
+        $authors = [];
+        foreach ($all as $a) {
+            if (!in_array((string)$a['author'], $authors, true)) $authors[] = (string)$a['author'];
+        }
+        sort($authors);
+        // 筛选: 名称/作者/分类页签
+        $name = trim(arr_get($_GET, 'name'));
+        $author = trim(arr_get($_GET, 'author'));
+        $filter = (string)arr_get($_GET, 'filter', '');
+        $list = array_values(array_filter($all, function ($a) use ($name, $author, $filter) {
+            if ($name !== '' && mb_stripos((string)$a['title'] . ' ' . (string)$a['name'] . ' ' . (string)$a['desc'], $name) === false) return false;
+            if ($author !== '' && (string)$a['author'] !== $author) return false;
+            switch ($filter) {
+                case 'installed': return !empty($a['installed']);
+                case 'pro': return !empty($a['pro']);
+                case 'free': return empty($a['pro']);
+                case 'local': return !empty($a['local']);
+                case 'remote': return empty($a['local']);
+            }
+            return true;
+        }));
         View::admin('apps', [
             'type' => $type,
             'list' => $list,
             'license' => License::info(),
             'price' => $this->masterPrice(),
+            'authors' => $authors,
         ]);
     }
 
