@@ -139,4 +139,33 @@ class Market
         $zip->extractTo($toDir);
         $zip->close();
     }
+
+    /** 官方公告(主控下发, 10分钟缓存) */
+    public static function officialNotices($force = false)
+    {
+        $cache = setting('official_notice_cache', '');
+        $j = json_decode((string)$cache, true);
+        if (!$force && is_array($j) && isset($j['at']) && (int)$j['at'] > now() - 600) {
+            return is_array($j['items']) ? $j['items'] : [];
+        }
+        $items = [];
+        $api = self::apiUrl();
+        if ($api) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $api . '/api/notice');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $res = curl_exec($ch);
+            curl_close($ch);
+            $json = json_decode((string)$res, true);
+            if (is_array($json) && ($json['code'] ?? 1) === 0 && isset($json['data']['items']) && is_array($json['data']['items'])) {
+                foreach ($json['data']['items'] as $it) {
+                    if (is_string($it) && $it !== '') $items[] = mb_substr($it, 0, 200);
+                }
+            }
+        }
+        setting_set('official_notice_cache', json_encode(['items' => $items, 'at' => now()], JSON_UNESCAPED_UNICODE));
+        return $items;
+    }
 }

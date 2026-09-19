@@ -146,12 +146,15 @@ class AdminController
         array_walk($bizPeriods, function (&$p) {
             $p['avg'] = $p['stat']['orders'] > 0 ? round($p['stat']['amount'] / $p['stat']['orders'], 2) : 0;
         });
+        // 官方公告(主控下发, 10分钟缓存)
+        $officialNotices = Market::officialNotices();
         // 站内公告 + 登录信息
         $notices = DB::fetchAll('SELECT id, title, created_at FROM notices WHERE status = 1 ORDER BY sort DESC, id DESC LIMIT 6');
         $logins = DB::fetchAll("SELECT ip, created_at FROM logs WHERE type = 'admin' AND message LIKE '%登录成功%' ORDER BY id DESC LIMIT 2");
         View::admin('dashboard', [
             'stats' => $stats, 'todo' => $todo, 'trend' => $trend, 'bizPeriods' => $bizPeriods,
             'notices' => $notices, 'curLogin' => $logins[0] ?? null, 'prevLogin' => $logins[1] ?? null,
+            'officialNotices' => $officialNotices,
         ]);
     }
 

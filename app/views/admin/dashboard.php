@@ -72,20 +72,21 @@ $cmp = function ($nowV, $base) {
     <!-- ====== 左栏: 公告 + 账号 ====== -->
     <div class="dash-side">
         <div class="card">
-            <h3>📣 站内公告</h3>
-            <?php if (!$notices): ?><p class="dim" style="margin:0">暂无公告, 前往「公告单页」发布。</p><?php endif; ?>
+            <h3>📣 官方公告</h3>
+            <?php if (!$officialNotices): ?>
+                <p class="dim" style="margin:0">暂无官方公告。</p>
+            <?php else: ?>
             <div class="n-list">
-                <?php foreach ($notices as $n): ?>
-                    <a class="n-item" href="<?= e(site_url('index.php?s=/notice/detail&id=' . (int)$n['id'])) ?>" target="_blank" rel="noopener">
-                        <span class="n-badge">公告</span>
+                <?php foreach ($officialNotices as $i => $text): ?>
+                    <div class="n-item" style="cursor:default">
+                        <span class="n-badge">官方</span>
                         <span class="n-main">
-                            <span class="n-title"><?= e($n['title']) ?></span>
-                            <span class="n-date"><?= e(date('Y-m-d', $n['created_at'])) ?></span>
+                            <span class="n-title"><?= e($text) ?></span>
                         </span>
-                    </a>
+                    </div>
                 <?php endforeach; ?>
             </div>
-            <?php if ($notices): ?><div style="margin-top:10px"><a class="btn sm gray" href="<?= au('notices') ?>">管理公告 →</a></div><?php endif; ?>
+            <?php endif; ?>
         </div>
 
         <div class="card">
