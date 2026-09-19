@@ -31,7 +31,7 @@ $required = [
     'index.php', 'admin.php', 'cron.php', 'install.php', 'database.sql', 'README.md', '.htaccess',
     'app/bootstrap.php', 'app/functions.php', 'app/DB.php', 'app/View.php',
     'assets/css/admin.css', 'assets/js/app.js', 'assets/js/admin.js', 'assets/js/qrcode.min.js',
-    'data/.htaccess', 'data/readme.txt', 'tools/upgrade.php', 'tools/make_license.php',
+    'data/.htaccess', 'data/readme.txt', 'tools/upgrade.php',
     'license-server/index.php', 'license-server/admin.php', 'license-server/common.php',
     'license-server/.htaccess', 'license-server/packages/.htaccess',
     'plugins/codepay/codepay.json', 'plugins/epay/epay.json', 'plugins/alipay_f2f/alipay_f2f.json',
