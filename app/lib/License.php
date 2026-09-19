@@ -1,9 +1,9 @@
 <?php
 /**
- * 坤发卡 会员授权中心
+ * 坤发卡 授权中心
  * - 免费版: 可使用全部免费插件/主题
- * - 专业版(99元): 应用商店所有插件/主题免费下载, 含USDT免挂支付等付费插件
- * 支持两种开通方式: 官方会员中心在线开通 / 离线授权码激活
+ * - 专业版: 应用商店所有插件/主题免费下载, 含USDT免挂支付等付费插件
+ * 开通方式: 官方主控在线购买(邮箱收码) / 离线授权码激活, 一码仅绑定一个站点
  */
 class License
 {
@@ -17,28 +17,20 @@ class License
         return $expires === 0 || $expires > now();
     }
 
-    /** 是否已登录官方账号(免费注册会员) */
-    public static function isAuthed()
-    {
-        return setting('auth_token') !== '' && (int)setting('auth_expires', '0') > now();
-    }
-
-    /** 会员信息数组 */
+    /** 授权信息数组 */
     public static function info()
     {
         return [
             'is_pro' => self::isPro(),
-            'is_authed' => self::isAuthed(),
             'license_key' => setting('license_key'),
             'license_type' => setting('license_type', 'free'),
             'license_expires' => (int)setting('license_expires', '0'),
-            'auth_user' => setting('auth_user'),
         ];
     }
 
     /**
-     * 激活授权码(优先在线校验, 网络不通时离线校验)
-     * 授权码格式: YF99-XXXXX-XXXXX-XXXXX
+     * 激活授权码(优先在线校验并绑定本站域名, 网络不通时离线校验)
+     * 授权码格式: YF99-XXXXX-XXXXX-XXXXX, 一码仅绑定一个站点
      */
     public static function activate($key)
     {
@@ -70,33 +62,6 @@ class License
         setting_set('license_key', $key);
         setting_set('license_type', 'pro');
         setting_set('license_expires', '0');
-    }
-
-    /** 登录官方会员账号(免费注册即会员, 可下商店免费应用; 专业版可下全部) */
-    public static function login($user, $pass)
-    {
-        $api = setting('official_api');
-        if (!$api) throw new Exception('未配置官方市场地址');
-        $res = self::post($api . '/api/login', ['username' => $user, 'password' => $pass]);
-        if (!is_array($res) || !isset($res['code']) || $res['code'] !== 0) {
-            throw new Exception(isset($res['msg']) ? $res['msg'] : '登录失败, 请检查官方市场地址或稍后再试');
-        }
-        $d = $res['data'];
-        setting_set('auth_token', $d['token']);
-        setting_set('auth_user', $user);
-        setting_set('auth_expires', (string)(now() + 86400 * 7));
-        if (isset($d['membership'])) {
-            setting_set('license_type', $d['membership'] === 'pro' ? 'pro' : 'free');
-            setting_set('license_expires', (string)(int)(isset($d['expires']) ? $d['expires'] : 0));
-        }
-    }
-
-    /** 退出官方账号登录 */
-    public static function logout()
-    {
-        setting_set('auth_token', '');
-        setting_set('auth_user', '');
-        setting_set('auth_expires', '0');
     }
 
     protected static function post($url, $data)

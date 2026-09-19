@@ -39,11 +39,6 @@ function client_ip() {
     return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
 }
 
-/** 是否处于CDN接入模式(用于支付回调/缓存相关提示与处理) */
-function cdn_on() {
-    return in_array(setting('cdn_mode', 'off'), ['cloudflare', 'cdn'], true);
-}
-
 /** 金额显示 */
 function nf($v) {
     return number_format((float)$v, 2, '.', '');

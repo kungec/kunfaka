@@ -97,10 +97,12 @@ class Market
         if (!$api) throw new Exception('未配置官方市场地址');
         // 标识二次白名单(防御纵深: 即使列表被污染也拒绝路径注入)
         if (!preg_match('/^[a-z0-9_\-]{1,40}$/i', (string)$name)) throw new Exception('应用标识非法');
-        $token = setting('auth_token');
-        if (!$token) throw new Exception('请先在授权中心登录官方会员账号');
+        $domain = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+        $key = setting('license_key');
+        if (!$key) throw new Exception('专业版应用需先在授权中心激活授权码');
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $api . '/api/download?type=' . urlencode($type) . '&name=' . urlencode($name) . '&token=' . urlencode($token));
+        curl_setopt($ch, CURLOPT_URL, $api . '/api/download?type=' . urlencode($type) . '&name=' . urlencode($name)
+            . '&key=' . urlencode($key) . '&domain=' . urlencode($domain));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 60);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

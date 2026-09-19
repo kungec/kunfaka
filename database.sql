@@ -128,21 +128,6 @@ CREATE TABLE IF NOT EXISTS `notices` (
   KEY `idx_status` (`status`,`sort`,`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 商店购买订单(自助开通专业版: 码支付/USDT)
-CREATE TABLE IF NOT EXISTS `store_orders` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  `sn` varchar(32) NOT NULL,
-  `channel` varchar(10) NOT NULL DEFAULT 'usdt' COMMENT 'usdt / codepay',
-  `pay_type` varchar(10) NOT NULL DEFAULT '' COMMENT 'codepay子渠道 alipay/wxpay/qqpay',
-  `amount` decimal(14,6) NOT NULL DEFAULT 0.000000 COMMENT '应收金额(CNY或USDT)',
-  `status` tinyint NOT NULL DEFAULT 0 COMMENT '0待支付 1已支付 2已取消',
-  `txid` varchar(100) NOT NULL DEFAULT '' COMMENT '链上哈希或三方流水',
-  `created_at` int unsigned NOT NULL DEFAULT 0,
-  `paid_at` int unsigned NOT NULL DEFAULT 0,
-  UNIQUE KEY `uk_sn` (`sn`),
-  KEY `idx_status` (`status`,`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- 应用(插件/主题)安装与启用状态
 CREATE TABLE IF NOT EXISTS `apps` (
   `name` varchar(40) NOT NULL PRIMARY KEY,

@@ -6,14 +6,11 @@
 
 <?php if (!License::isPro()): ?>
     <div class="store-banner">
-        <span>💡 坤发卡<b>程序本体完全免费</b>, 收费内容仅限应用商店。开通 <b>99元专业版会员</b>, 商店全部付费插件与主题(含USDT免挂支付)免费畅享。</span>
-        <a href="<?= au('license') ?>">前往授权中心开通 →</a>
+        <span>💡 坤发卡<b>程序本体完全免费</b>, 收费内容仅限应用商店。购买 <b>¥<?= e(nf((float)($price ?? 99))) ?> 永久授权</b>, 商店全部付费插件与主题(含USDT免挂支付)免费畅享。</span>
+        <a href="<?= au('license') ?>">前往授权中心购买 →</a>
     </div>
 <?php else: ?>
-    <div class="store-banner"><span>👑 专业版会员已激活, 程序完全免费 + 商店全部应用免费畅享。</span></div>
-<?php endif; ?>
-<?php if (!License::isAuthed() && !$isTheme): ?>
-    <div class="alert info">登录官方会员账号(免费注册)后, 可下载官方市场持续上架的免费应用。当前内置应用无需登录即可使用。</div>
+    <div class="store-banner"><span>👑 专业版授权已激活, 程序完全免费 + 商店全部应用免费畅享。</span></div>
 <?php endif; ?>
 
 <div class="store-grid">
@@ -42,7 +39,7 @@
                 <?php if ($isTheme && setting('theme') === $app['name']): ?><span class="tag ok">当前使用</span><?php endif; ?>
             </div>
             <div class="app-foot" data-app="<?= e($app['name']) ?>" data-type="<?= e($type) ?>" data-pro="<?= $app['pro'] ? 1 : 0 ?>">
-                <span class="app-price"><?= $app['pro'] ? '99会员免费' : ($app['price'] > 0 ? '¥' . nf($app['price']) : '免费') ?></span>
+                <span class="app-price"><?= $app['pro'] ? '专业版免费' : ($app['price'] > 0 ? '¥' . nf($app['price']) : '免费') ?></span>
                 <span>
                     <?php if ($app['local']): ?>
                         <?php if (!$isTheme && $app['installed']): ?>
@@ -50,14 +47,14 @@
                             <?php if ($app['enabled']): ?><a class="btn sm" href="<?= au('app_config', ['name' => $app['name'], 'type' => $type]) ?>">配置</a><?php endif; ?>
                         <?php elseif (!$isTheme && !$app['installed']): ?>
                             <?php if ($app['pro'] && !License::isPro()): ?>
-                                <button class="btn sm gray" disabled title="需开通99元专业版">安装(需专业版)</button>
+                                <button class="btn sm gray" disabled title="需专业版授权">安装(需专业版)</button>
                             <?php else: ?>
                                 <button class="btn sm green" data-install="<?= e($app['name']) ?>">安装</button>
                             <?php endif; ?>
                         <?php endif; ?>
                         <?php if ($isTheme): ?>
                             <?php if ($app['pro'] && !License::isPro()): ?>
-                                <button class="btn sm gray" disabled title="需开通99元专业版">使用(需专业版)</button>
+                                <button class="btn sm gray" disabled title="需专业版授权">使用(需专业版)</button>
                             <?php else: ?>
                                 <button class="btn sm" data-usetheme="<?= e($app['name']) ?>">使用该主题</button>
                             <?php endif; ?>
@@ -65,8 +62,6 @@
                     <?php else: ?>
                         <?php if ($app['pro'] && !License::isPro()): ?>
                             <button class="btn sm gray" disabled>下载(需专业版)</button>
-                        <?php elseif (!License::isAuthed()): ?>
-                            <button class="btn sm gray" disabled title="请先在授权中心登录官方账号">下载(需登录)</button>
                         <?php else: ?>
                             <button class="btn sm green" data-download="<?= e($app['name']) ?>">下载安装</button>
                         <?php endif; ?>

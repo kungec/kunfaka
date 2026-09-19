@@ -341,7 +341,7 @@ class AdminController
             'type' => $type,
             'list' => $list,
             'license' => License::info(),
-            'marketUrl' => Market::apiUrl(),
+            'price' => $this->masterPrice(),
         ]);
     }
 
@@ -353,7 +353,7 @@ class AdminController
         $meta = Plugin::meta($type, $name);
         if (!$meta) json_out(['code' => 1, 'msg' => '应用不存在']);
         if (!empty($meta['pro']) && !License::isPro()) {
-            json_out(['code' => 2, 'msg' => '该应用为专业版专享, 请先开通99元专业版会员']);
+            json_out(['code' => 2, 'msg' => '该应用为专业版专享, 请先在授权中心购买并激活授权码']);
         }
         Plugin::install($type, $name);
         add_log('store', '安装应用: ' . $meta['title'] . '(' . $name . ')');
@@ -456,39 +456,59 @@ class AdminController
         json_out(['code' => 0, 'msg' => '主题已切换为「' . $meta['title'] . '」']);
     }
 
-    // ---------- 授权中心(会员) ----------
+    // ---------- 授权中心(激活码授权) ----------
 
     public function actionLicense()
     {
-        // ?sync=1: 从主控返回后强制同步会员状态
-        $this->trySync(isset($_GET['sync']));
+        $sn = trim(arr_get($_GET, 'sn'));
         View::admin('license', [
             'license' => License::info(),
-            'marketUrl' => Market::apiUrl(),
-            'pending' => self::pendingStoreOrder(),
-            'sp' => [
-                'usdt' => setting('storepay_usdt'),
-                'codepay_api' => setting('storepay_codepay_api'),
-                'codepay_pid' => setting('storepay_codepay_pid'),
-                'codepay_key' => setting('storepay_codepay_key'),
-                'price' => setting('storepay_price', '99'),
-                'usdt_amount' => setting('storepay_usdt_amount', '15'),
-            ],
+            'price' => $this->masterPrice(),
+            'buySn' => preg_match('/^SP[0-9A-Z]{4,40}$/', $sn) ? $sn : '',
         ]);
     }
 
-    /** 在线开通专业版(通过官方主控收银台支付) */
-    public function actionStorepayOnline()
+    /** 主控专业版定价(10分钟缓存, 失败回退99) */
+    protected function masterPrice()
     {
-        if (!License::isAuthed()) json_out(['code' => 1, 'msg' => '请先登录官方账号']);
-        if (License::isPro()) json_out(['code' => 1, 'msg' => '您已是专业版会员']);
+        $cache = json_decode((string)setting('license_price_cache', ''), true);
+        if (is_array($cache) && isset($cache['at'], $cache['price']) && (int)$cache['at'] > now() - 600) {
+            return (string)$cache['price'];
+        }
+        $price = '99';
+        $api = rtrim(Market::apiUrl(), '/');
+        if ($api !== '') {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $api . '/api/price');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $res = curl_exec($ch);
+            curl_close($ch);
+            $json = json_decode((string)$res, true);
+            if (is_array($json) && ($json['code'] ?? 1) === 0 && isset($json['data']['price'])) {
+                $price = (string)max(1, (float)$json['data']['price']);
+            }
+        }
+        setting_set('license_price_cache', json_encode(['price' => $price, 'at' => now()]));
+        return $price;
+    }
+
+    /** 购买授权码: 填邮箱 → 跳转官方主控收银台(码支付/USDT) */
+    public function actionLicenseBuy()
+    {
+        if (License::isPro()) json_out(['code' => 1, 'msg' => '本站已激活专业版']);
+        $email = trim(arr_get($_POST, 'email'));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 100) {
+            json_out(['code' => 1, 'msg' => '请填写正确的邮箱地址, 授权码将发送到该邮箱']);
+        }
         $api = rtrim(Market::apiUrl(), '/');
         if ($api === '') json_out(['code' => 1, 'msg' => '未配置官方市场地址(主控域名)']);
-        $returnUrl = site_url('admin.php') . '?s=/license&sync=1';
+        $returnUrl = site_url('admin.php') . '?s=/license';
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $api . '/api/purchase');
+        curl_setopt($ch, CURLOPT_URL, $api . '/api/buy');
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['token' => setting('auth_token'), 'return_url' => $returnUrl]));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['email' => $email, 'return_url' => $returnUrl]));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 12);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -499,23 +519,45 @@ class AdminController
         if (!is_array($json) || ($json['code'] ?? 1) !== 0 || empty($json['data']['pay_url'])) {
             json_out(['code' => 1, 'msg' => isset($json['msg']) ? $json['msg'] : '主控连接失败, 请稍后再试']);
         }
-        add_log('store', '跳转官方主控收银台购买专业版: ' . $json['data']['sn']);
-        json_out(['code' => 0, 'msg' => '正在跳转主控收银台', 'redirect' => $json['data']['pay_url']]);
+        add_log('store', '跳转官方主控收银台购买授权码: ' . $json['data']['sn'] . ' (邮箱 ' . $email . ')');
+        json_out(['code' => 0, 'msg' => '正在跳转主控收银台', 'redirect' => $json['data']['pay_url'], 'sn' => $json['data']['sn']]);
     }
 
-    /** 手动同步主控会员状态 */
-    public function actionLicenseSync()
+    /** 查询购买订单: 支付完成后返回主控生成的授权码 */
+    public function actionLicenseBuyCheck()
     {
-        if (!License::isAuthed()) json_out(['code' => 1, 'msg' => '请先登录官方账号']);
-        $this->trySync(true);
-        json_out(['code' => 0, 'msg' => License::isPro() ? '已同步: 专业版会员 ✓' : '已同步: 当前为免费版']);
+        $sn = trim(arr_get($_POST, 'sn'));
+        if (!preg_match('/^SP[0-9A-Z]{4,40}$/', $sn)) json_out(['code' => 1, 'msg' => '订单号无效']);
+        $api = rtrim(Market::apiUrl(), '/');
+        if ($api === '') json_out(['code' => 1, 'msg' => '未配置官方市场地址']);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $api . '/api/order');
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['sn' => $sn]));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        $res = curl_exec($ch);
+        curl_close($ch);
+        $json = json_decode((string)$res, true);
+        if (!is_array($json) || ($json['code'] ?? 1) !== 0) {
+            json_out(['code' => 1, 'msg' => '主控连接失败, 请稍后再试']);
+        }
+        json_out(['code' => 0,
+            'paid' => !empty($json['data']['paid']),
+            'license_key' => isset($json['data']['license_key']) ? (string)$json['data']['license_key'] : '',
+        ]);
     }
 
-    public function actionLicenseLogin()
+    /** 验证已激活的授权码(同域名幂等, 顺带同步有效期) */
+    public function actionLicenseVerify()
     {
+        $key = setting('license_key');
+        if ($key === '') json_out(['code' => 1, 'msg' => '本站尚未激活授权码']);
         try {
-            License::login(trim(arr_get($_POST, 'username')), arr_get($_POST, 'password'));
-            json_out(['code' => 0, 'msg' => '登录成功']);
+            License::activate($key);
+            json_out(['code' => 0, 'msg' => License::isPro() ? '授权有效 ✓ 专业版' : '授权有效 ✓']);
         } catch (Exception $ex) {
             json_out(['code' => 1, 'msg' => $ex->getMessage()]);
         }
@@ -528,44 +570,6 @@ class AdminController
             json_out(['code' => 0, 'msg' => '专业版激活成功, 已解锁全部付费应用']);
         } catch (Exception $ex) {
             json_out(['code' => 1, 'msg' => $ex->getMessage()]);
-        }
-    }
-
-    public function actionLicenseLogout()
-    {
-        License::logout();
-        json_out(['code' => 0, 'msg' => '已退出登录']);
-    }
-
-    protected function trySync($force = false)
-    {
-        if (!License::isAuthed()) return;
-        $last = (int)setting('license_sync_at', '0');
-        if (!$force && now() - $last < 3600) return;
-        try {
-            $api = Market::apiUrl();
-            $token = setting('auth_token');
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $api . '/api/me');
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['token' => $token, 'domain' => isset($_SERVER['HTTP_HOST']) ? strtolower($_SERVER['HTTP_HOST']) : '']));
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 8);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-            $res = curl_exec($ch);
-            curl_close($ch);
-            $json = json_decode((string)$res, true);
-            if (is_array($json) && isset($json['code']) && $json['code'] === 0 && isset($json['data']['membership'])) {
-                setting_set('license_type', $json['data']['membership'] === 'pro' ? 'pro' : 'free');
-                setting_set('license_expires', (string)(int)(isset($json['data']['expires']) ? $json['data']['expires'] : 0));
-                // 主控为授权唯一事实来源: 同步授权标识
-                if (isset($json['data']['license_key'])) {
-                    setting_set('license_key', (string)$json['data']['license_key']);
-                }
-            }
-            setting_set('license_sync_at', (string)now());
-        } catch (Exception $ex) {
         }
     }
 
@@ -699,124 +703,6 @@ class AdminController
         setting_set('singlepage_content', trim(arr_get($_POST, 'content')));
         add_log('system', '管理员更新单页设置(状态: ' . ($open === '1' ? '开启' : '关闭') . ')');
         json_out(['code' => 0, 'msg' => '单页设置已保存']);
-    }
-
-    // ---------- 商店自助购买(码支付/USDT → 专业版) ----------
-
-    public function actionStorepaySave()
-    {
-        $keys = ['storepay_usdt', 'storepay_codepay_api', 'storepay_codepay_pid', 'storepay_codepay_key'];
-        foreach ($keys as $k) {
-            if (isset($_POST[$k])) setting_set($k, trim((string)$_POST[$k]));
-        }
-        if (isset($_POST['storepay_price'])) setting_set('storepay_price', (string)max(1, (int)$_POST['storepay_price']));
-        if (isset($_POST['storepay_usdt_amount'])) setting_set('storepay_usdt_amount', (string)max(0.01, (float)$_POST['storepay_usdt_amount']));
-        add_log('store', '管理员更新商店收款配置');
-        json_out(['code' => 0, 'msg' => '收款配置已保存']);
-    }
-
-    public function actionStorepayCreate()
-    {
-        $channel = arr_get($_POST, 'channel') === 'codepay' ? 'codepay' : 'usdt';
-        if (self::pendingStoreOrder()) json_out(['code' => 1, 'msg' => '已有待支付订单, 请先完成或取消']);
-        $sn = 'SP' . date('Ymd') . strtoupper(bin2hex(random_bytes(6)));
-        if ($channel === 'codepay') {
-            $api = trim(setting('storepay_codepay_api'));
-            $pid = trim(setting('storepay_codepay_pid'));
-            $key = trim(setting('storepay_codepay_key'));
-            if ($api === '' || $pid === '' || $key === '') json_out(['code' => 1, 'msg' => '请先在下方配置码支付网关/PID/密钥']);
-            $price = (float)setting('storepay_price', '99');
-            DB::insert('store_orders', [
-                'sn' => $sn, 'channel' => 'codepay',
-                'pay_type' => in_array(arr_get($_POST, 'pay_type'), ['alipay', 'wxpay', 'qqpay'], true) ? arr_get($_POST, 'pay_type') : 'alipay',
-                'amount' => $price, 'status' => 0, 'created_at' => now(),
-            ]);
-            add_log('store', '发起商店购买(码支付): ' . $sn);
-            $url = EpayClient::buildSubmit(
-                $api, $pid, $key,
-                in_array(arr_get($_POST, 'pay_type'), ['alipay', 'wxpay', 'qqpay'], true) ? arr_get($_POST, 'pay_type') : 'alipay',
-                ['sn' => $sn, 'product_name' => '坤发卡专业版会员', 'total' => $price],
-                site_url('index.php?s=/storepay/notify'),
-                au('license'),
-                setting('site_name', '坤发卡')
-            );
-            json_out(['code' => 0, 'msg' => '正在跳转支付', 'redirect' => $url, 'sn' => $sn]);
-        }
-        // USDT: 基础数量 + 唯一尾数(防撞单)
-        $addr = trim(setting('storepay_usdt'));
-        if ($addr === '') json_out(['code' => 1, 'msg' => '请先在下方配置USDT(TRC20)收款地址']);
-        $base = (float)setting('storepay_usdt_amount', '15');
-        $amount = 0.0;
-        for ($i = 0; $i < 30; $i++) {
-            $try = (float)number_format($base + mt_rand(1, 999999) / 1000000, 6, '.', '');
-            $dup = DB::fetch('SELECT id FROM store_orders WHERE status = 0 AND channel = \'usdt\' AND amount = ?', [$try]);
-            if (!$dup) { $amount = $try; break; }
-        }
-        if ($amount <= 0) json_out(['code' => 1, 'msg' => '金额分配失败, 请重试']);
-        DB::insert('store_orders', ['sn' => $sn, 'channel' => 'usdt', 'amount' => $amount, 'status' => 0, 'created_at' => now()]);
-        add_log('store', '发起商店购买(USDT): ' . $sn . ' 金额 ' . $amount);
-        json_out(['code' => 0, 'msg' => '订单已创建', 'sn' => $sn]);
-    }
-
-    public function actionStorepayCheck()
-    {
-        $sn = trim(arr_get($_POST, 'sn'));
-        $order = DB::fetch('SELECT * FROM store_orders WHERE sn = ?', [$sn]);
-        if (!$order) json_out(['code' => 1, 'msg' => '订单不存在']);
-        if ((int)$order['status'] === 1) json_out(['code' => 0, 'paid' => true]);
-        if ((int)$order['status'] !== 0) json_out(['code' => 0, 'paid' => false, 'msg' => '订单已取消']);
-        if ($order['channel'] === 'codepay') {
-            // 易支付协议订单查询接口
-            $api = rtrim(trim(setting('storepay_codepay_api')), '/');
-            $pid = trim(setting('storepay_codepay_pid'));
-            $key = trim(setting('storepay_codepay_key'));
-            if ($api === '' || $key === '') json_out(['code' => 1, 'msg' => '码支付未配置']);
-            $qs = http_build_query(['act' => 'order', 'pid' => $pid, 'key' => $key, 'out_trade_no' => $sn]);
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, (stripos($api, 'http') === 0 ? $api : 'https://' . $api) . '/api.php?' . $qs);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            $res = curl_exec($ch);
-            curl_close($ch);
-            $j = json_decode((string)$res, true);
-            if (is_array($j) && isset($j['status']) && (int)$j['status'] === 1) {
-                DB::update('store_orders', ['status' => 1, 'txid' => trim((string)($j['trade_no'] ?? '')), 'paid_at' => now()], 'id = ?', [(int)$order['id']]);
-                StorepayController::activatePro($sn);
-                json_out(['code' => 0, 'paid' => true]);
-            }
-            json_out(['code' => 0, 'paid' => false]);
-        }
-        // USDT: 链上精确金额匹配
-        $addr = trim(setting('storepay_usdt'));
-        try {
-            $list = TronService::getTransfers($addr, (int)$order['created_at'] - 120);
-        } catch (Exception $ex) {
-            json_out(['code' => 0, 'paid' => false, 'msg' => '链上查询失败, 稍后重试']);
-        }
-        foreach ($list as $t) {
-            if ((float)$t['amount'] === (float)$order['amount']) {
-                DB::update('store_orders', ['status' => 1, 'txid' => $t['txid'], 'paid_at' => now()], 'id = ?', [(int)$order['id']]);
-                StorepayController::activatePro($sn);
-                json_out(['code' => 0, 'paid' => true]);
-            }
-        }
-        json_out(['code' => 0, 'paid' => false]);
-    }
-
-    public function actionStorepayCancel()
-    {
-        $sn = trim(arr_get($_POST, 'sn'));
-        $n = DB::update('store_orders', ['status' => 2], 'sn = ? AND status = 0', [$sn]);
-        if ($n <= 0) json_out(['code' => 1, 'msg' => '订单不存在或状态不可取消']);
-        add_log('store', '取消商店购买订单: ' . $sn);
-        json_out(['code' => 0, 'msg' => '订单已取消']);
-    }
-
-    /** 当前待支付的商店订单 */
-    protected static function pendingStoreOrder()
-    {
-        return DB::fetch('SELECT * FROM store_orders WHERE status = 0 ORDER BY id DESC LIMIT 1');
     }
 
     // ---------- 系统设置 ----------

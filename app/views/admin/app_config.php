@@ -15,9 +15,9 @@
                     <label><?= e($f['label']) ?></label>
                     <?php $val = isset($config[$f['key']]) && $config[$f['key']] !== '' ? $config[$f['key']] : (isset($f['default']) ? $f['default'] : ''); ?>
                     <?php if ($f['type'] === 'textarea'): ?>
-                        <textarea name="<?= e($f['key']) ?>" placeholder="<?= isset($f['default']) ? e($f['default']) : '' ?>"><?= e($val) ?></textarea>
+                        <textarea name="<?= e($f['key']) ?>" placeholder="<?= isset($f['default']) ? e($f['default']) : '' ?>" style="max-width:600px"><?= e($val) ?></textarea>
                     <?php elseif ($f['type'] === 'select'): ?>
-                        <select name="<?= e($f['key']) ?>" style="max-width:300px">
+                        <select name="<?= e($f['key']) ?>" style="max-width:600px">
                             <?php foreach (($f['options'] ?: []) as $ok => $ov): ?>
                                 <option value="<?= e($ok) ?>" <?= $val === (string)$ok ? 'selected' : '' ?>><?= e($ov) ?></option>
                             <?php endforeach; ?>
@@ -34,7 +34,7 @@
                             <?php endforeach; ?>
                         </div>
                     <?php else: ?>
-                        <input type="text" name="<?= e($f['key']) ?>" value="<?= e($val) ?>">
+                        <input type="text" name="<?= e($f['key']) ?>" value="<?= e($val) ?>" style="max-width:600px" class="<?= strlen((string)$val) > 40 ? 'mono' : '' ?>">
                     <?php endif; ?>
                     <?php if (!empty($f['desc'])): ?><div class="desc"><?= e($f['desc']) ?></div><?php endif; ?>
                 </div>
