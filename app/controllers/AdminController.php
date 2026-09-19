@@ -740,7 +740,7 @@ class AdminController
         $keys = ['site_name', 'site_url', 'theme', 'announcement', 'order_timeout', 'contact_qq',
             'smtp_open', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_ssl', 'official_api',
             'verify_mode', 'captcha_open', 'turnstile_open', 'turnstile_site_key', 'turnstile_secret_key',
-            'geetest_id', 'geetest_key', 'geetest_timeout', 'cdn_mode'];
+            'geetest_id', 'geetest_key', 'geetest_timeout', 'cdn_mode', 'member_open'];
         foreach ($keys as $k) {
             if (isset($_POST[$k])) setting_set($k, is_string($_POST[$k]) ? trim($_POST[$k]) : $_POST[$k]);
         }

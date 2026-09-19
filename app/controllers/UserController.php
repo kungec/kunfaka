@@ -7,6 +7,10 @@ class UserController
 {
     public function actionLogin()
     {
+        if (!member_open()) {
+            View::theme('error', ['msg' => '本站未开启会员功能, 无需登录即可购买, 可在「订单查询」页凭联系方式查单', 'pageTitle' => '功能未开启']);
+            return;
+        }
         if (current_user_id()) redirect(u('user/orders'));
         $error = '';
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -46,6 +50,10 @@ class UserController
 
     public function actionRegister()
     {
+        if (!member_open()) {
+            View::theme('error', ['msg' => '本站未开启会员注册, 无需登录即可购买, 可在「订单查询」页凭联系方式查单', 'pageTitle' => '功能未开启']);
+            return;
+        }
         if (current_user_id()) redirect(u('user/orders'));
         $error = '';
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -97,6 +105,10 @@ class UserController
     /** 我的订单 */
     public function actionOrders()
     {
+        if (!member_open()) {
+            View::theme('error', ['msg' => '本站未开启会员功能, 可在「订单查询」页凭联系方式查单', 'pageTitle' => '功能未开启']);
+            return;
+        }
         $uid = current_user_id();
         if (!$uid) redirect(u('user/login'));
         $orders = DB::fetchAll('SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC LIMIT 100', [$uid]);

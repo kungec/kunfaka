@@ -26,7 +26,7 @@
                 <a href="<?= u('user/orders') ?>">我的订单</a>
                 <span class="nav-user">👋 <?= e(isset($_SESSION['front_user_name']) ? $_SESSION['front_user_name'] : '') ?></span>
                 <a href="<?= u('user/logout') ?>">退出</a>
-            <?php else: ?>
+            <?php elseif (member_open()): ?>
                 <a href="<?= u('user/login') ?>">登录 / 注册</a>
             <?php endif; ?>
             <a href="<?= au('login') ?>">管理后台</a>

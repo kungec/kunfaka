@@ -39,6 +39,14 @@
                 </select>
             </div>
             <div class="form-row">
+                <label>前台会员(注册/登录)</label>
+                <select name="member_open">
+                    <option value="1" <?= setting('member_open', '1') === '1' ? 'selected' : '' ?>>开启(默认)</option>
+                    <option value="0" <?= setting('member_open', '1') !== '1' ? 'selected' : '' ?>>关闭(纯游客购买)</option>
+                </select>
+                <div class="desc">关闭后前台隐藏登录/注册入口, 已注册会员无法登录; 买家无需登录直接购买, 凭联系方式在「订单查询」查单。历史会员数据保留。</div>
+            </div>
+            <div class="form-row">
                 <label>下单联系方式</label>
                 <input type="hidden" name="contact_types_submitted" value="1">
                 <div class="chk-group">

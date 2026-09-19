@@ -172,8 +172,14 @@ function send_mail($to, $subject, $body) {
     }
 }
 
-/** 当前登录前台会员ID(未登录0) */
+/** 前台注册/登录功能是否开启(后台系统设置可关) */
+function member_open() {
+    return setting('member_open', '1') === '1';
+}
+
+/** 当前登录前台会员ID(未登录0; 会员功能关闭时视为游客) */
 function current_user_id() {
+    if (!member_open()) return 0;
     return isset($_SESSION['front_user_id']) ? (int)$_SESSION['front_user_id'] : 0;
 }
 

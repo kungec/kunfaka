@@ -101,6 +101,9 @@ foreach ($settings as $k => $v) {
     $st->execute([$k, $v]);
     echo "OK: settings[{$k}]\n";
 }
+// member_open 仅首次插入(不覆盖站长已关闭的状态)
+$pdo->exec("INSERT IGNORE INTO settings (k, v) VALUES ('member_open', '1')");
+echo "OK: settings[member_open]\n";
 
 // 默认主题切换到云商城(v1.9): 仅当当前是旧默认 anime 时切换, 自选主题不动
 $cur = '';
