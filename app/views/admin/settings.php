@@ -71,6 +71,14 @@
                 <div class="desc">关闭后前台隐藏登录/注册入口, 已注册会员无法登录; 买家无需登录直接购买, 凭联系方式在「订单查询」查单。历史会员数据保留。</div>
             </div>
             <div class="form-row">
+                <label>伪静态(URL重写)</label>
+                <select name="url_rewrite">
+                    <option value="0" <?= setting('url_rewrite', '0') !== '1' ? 'selected' : '' ?>>关闭(默认, index.php?s=形式)</option>
+                    <option value="1" <?= setting('url_rewrite', '0') === '1' ? 'selected' : '' ?>>开启(/home/index 形式)</option>
+                </select>
+                <div class="desc">开启后前台链接变为 /home/index 等路径形式。需服务器支持回退: Nginx 加 <span class="mono">location / { try_files $uri $uri/ /index.php$is_args$args; }</span>; Apache 用根目录 .htaccess 的 RewriteRule 回退 index.php。未配置回退时开启会导致前台打不开, 请先配好服务器再开启。</div>
+            </div>
+            <div class="form-row">
                 <label>下单联系方式</label>
                 <input type="hidden" name="contact_types_submitted" value="1">
                 <div class="chk-group">

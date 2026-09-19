@@ -1445,7 +1445,7 @@ class AdminController
             setting_set('contact_types', implode(',', $picked));
         }
         $keys = ['site_name', 'site_url', 'theme', 'announcement', 'order_timeout',
-            'logo_type', 'logo_text',
+            'logo_type', 'logo_text', 'url_rewrite',
             'smtp_open', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_ssl', 'official_api',
             'verify_mode', 'captcha_open', 'turnstile_open', 'turnstile_site_key', 'turnstile_secret_key',
             'geetest_id', 'geetest_key', 'geetest_timeout', 'cdn_mode', 'member_open'];
@@ -1481,6 +1481,10 @@ class AdminController
         // CDN模式白名单兜底(仅允许三个合法值)
         if (isset($_POST['cdn_mode']) && !in_array($_POST['cdn_mode'], ['off', 'cloudflare', 'cdn'], true)) {
             setting_set('cdn_mode', 'off');
+        }
+        // 伪静态开关白名单兜底
+        if (isset($_POST['url_rewrite']) && !in_array($_POST['url_rewrite'], ['0', '1'], true)) {
+            setting_set('url_rewrite', '0');
         }
         json_out(['code' => 0, 'msg' => '设置已保存']);
     }

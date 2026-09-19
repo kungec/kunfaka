@@ -62,6 +62,14 @@ function site_url($path = '') {
 
 /** 前台URL */
 function u($route, $params = []) {
+    $path = '/' . ltrim($route, '/');
+    // 伪静态开启: 前台输出路径形式URL(需服务器将不存在路径回退到 index.php)
+    try {
+        if (setting('url_rewrite', '0') === '1') {
+            return site_url($path) . ($params ? '?' . http_build_query($params) : '');
+        }
+    } catch (Exception $ex) {
+    }
     $q = 'index.php?s=/' . ltrim($route, '/');
     if ($params) $q .= '&' . http_build_query($params);
     return site_url($q);
