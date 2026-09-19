@@ -136,6 +136,15 @@ foreach ([
 $pdo->exec("UPDATE admin_users SET role = 'super' WHERE id = (SELECT id FROM (SELECT id FROM admin_users ORDER BY id ASC LIMIT 1) t) AND role <> 'super'");
 echo "OK: 首个管理员已设为超级管理员\n";
 
+// logs 表补 ua 列(v2.15.0 日志记录浏览器)
+$stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'logs' AND COLUMN_NAME = 'ua'");
+if ((int)$stmt->fetchColumn() === 0) {
+    $pdo->exec("ALTER TABLE `logs` ADD COLUMN `ua` varchar(255) NOT NULL DEFAULT '' COMMENT '浏览器UA'");
+    echo "OK: logs 表已添加 ua 列\n";
+} else {
+    echo "SKIP: logs.ua 已存在\n";
+}
+
 // 系统日志表(v1.4→v1.5)
 $pdo->exec("CREATE TABLE IF NOT EXISTS `logs` (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,

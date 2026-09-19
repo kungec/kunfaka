@@ -226,6 +226,7 @@ function add_log($type, $message) {
             'type' => substr(trim($type), 0, 20),
             'message' => mb_substr((string)$message, 0, 500),
             'ip' => client_ip(),
+            'ua' => substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255),
             'created_at' => now(),
         ]);
     } catch (Exception $ex) {

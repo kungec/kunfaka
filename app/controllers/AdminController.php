@@ -1269,20 +1269,57 @@ class AdminController
 
     public function actionLogs()
     {
-        $type = trim(arr_get($_GET, 'type'));
         $where = '1';
         $params = [];
+        $type = trim(arr_get($_GET, 'type'));
         if ($type !== '') {
             $where .= ' AND type = ?';
             $params[] = $type;
         }
-        $total = (int)DB::value("SELECT COUNT(*) FROM logs WHERE {$where}", $params);
-        $list = DB::fetchAll("SELECT * FROM logs WHERE {$where} ORDER BY id DESC LIMIT 100", $params);
-        View::admin('logs', ['list' => $list, 'total' => $total, 'type' => $type]);
+        $kw = trim(arr_get($_GET, 'kw'));
+        if ($kw !== '') {
+            $where .= ' AND message LIKE ?';
+            $params[] = '%' . $kw . '%';
+        }
+        $ip = trim(arr_get($_GET, 'ip'));
+        if ($ip !== '') {
+            $where .= ' AND ip = ?';
+            $params[] = $ip;
+        }
+        $from = trim(arr_get($_GET, 'date_from'));
+        if ($from !== '' && ($ts = strtotime($from)) > 0) {
+            $where .= ' AND created_at >= ?';
+            $params[] = $ts;
+        }
+        $to = trim(arr_get($_GET, 'date_to'));
+        if ($to !== '' && ($ts = strtotime($to)) > 0) {
+            $where .= ' AND created_at <= ?';
+            $params[] = $ts + 86399;
+        }
+        // 风险评估: 按日志内容关键词分级(最多取500条后内存过滤)
+        $risk = (string)arr_get($_GET, 'risk', '');
+        $rows = DB::fetchAll("SELECT * FROM logs WHERE {$where} ORDER BY id DESC LIMIT 500", $params);
+        $isHigh = function ($m) {
+            return preg_match('/删除|清理|清空|禁用|移除|销毁|吊销|失败|拦截|错误/', (string)$m) === 1;
+        };
+        if ($risk === 'high' || $risk === 'low') {
+            $rows = array_values(array_filter($rows, function ($r) use ($isHigh, $risk) {
+                return $risk === 'high' ? $isHigh($r['message']) : !$isHigh($r['message']);
+            }));
+        }
+        $total = count($rows);
+        $list = array_slice($rows, 0, 100);
+        View::admin('logs', ['list' => $list, 'total' => $total, 'type' => $type, 'risk' => $risk, 'kw' => $kw, 'ip' => $ip]);
     }
 
     public function actionLogsClear()
     {
+        $scope = arr_get($_POST, 'scope', 'all');
+        if ($scope === '30') {
+            $n = DB::exec('DELETE FROM logs WHERE created_at < ?', [now() - 30 * 86400]);
+            add_log('system', '管理员清理30天前日志, 共 ' . $n . ' 条');
+            json_out(['code' => 0, 'msg' => '已清理 ' . $n . ' 条30天前日志']);
+        }
         $n = (int)DB::value('SELECT COUNT(*) FROM logs');
         DB::exec('DELETE FROM logs');
         add_log('system', '管理员清空系统日志(原 ' . $n . ' 条)');

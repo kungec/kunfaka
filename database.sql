@@ -131,6 +131,7 @@ CREATE TABLE IF NOT EXISTS `logs` (
   `type` varchar(20) NOT NULL DEFAULT 'system' COMMENT 'admin/user/pay/usdt/store/system',
   `message` text NULL,
   `ip` varchar(45) NOT NULL DEFAULT '',
+  `ua` varchar(255) NOT NULL DEFAULT '' COMMENT '浏览器UA',
   `created_at` int unsigned NOT NULL DEFAULT 0,
   KEY `idx_type` (`type`,`created_at`),
   KEY `idx_created` (`created_at`)
