@@ -23,6 +23,30 @@
                 <input type="text" name="site_name" value="<?= e(setting('site_name', '坤发卡')) ?>">
             </div>
             <div class="form-row">
+                <label>网站 Logo</label>
+                <?php $logoType = setting('logo_type', 'default'); ?>
+                <select name="logo_type" onchange="document.getElementById('logoTextRow').style.display=this.value==='text'?'block':'none';document.getElementById('logoImageRow').style.display=this.value==='image'?'block':'none'">
+                    <option value="default" <?= $logoType === 'default' ? 'selected' : '' ?>>默认样式(图标 + 站点名)</option>
+                    <option value="text" <?= $logoType === 'text' ? 'selected' : '' ?>>文字 Logo(纯文字)</option>
+                    <option value="image" <?= $logoType === 'image' ? 'selected' : '' ?>>图片 Logo(上传)</option>
+                </select>
+                <div class="desc">作用于前台所有主题的左上角站点标识。</div>
+            </div>
+            <div class="form-row" id="logoTextRow" style="display:<?= $logoType === 'text' ? 'block' : 'none' ?>">
+                <label>Logo 文字(留空则显示站点名称)</label>
+                <input type="text" name="logo_text" value="<?= e(setting('logo_text', '')) ?>" maxlength="20" placeholder="如 KUNFAKA">
+            </div>
+            <div class="form-row" id="logoImageRow" style="display:<?= $logoType === 'image' ? 'block' : 'none' ?>">
+                <label>Logo 图片(png / webp / jpg, ≤2MB, 建议透明底; 换用其他类型会自动停用图片)</label>
+                <input type="file" name="logo_image_file" accept=".png,.webp,.jpg,.jpeg">
+                <?php if (setting('logo_image')): ?>
+                    <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+                        <span style="font-size:11.5px;color:var(--muted)">当前:</span>
+                        <img src="<?= e(site_url(setting('logo_image'))) ?>" alt="logo" style="height:34px;max-width:160px;object-fit:contain;background:var(--input-bg);border-radius:6px;padding:3px">
+                    </div>
+                <?php endif; ?>
+            </div>
+            <div class="form-row">
                 <label>网站地址(支付回调用)</label>
                 <input type="text" name="site_url" value="<?= e(setting('site_url')) ?>" placeholder="https://shop.example.com">
             </div>

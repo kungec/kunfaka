@@ -15,7 +15,7 @@
 </div>
 <header class="site-header">
     <div class="wrap header-inner">
-        <a class="logo" href="<?= u('home/index') ?>"><span class="logo-icon">✦</span><?= e(setting('site_name', '坤发卡')) ?></a>
+        <a class="logo" href="<?= u('home/index') ?>"><?php $logoHtml = site_logo_html('✦'); echo $logoHtml !== null ? $logoHtml : '<span class="logo-icon">✦</span>' . e(setting('site_name', '坤发卡')); ?></a>
         <button class="nav-burger" id="navBurger" aria-label="打开菜单"><span></span><span></span><span></span></button>
         <nav class="nav" id="siteNav">
             <a href="<?= u('home/index') ?>">商品首页</a>

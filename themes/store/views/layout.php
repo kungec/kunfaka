@@ -22,10 +22,7 @@
 <body>
 <header class="site-header">
     <div class="wrap header-inner">
-        <a class="logo" href="<?= u('home/index') ?>">
-            <span class="logo-mark"><?= e(mb_substr(setting('site_name', '云'), 0, 1)) ?></span>
-            <span><?= e(setting('site_name', '坤发卡')) ?></span>
-        </a>
+        <a class="logo" href="<?= u('home/index') ?>"><?php $logoHtml = site_logo_html(); echo $logoHtml !== null ? $logoHtml : '<span class="logo-mark">' . e(mb_substr(setting('site_name', '云'), 0, 1)) . '</span><span>' . e(setting('site_name', '坤发卡')) . '</span>'; ?></a>
         <button class="nav-burger" id="navBurger" aria-label="打开菜单"><span></span><span></span><span></span></button>
         <nav class="nav" id="siteNav">
             <a href="<?= u('home/index') ?>">全部商品</a>

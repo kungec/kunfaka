@@ -182,6 +182,19 @@ function cat_list() {
     return DB::fetchAll('SELECT * FROM categories WHERE status = 1 ORDER BY sort ASC, id ASC');
 }
 
+/** 前台站点Logo(按系统设置: 图片/文字; 返回null表示使用主题默认样式) */
+function site_logo_html($fallbackMark = '') {
+    $type = setting('logo_type', 'default');
+    $name = setting('site_name', '坤发卡');
+    if ($type === 'image' && setting('logo_image')) {
+        return '<img src="' . e(site_url(setting('logo_image'))) . '" alt="' . e($name) . '" style="height:38px;max-width:200px;object-fit:contain">';
+    }
+    if ($type === 'text') {
+        return '<span style="font-weight:800;font-size:17px;letter-spacing:.5px">' . e(setting('logo_text') ?: $name) . '</span>';
+    }
+    return null;
+}
+
 /** 当前访客的会员等级数值(游客/无等级为0) */
 function viewer_level() {
     $uid = current_user_id();

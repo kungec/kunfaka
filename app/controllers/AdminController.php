@@ -1445,11 +1445,38 @@ class AdminController
             setting_set('contact_types', implode(',', $picked));
         }
         $keys = ['site_name', 'site_url', 'theme', 'announcement', 'order_timeout',
+            'logo_type', 'logo_text',
             'smtp_open', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_ssl', 'official_api',
             'verify_mode', 'captcha_open', 'turnstile_open', 'turnstile_site_key', 'turnstile_secret_key',
             'geetest_id', 'geetest_key', 'geetest_timeout', 'cdn_mode', 'member_open'];
         foreach ($keys as $k) {
             if (isset($_POST[$k])) setting_set($k, is_string($_POST[$k]) ? trim($_POST[$k]) : $_POST[$k]);
+        }
+        // Logo 类型白名单 + 图片上传
+        if (isset($_POST['logo_type']) && !in_array($_POST['logo_type'], ['default', 'text', 'image'], true)) {
+            setting_set('logo_type', 'default');
+        }
+        if (!empty($_FILES['logo_image_file']['tmp_name']) && $_FILES['logo_image_file']['error'] === UPLOAD_ERR_OK) {
+            $f = $_FILES['logo_image_file'];
+            if ($f['size'] > 2 * 1024 * 1024) {
+                json_out(['code' => 1, 'msg' => 'Logo 图片不能超过2MB']);
+            }
+            $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, ['png', 'webp', 'jpg', 'jpeg'], true)) {
+                json_out(['code' => 1, 'msg' => 'Logo 仅支持 png/webp/jpg 图片']);
+            }
+            if (@getimagesize($f['tmp_name']) === false) {
+                json_out(['code' => 1, 'msg' => 'Logo 文件不是有效图片']);
+            }
+            $dir = YF_ROOT . '/uploads';
+            if (!is_dir($dir)) @mkdir($dir, 0755, true);
+            $fname = 'logo_' . bin2hex(random_bytes(8)) . '.' . $ext;
+            if (!move_uploaded_file($f['tmp_name'], $dir . '/' . $fname)) {
+                json_out(['code' => 1, 'msg' => 'Logo 保存失败, 请检查目录权限']);
+            }
+            $oldLogo = setting('logo_image');
+            if ($oldLogo && strpos($oldLogo, 'uploads/') === 0) @unlink(YF_ROOT . '/' . $oldLogo);
+            setting_set('logo_image', 'uploads/' . $fname);
         }
         // CDN模式白名单兜底(仅允许三个合法值)
         if (isset($_POST['cdn_mode']) && !in_array($_POST['cdn_mode'], ['off', 'cloudflare', 'cdn'], true)) {
