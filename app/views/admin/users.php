@@ -1,54 +1,161 @@
-<?php $activeMenu = 'users'; $pages = max(1, (int)ceil($total / $per)); ?>
+<?php $activeMenu = 'users'; $pages = max(1, (int)ceil($total / $per));
+$curStatus = isset($_GET['status']) ? (string)$_GET['status'] : '';
+/* 保留当前筛选条件 */
+$f = [];
+foreach (['username', 'uid', 'email', 'reg_ip', 'status'] as $k) {
+    $v = isset($_GET[$k]) ? (string)$_GET[$k] : '';
+    if ($v !== '') $f[$k] = $v;
+}
+$tabLink = function ($status) use ($f) {
+    $p = $f;
+    if ($status !== '') $p['status'] = $status;
+    return au('users', $p);
+};
+$pageLink = function ($i) use ($f) {
+    $p = $f;
+    if ($i > 1) $p['page'] = $i;
+    return au('users', $p);
+};
+?>
+<style>
+.u-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:9px 10px}
+.u-filters .uf label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600}
+.u-filters input{width:100%;height:36px;padding:0 10px;font-size:12.5px}
+.u-tabs{display:flex;gap:7px;margin:14px 0 0}
+.u-tabs a{padding:6px 16px;border-radius:8px;border:1.5px solid var(--input-border);font-size:12.5px;font-weight:600;color:var(--text2);text-decoration:none;transition:.12s}
+.u-tabs a.on{border-color:var(--text);color:var(--text);background:var(--input-bg)}
+.u-tabs a:hover{border-color:var(--muted)}
+th.u-chk,td.u-chk{width:34px;text-align:center}
+.u-name b{display:block;font-size:13px}
+.u-name small{color:var(--muted);font-size:10.5px}
+.u-empty{text-align:center;padding:34px 0;color:var(--muted)}
+.u-empty .ico{font-size:34px;margin-bottom:6px;opacity:.55}
+.u-total{font-size:12px;color:var(--muted);padding:10px 2px 0}
+</style>
+
+<div class="page-head">
+    <div>
+        <h2>👥 会员管理</h2>
+        <div class="sub">前台注册会员的查询 · 批量启用/禁用 · 移除</div>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="stat"><div class="s-label">总用户</div><div class="s-val"><?= (int)$stats['total'] ?></div><div class="s-sub">全部注册会员</div></div>
+    <div class="stat"><div class="s-label">今日新增</div><div class="s-val v-ok"><?= (int)$stats['today'] ?></div><div class="s-sub">今日注册</div></div>
+    <div class="stat"><div class="s-label">已封禁</div><div class="s-val v-warn"><?= (int)$stats['banned'] ?></div><div class="s-sub">禁用状态会员</div></div>
+    <div class="stat"><div class="s-label">会员成交订单</div><div class="s-val v-primary"><?= (int)$stats['paid_orders'] ?></div><div class="s-sub">会员身份完成的订单</div></div>
+</div>
+
 <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-        <h3 style="margin:0">会员列表 <span class="tag"><?= (int)$total ?> 人</span></h3>
-        <form class="form-inline" method="get" action="<?= site_url('admin.php') ?>">
-            <input type="hidden" name="s" value="/users">
-            <input type="text" name="kw" value="<?= e($kw) ?>" placeholder="用户名/邮箱">
-            <button class="btn" type="submit">搜索</button>
-        </form>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+        <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <button class="btn sm" id="enableBtn" disabled data-op="enable" data-confirm="确定启用选中的会员?">✓ 启用选中</button>
+            <button class="btn sm gray" id="disableBtn" disabled data-op="disable" data-confirm="确定禁用选中的会员? 禁用后其账号将无法登录">🚫 禁用选中</button>
+            <button class="btn sm red" id="delBtn" disabled data-op="delete" data-confirm="⚠ 确定移除选中的会员? 账号不可恢复(历史订单保留)">🗑 移除选中用户</button>
+        </div>
+        <span class="dim" style="font-size:11.5px">Tips: 勾选会员后可批量启用 / 禁用 / 移除</span>
+    </div>
+
+    <form method="get" action="<?= site_url('admin.php') ?>">
+        <input type="hidden" name="s" value="/users">
+        <div class="u-filters">
+            <div class="uf"><label>用户名</label><input type="text" name="username" value="<?= e(arr_get($_GET, 'username')) ?>"></div>
+            <div class="uf"><label>UID</label><input type="number" name="uid" value="<?= e(arr_get($_GET, 'uid')) ?>"></div>
+            <div class="uf"><label>邮箱</label><input type="text" name="email" value="<?= e(arr_get($_GET, 'email')) ?>"></div>
+            <div class="uf"><label>注册IP</label><input type="text" name="reg_ip" value="<?= e(arr_get($_GET, 'reg_ip')) ?>"></div>
+            <div class="uf"><label>&nbsp;</label><button class="btn" type="submit" style="width:100%">🔍 查询</button></div>
+        </div>
+    </form>
+
+    <div class="u-tabs">
+        <a href="<?= e($tabLink('')) ?>" class="<?= $curStatus === '' ? 'on' : '' ?>">全部</a>
+        <a href="<?= e($tabLink('1')) ?>" class="<?= $curStatus === '1' ? 'on' : '' ?>">正常</a>
+        <a href="<?= e($tabLink('0')) ?>" class="<?= $curStatus === '0' ? 'on' : '' ?>">封禁</a>
     </div>
 </div>
 
 <div class="card">
-    <table class="tb">
-        <tr><th>ID</th><th>用户名</th><th>邮箱</th><th>成功订单</th><th>注册IP</th><th>注册时间</th><th>状态</th><th>操作</th></tr>
-        <?php foreach ($list as $u): ?>
+    <table class="tb" id="userTable">
+        <thead>
+        <tr>
+            <th class="u-chk"><input type="checkbox" id="chkAll" style="width:auto"></th>
+            <th>用户名</th>
+            <th>邮箱</th>
+            <th>成功订单</th>
+            <th>注册IP</th>
+            <th>注册时间</th>
+            <th>状态</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($list as $u): $sid = (int)$u['status']; ?>
             <tr>
-                <td><?= (int)$u['id'] ?></td>
-                <td><?= e($u['username']) ?></td>
-                <td class="dim"><?= e($u['email'] ?: '-') ?></td>
+                <td class="u-chk"><input type="checkbox" class="row-chk" value="<?= (int)$u['id'] ?>" style="width:auto"></td>
+                <td class="u-name"><b><?= e($u['username']) ?></b><small>UID <?= (int)$u['id'] ?></small></td>
+                <td class="dim"><?= e($u['email'] ?: '—') ?></td>
                 <td><?= (int)$u['orders_count'] ?></td>
-                <td class="dim mono"><?= e($u['reg_ip']) ?></td>
+                <td class="dim mono"><?= e($u['reg_ip'] ?: '—') ?></td>
                 <td class="dim"><?= e(date('Y-m-d H:i', $u['created_at'])) ?></td>
-                <td><span class="tag <?= (int)$u['status'] === 1 ? 'ok' : 'bad' ?>"><?= (int)$u['status'] === 1 ? '正常' : '已禁用' ?></span></td>
+                <td><span class="tag <?= $sid === 1 ? 'ok' : 'bad' ?>"><?= $sid === 1 ? '正常' : '已封禁' ?></span></td>
                 <td class="actions">
-                    <button class="btn sm gray" data-toggle="<?= (int)$u['id'] ?>"><?= (int)$u['status'] === 1 ? '禁用' : '启用' ?></button>
-                    <button class="btn sm red" data-confirm="确定删除该会员? 其历史订单将保留" data-del="<?= (int)$u['id'] ?>">删除</button>
+                    <button class="btn sm gray" data-toggle="<?= (int)$u['id'] ?>" data-confirm="<?= $sid === 1 ? '确定禁用该会员? 其账号将无法登录' : '确定启用该会员?' ?>"><?= $sid === 1 ? '禁用' : '启用' ?></button>
+                    <button class="btn sm red" data-del="<?= (int)$u['id'] ?>" data-confirm="确定移除会员 <?= e($u['username']) ?> ? 账号不可恢复(历史订单保留)">删除</button>
                 </td>
             </tr>
         <?php endforeach; ?>
-        <?php if (!$list): ?><tr><td colspan="8" class="dim" style="text-align:center">暂无会员</td></tr><?php endif; ?>
+        <?php if (!$list): ?><tr><td colspan="8"><div class="u-empty"><div class="ico">🗂</div>暂无数据</div></td></tr><?php endif; ?>
+        </tbody>
     </table>
+    <div class="u-total">共 <?= (int)$total ?> 条</div>
     <?php if ($pages > 1): ?>
         <div class="pager">
             <?php for ($i = 1; $i <= min($pages, 12); $i++): ?>
-                <a class="<?= $i === $page ? 'on' : '' ?>" href="<?= au('users', array_filter(['kw' => $kw, 'page' => $i > 1 ? $i : ''], function ($v) { return $v !== '' && $v !== null; })) ?>"><?= $i ?></a>
+                <a class="<?= $i === $page ? 'on' : '' ?>" href="<?= e($pageLink($i)) ?>"><?= $i ?></a>
             <?php endfor; ?>
         </div>
     <?php endif; ?>
 </div>
 
 <script>
+var chkAll = document.getElementById('chkAll');
+function rowChks() { return Array.prototype.slice.call(document.querySelectorAll('.row-chk')); }
+function syncBtns() {
+    var n = rowChks().filter(function (c) { return c.checked; }).length;
+    ['enableBtn', 'disableBtn', 'delBtn'].forEach(function (id) {
+        var b = document.getElementById(id);
+        if (b) b.disabled = n === 0;
+    });
+}
+if (chkAll) chkAll.addEventListener('change', function () {
+    rowChks().forEach(function (c) { c.checked = chkAll.checked; });
+    syncBtns();
+});
+document.addEventListener('change', function (ev) {
+    if (ev.target.classList && ev.target.classList.contains('row-chk')) syncBtns();
+});
+function yfPost(url, fd) {
+    fd.append('_csrf', '<?= e(csrf_token()) ?>');
+    return fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { return r.json(); });
+}
 document.addEventListener('click', function (ev) {
-    var t = ev.target.closest ? ev.target.closest('[data-toggle],[data-del]') : null;
+    var t = ev.target.closest ? ev.target.closest('[data-toggle],[data-del],[data-op]') : null;
     if (!t) return;
     var fd = new FormData();
-    fd.append('_csrf', '<?= e(csrf_token()) ?>');
+    if (t.hasAttribute('data-op')) {
+        var ids = rowChks().filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
+        if (!ids.length) return;
+        if (!confirm(t.getAttribute('data-confirm') || '确定执行该操作?')) return;
+        ids.forEach(function (v) { fd.append('ids[]', v); });
+        fd.append('op', t.getAttribute('data-op'));
+        yfPost('<?= au('users_batch') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+        return;
+    }
+    if (!confirm(t.getAttribute('data-confirm') || '确定执行该操作?')) return;
     fd.append('id', t.getAttribute('data-toggle') || t.getAttribute('data-del'));
     var url = t.hasAttribute('data-toggle') ? '<?= au('user_toggle') ?>' : '<?= au('user_del') ?>';
-    fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(function (r) { return r.json(); })
-        .then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+    yfPost(url, fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
 });
 </script>

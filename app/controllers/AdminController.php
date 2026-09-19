@@ -683,20 +683,63 @@ class AdminController
 
     public function actionUsers()
     {
-        $kw = trim(arr_get($_GET, 'kw'));
+        [$where, $params] = $this->userFilter();
         $page = max(1, (int)arr_get($_GET, 'page', 1));
         $per = 20;
-        $where = '1';
-        $params = [];
-        if ($kw !== '') {
-            $where .= ' AND (u.username LIKE ? OR u.email LIKE ?)';
-            $params = array_merge($params, ['%' . $kw . '%', '%' . $kw . '%']);
-        }
         $total = (int)DB::value("SELECT COUNT(*) FROM users u WHERE {$where}", $params);
         $list = DB::fetchAll(
             "SELECT u.*, (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id AND o.status = 1) AS orders_count
              FROM users u WHERE {$where} ORDER BY u.id DESC LIMIT {$per} OFFSET " . (($page - 1) * $per), $params);
-        View::admin('users', ['list' => $list, 'total' => $total, 'page' => $page, 'per' => $per, 'kw' => $kw]);
+        $todayStart = strtotime(date('Y-m-d'));
+        $stats = [
+            'total' => (int)DB::value('SELECT COUNT(*) FROM users'),
+            'today' => (int)DB::value('SELECT COUNT(*) FROM users WHERE created_at >= ?', [$todayStart]),
+            'banned' => (int)DB::value('SELECT COUNT(*) FROM users WHERE status = 0'),
+            'paid_orders' => (int)DB::value('SELECT COUNT(*) FROM orders WHERE status = 1 AND user_id > 0'),
+        ];
+        View::admin('users', ['list' => $list, 'total' => $total, 'page' => $page, 'per' => $per, 'stats' => $stats]);
+    }
+
+    /** 会员筛选条件(列表/统计共用) */
+    protected function userFilter()
+    {
+        $where = '1';
+        $params = [];
+        $name = trim(arr_get($_GET, 'username'));
+        if ($name !== '') { $where .= ' AND u.username LIKE ?'; $params[] = '%' . $name . '%'; }
+        $uid = arr_get($_GET, 'uid', '');
+        if ($uid !== '') { $where .= ' AND u.id = ?'; $params[] = (int)$uid; }
+        $email = trim(arr_get($_GET, 'email'));
+        if ($email !== '') { $where .= ' AND u.email LIKE ?'; $params[] = '%' . $email . '%'; }
+        $ip = trim(arr_get($_GET, 'reg_ip'));
+        if ($ip !== '') { $where .= ' AND u.reg_ip = ?'; $params[] = $ip; }
+        $status = arr_get($_GET, 'status', '');
+        if ($status !== '') { $where .= ' AND u.status = ?'; $params[] = (int)$status; }
+        return [$where, $params];
+    }
+
+    /** 批量操作选中会员(启用/禁用/删除) */
+    public function actionUsersBatch()
+    {
+        $op = trim(arr_get($_POST, 'op'));
+        $ids = array_values(array_filter(array_map('intval', is_array($_POST['ids'] ?? null) ? $_POST['ids'] : [])));
+        if (!$ids) json_out(['code' => 1, 'msg' => '未选择会员']);
+        $in = implode(',', $ids);
+        if ($op === 'enable') {
+            $n = DB::exec("UPDATE users SET status = 1 WHERE id IN ({$in})");
+            json_out(['code' => 0, 'msg' => '已启用 ' . $n . ' 位会员']);
+        }
+        if ($op === 'disable') {
+            $n = DB::exec("UPDATE users SET status = 0 WHERE id IN ({$in})");
+            add_log('admin', '管理员批量禁用会员 ' . $n . ' 名');
+            json_out(['code' => 0, 'msg' => '已禁用 ' . $n . ' 位会员']);
+        }
+        if ($op === 'delete') {
+            $n = DB::exec("DELETE FROM users WHERE id IN ({$in})");
+            add_log('admin', '管理员批量删除会员 ' . $n . ' 名(历史订单保留)');
+            json_out(['code' => 0, 'msg' => '已移除 ' . $n . ' 位会员(历史订单保留)']);
+        }
+        json_out(['code' => 1, 'msg' => '无效操作']);
     }
 
     public function actionUserToggle()
