@@ -21,7 +21,8 @@ $tabLink = function ($filter) use ($curName, $curAuthor, $type) {
 .mkt-hero .h-ico{font-size:22px}
 .mkt-hero .h-t{font-size:17px;font-weight:800;letter-spacing:.3px}
 .mkt-hero .h-s{font-size:12px;opacity:.85;margin-top:2px}
-.mkt-hero .h-arr{font-size:22px;font-weight:700}
+.mkt-hero .h-btn{flex:none;background:#fff;color:var(--info);font-weight:700;font-size:13px;padding:10px 20px;border-radius:9px;white-space:nowrap}
+.mkt-hero.is-pro .h-btn{background:rgba(255,255,255,.18);color:#fff}
 .mkt-hero.is-pro{background:var(--ok)}
 .mkt-filters{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end}
 .mkt-filters .mf label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600}
@@ -52,14 +53,14 @@ td.m-act .btn{margin:2px 2px 2px 0}
         <span class="h-l"><span class="h-ico">👑</span>
             <span><span class="h-t">开通专业版</span><br><span class="h-s">全部付费应用免费畅享 · 含USDT免挂支付等付费插件 · 一次开通 永久授权</span></span>
         </span>
-        <span class="h-arr">→</span>
+        <span class="h-btn">立即开通 →</span>
     </a>
 <?php else: ?>
     <a class="mkt-hero is-pro" href="<?= au('license') ?>">
         <span class="h-l"><span class="h-ico">👑</span>
             <span><span class="h-t">专业版授权已激活</span><br><span class="h-s">商店全部付费应用免费下载 · 后续新增应用同步免费</span></span>
         </span>
-        <span class="h-arr">→</span>
+        <span class="h-btn">管理授权 →</span>
     </a>
 <?php endif; ?>
 
@@ -134,27 +135,35 @@ td.m-act .btn{margin:2px 2px 2px 0}
                     <?php endif; ?>
                 </td>
                 <td class="m-act">
+                    <?php $proLocked = $app['pro'] && !License::isPro(); ?>
                     <?php if ($app['local']): ?>
                         <?php if (!$isTheme && $app['installed']): ?>
-                            <button class="btn sm gray" data-toggle="<?= e($app['name']) ?>"><?= $app['enabled'] ? '停用' : '启用' ?></button>
-                            <?php if ($app['enabled']): ?><a class="btn sm" href="<?= au('app_config', ['name' => $app['name'], 'type' => $type]) ?>">配置</a><?php endif; ?>
-                        <?php elseif (!$isTheme && !$app['installed']): ?>
-                            <?php if ($app['pro'] && !License::isPro()): ?>
-                                <button class="btn sm gray" disabled title="需专业版授权">安装(需专业版)</button>
+                            <?php if ($app['enabled']): ?>
+                                <button class="btn sm gray" data-toggle="<?= e($app['name']) ?>"><?= $proLocked ? '停用(专业版)' : '停用' ?></button>
+                                <a class="btn sm" href="<?= au('app_config', ['name' => $app['name'], 'type' => $type]) ?>">配置</a>
+                            <?php endif; ?>
+                            <?php if ($proLocked): ?>
+                                <a class="btn sm green" href="<?= au('license') ?>">👑 开通专业版</a>
+                            <?php elseif (!$app['enabled']): ?>
+                                <button class="btn sm green" data-toggle="<?= e($app['name']) ?>">启用</button>
+                            <?php endif; ?>
+                        <?php elseif (!$isTheme): ?>
+                            <?php if ($proLocked): ?>
+                                <a class="btn sm green" href="<?= au('license') ?>">👑 开通专业版</a>
                             <?php else: ?>
                                 <button class="btn sm green" data-install="<?= e($app['name']) ?>">安装</button>
                             <?php endif; ?>
                         <?php endif; ?>
                         <?php if ($isTheme): ?>
-                            <?php if ($app['pro'] && !License::isPro()): ?>
-                                <button class="btn sm gray" disabled title="需专业版授权">使用(需专业版)</button>
+                            <?php if ($proLocked): ?>
+                                <a class="btn sm green" href="<?= au('license') ?>">👑 开通专业版</a>
                             <?php else: ?>
                                 <button class="btn sm" data-usetheme="<?= e($app['name']) ?>">使用该主题</button>
                             <?php endif; ?>
                         <?php endif; ?>
                     <?php else: ?>
-                        <?php if ($app['pro'] && !License::isPro()): ?>
-                            <button class="btn sm gray" disabled>下载(需专业版)</button>
+                        <?php if ($proLocked): ?>
+                            <a class="btn sm green" href="<?= au('license') ?>">👑 开通专业版</a>
                         <?php else: ?>
                             <button class="btn sm green" data-download="<?= e($app['name']) ?>">下载安装</button>
                         <?php endif; ?>

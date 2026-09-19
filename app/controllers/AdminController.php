@@ -926,6 +926,11 @@ class AdminController
         $row = DB::fetch('SELECT * FROM apps WHERE name = ?', [$name]);
         if (!$row) json_out(['code' => 1, 'msg' => '请先安装该应用']);
         $enabled = (int)$row['enabled'] === 1 ? 0 : 1;
+        // 启用专业版应用需已激活专业版(停用不受限)
+        $meta = Plugin::meta($row['type'] ?? 'payment', $name);
+        if ($enabled === 1 && !empty($meta['pro']) && !License::isPro()) {
+            json_out(['code' => 2, 'msg' => '该应用为专业版专享, 请先在授权中心激活专业版']);
+        }
         DB::update('apps', ['enabled' => $enabled], 'name = ?', [$name]);
         json_out(['code' => 0, 'msg' => $enabled ? '已启用' : '已停用', 'enabled' => $enabled]);
     }
