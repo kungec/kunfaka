@@ -29,7 +29,6 @@
             <?php elseif (member_open()): ?>
                 <a href="<?= u('user/login') ?>">登录 / 注册</a>
             <?php endif; ?>
-            <a href="<?= au('login') ?>">管理后台</a>
         </nav>
     </div>
 </header>

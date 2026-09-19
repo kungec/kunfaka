@@ -39,7 +39,6 @@
             <?php elseif (member_open()): ?>
                 <a href="<?= u('user/login') ?>">登录 / 注册</a>
             <?php endif; ?>
-            <a href="<?= au('login') ?>">管理后台</a>
         </nav>
         <div class="header-acts">
             <button type="button" class="icon-btn" id="themeToggle" aria-label="切换主题" title="切换亮/暗模式">
@@ -68,11 +67,7 @@
                 <a href="<?= u('order/query') ?>">订单查询</a>
                 <a href="<?= u('notice/index') ?>">站点公告</a>
                 <?php if (member_open()): ?><a href="<?= u('user/orders') ?>">个人中心</a><?php endif; ?>
-            </div>
-            <div class="f-col">
-                <div class="f-title">账户</div>
                 <?php if (member_open()): ?><a href="<?= u('user/login') ?>">登录 / 注册</a><?php endif; ?>
-                <a href="<?= au('login') ?>">管理后台</a>
             </div>
             <div class="f-col">
                 <div class="f-title">关于</div>

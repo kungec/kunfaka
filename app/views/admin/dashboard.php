@@ -9,10 +9,10 @@ $cmp = function ($nowV, $base) {
 };
 ?>
 <style>
-.dash-grid{display:grid;grid-template-columns:288px minmax(0,1fr);gap:14px;align-items:start}
+.dash-grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px;align-items:start}
 @media(max-width:1100px){.dash-grid{grid-template-columns:1fr}}
 .dash-side{display:flex;flex-direction:column;gap:14px}
-.dash-side .card{margin-bottom:0}
+.dash-side .card{margin-bottom:0;min-width:0;overflow:hidden}
 .n-list{display:flex;flex-direction:column}
 .n-item{display:flex;gap:9px;padding:9px 0;border-bottom:1px dashed var(--input-border);text-decoration:none;color:var(--text)}
 .n-item:last-child{border-bottom:none}
@@ -21,7 +21,16 @@ $cmp = function ($nowV, $base) {
 .n-main{min-width:0}
 .n-title{font-size:12.5px;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .n-date{font-size:10.5px;color:var(--muted);margin-top:3px}
-.d-top{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0}
+.acct-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed var(--input-border);font-size:12px}
+.acct-row:last-child{border-bottom:none}
+.acct-row .k{color:var(--muted);flex:none}
+.acct-row .v{text-align:right;word-break:break-all}
+.acct-head{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.acct-head .avatar{width:42px;height:42px;border-radius:12px;background:var(--text);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex:none}
+.acct-head .nm{font-weight:700;font-size:14px}
+.acct-head .rl{font-size:10.5px;color:var(--muted);margin-top:1px}
+.d-top{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}
+@media(max-width:900px){.d-top{grid-template-columns:1fr}}
 .d-top .cell{padding:2px 18px;border-left:1px solid var(--input-border)}
 .d-top .cell:first-child{border-left:none;padding-left:2px}
 .d-top .t-label{font-size:12px;color:var(--muted)}
@@ -46,7 +55,8 @@ $cmp = function ($nowV, $base) {
 .m-tab .m-v{display:block;font-size:19px;font-weight:800;color:var(--text);margin-top:2px}
 .m-tab.on{border-bottom-color:var(--text)}
 .m-tab.on .m-l{color:var(--text)}
-.t-chart{display:flex;align-items:flex-end;height:230px;gap:4px;padding-top:18px}
+.t-chart{display:flex;align-items:flex-end;height:210px;gap:4px;padding-top:18px;position:relative}
+.t-chart .t-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px}
 .t-col{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;min-width:0}
 .t-col .bar{width:min(36px,72%);background:var(--text);opacity:.88;border-radius:5px 5px 0 0;min-height:2px;transition:height .25s}
 .t-col .bar:hover{opacity:.65}
@@ -79,18 +89,21 @@ $cmp = function ($nowV, $base) {
         </div>
 
         <div class="card">
-            <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px">
-                <span class="mark" style="width:40px;height:40px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;background:var(--text);color:var(--bg);font-weight:800;font-size:17px">坤</span>
+            <div class="acct-head">
+                <span class="avatar">坤</span>
                 <div>
-                    <div style="font-weight:700;font-size:14px"><?= e(isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : '管理员') ?></div>
-                    <div class="dim" style="font-size:11px">站点管理员</div>
+                    <div class="nm"><?= e(isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : '管理员') ?></div>
+                    <div class="rl">站点管理员<?php if (current_admin() && current_admin()['role'] === 'super'): ?> · 超级管理员<?php endif; ?></div>
                 </div>
             </div>
-            <table class="tb">
-                <tr><td class="dim">本次登录IP</td><td class="mono" style="text-align:right"><?= e($curLogin['ip'] ?? client_ip()) ?></td></tr>
-                <tr><td class="dim">本次登录时间</td><td style="text-align:right"><?= e($curLogin ? date('Y-m-d H:i:s', $curLogin['created_at']) : date('Y-m-d H:i:s')) ?></td></tr>
-                <tr><td class="dim">上次登录</td><td style="text-align:right"><?= e($prevLogin ? date('m-d H:i', $prevLogin['created_at']) . ' · ' . $prevLogin['ip'] : '—') ?></td></tr>
-            </table>
+            <div class="acct-row"><span class="k">本次登录IP</span><span class="v mono"><?= e($curLogin['ip'] ?? client_ip()) ?></span></div>
+            <div class="acct-row"><span class="k">本次登录时间</span><span class="v"><?= e($curLogin ? date('Y-m-d H:i', $curLogin['created_at']) : date('Y-m-d H:i')) ?></span></div>
+            <div class="acct-row"><span class="k">上次登录</span><span class="v"><?= e($prevLogin ? date('m-d H:i', $prevLogin['created_at']) : '—') ?></span></div>
+            <div class="acct-row"><span class="k">上次登录IP</span><span class="v mono"><?= e($prevLogin['ip'] ?? '—') ?></span></div>
+            <div style="margin-top:12px;display:flex;gap:8px">
+                <a class="btn sm gray" href="<?= au('profile') ?>">个人设置</a>
+                <a class="btn sm gray" href="<?= au('logs') ?>">操作日志</a>
+            </div>
         </div>
     </div>
 
@@ -182,24 +195,26 @@ function nf2(n) { return Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '
 
 function renderTrend() {
     var data = TREND[trendRange], chart = document.getElementById('trendChart'), x = document.getElementById('trendX');
-    var max = 1;
-    data.forEach(function (it) { max = Math.max(max, it[trendMetric]); });
+    var max = 0, sum = 0, cnt = 0;
+    data.forEach(function (it) { max = Math.max(max, it[trendMetric]); sum += Number(it.amount); cnt += Number(it.orders); });
     chart.innerHTML = '';
     x.innerHTML = '';
-    data.forEach(function (it, i) {
-        var col = document.createElement('div');
-        col.className = 't-col';
-        var v = it[trendMetric];
-        var h = Math.round(v / max * 100);
-        var label = trendMetric === 'amount' ? '¥' + nf2(v) : String(v);
-        col.innerHTML = '<span class="v">' + (v > 0 ? label : '') + '</span><i class="bar" style="height:' + Math.max(h, 1.5) + '%" title="' + it.d + ' ' + label + '"></i>';
-        chart.appendChild(col);
-        var xs = document.createElement('span');
-        xs.textContent = data.length > 10 && i % 3 !== 0 && i !== data.length - 1 ? '' : it.d;
-        x.appendChild(xs);
-    });
-    var sum = 0, cnt = 0;
-    data.forEach(function (it) { sum += Number(it.amount); cnt += Number(it.orders); });
+    if (max === 0) {
+        chart.innerHTML = '<div class="t-empty">暂无成交数据, 出单后这里会显示每日趋势</div>';
+    } else {
+        data.forEach(function (it, i) {
+            var col = document.createElement('div');
+            col.className = 't-col';
+            var v = it[trendMetric];
+            var h = Math.round(v / max * 100);
+            var label = trendMetric === 'amount' ? '¥' + nf2(v) : String(v);
+            col.innerHTML = '<span class="v">' + (v > 0 ? label : '') + '</span><i class="bar" style="height:' + Math.max(h, 1.5) + '%" title="' + it.d + ' ' + label + '"></i>';
+            chart.appendChild(col);
+            var xs = document.createElement('span');
+            xs.textContent = data.length > 10 && i % 3 !== 0 && i !== data.length - 1 ? '' : it.d;
+            x.appendChild(xs);
+        });
+    }
     document.getElementById('tv-amount').textContent = '¥' + nf2(round2(sum));
     document.getElementById('tv-orders').textContent = String(cnt);
     document.getElementById('trendRange').textContent = data[0].d.replace('/', '月') + '日 ~ ' + data[data.length - 1].d.replace('/', '月') + '日';
