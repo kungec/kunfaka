@@ -233,23 +233,100 @@ class AdminController
 
     public function actionProducts()
     {
-        $catId = (int)arr_get($_GET, 'cat');
         $where = '1';
         $params = [];
+        $catId = (int)arr_get($_GET, 'cat');
         if ($catId > 0) {
             $where .= ' AND p.category_id = ?';
             $params[] = $catId;
+        }
+        $name = trim(arr_get($_GET, 'name'));
+        if ($name !== '') {
+            $where .= ' AND p.name LIKE ?';
+            $params[] = '%' . $name . '%';
+        }
+        $status = arr_get($_GET, 'status', '');
+        if ($status !== '') {
+            $where .= ' AND p.status = ?';
+            $params[] = (int)$status;
         }
         $list = DB::fetchAll(
             "SELECT p.*, c.name AS cat_name,
              (SELECT COUNT(*) FROM cards cc WHERE cc.product_id = p.id AND cc.status = 0) AS stock
              FROM products p LEFT JOIN categories c ON c.id = p.category_id
              WHERE {$where} ORDER BY p.sort ASC, p.id DESC LIMIT 200", $params);
+        $dayStart = strtotime(date('Y-m-d'));
+        $yStart = $dayStart - 86400;
+        $weekStart = $dayStart - ((int)date('N') - 1) * 86400;
+        $salesMap = [];
+        foreach (DB::fetchAll(
+            'SELECT product_id,
+                SUM(CASE WHEN paid_at >= ? THEN 1 ELSE 0 END) AS today_cnt,
+                SUM(CASE WHEN paid_at >= ? AND paid_at < ? THEN 1 ELSE 0 END) AS yesterday_cnt,
+                SUM(CASE WHEN paid_at >= ? THEN 1 ELSE 0 END) AS week_cnt
+             FROM orders WHERE status = 1 AND paid_at >= ? GROUP BY product_id',
+            [$dayStart, $yStart, $dayStart, $weekStart, $weekStart]) as $r) {
+            $salesMap[(int)$r['product_id']] = [
+                'today' => (int)$r['today_cnt'],
+                'yesterday' => (int)$r['yesterday_cnt'],
+                'week' => (int)$r['week_cnt'],
+            ];
+        }
+        $stats = [
+            'total' => (int)DB::value('SELECT COUNT(*) FROM products'),
+            'on' => (int)DB::value('SELECT COUNT(*) FROM products WHERE status = 1'),
+            'off' => (int)DB::value('SELECT COUNT(*) FROM products WHERE status = 0'),
+            'stock' => (int)DB::value('SELECT COUNT(*) FROM cards WHERE status = 0'),
+        ];
         View::admin('products', [
             'list' => $list,
             'categories' => DB::fetchAll('SELECT * FROM categories ORDER BY sort ASC, id ASC'),
             'catId' => $catId,
+            'stats' => $stats,
+            'salesMap' => $salesMap,
         ]);
+    }
+
+    /** 单个商品上架/下架开关 */
+    public function actionProductToggle()
+    {
+        $id = (int)arr_get($_POST, 'id');
+        $product = DB::fetch('SELECT * FROM products WHERE id = ?', [$id]);
+        if (!$product) json_out(['code' => 1, 'msg' => '商品不存在']);
+        $status = (int)$product['status'] === 1 ? 0 : 1;
+        DB::update('products', ['status' => $status], 'id = ?', [$id]);
+        json_out(['code' => 0, 'msg' => $status ? '已上架' : '已下架']);
+    }
+
+    /** 批量操作选中商品(上架/下架/移除) */
+    public function actionProductsBatch()
+    {
+        $op = trim(arr_get($_POST, 'op'));
+        $ids = array_values(array_filter(array_map('intval', is_array($_POST['ids'] ?? null) ? $_POST['ids'] : [])));
+        if (!$ids) json_out(['code' => 1, 'msg' => '未选择商品']);
+        $in = implode(',', $ids);
+        if ($op === 'on') {
+            $n = DB::exec("UPDATE products SET status = 1 WHERE id IN ({$in})");
+            json_out(['code' => 0, 'msg' => '已上架 ' . $n . ' 个商品']);
+        }
+        if ($op === 'off') {
+            $n = DB::exec("UPDATE products SET status = 0 WHERE id IN ({$in})");
+            json_out(['code' => 0, 'msg' => '已下架 ' . $n . ' 个商品']);
+        }
+        if ($op === 'delete') {
+            $done = 0;
+            $skip = 0;
+            foreach ($ids as $id) {
+                $cnt = (int)DB::value('SELECT COUNT(*) FROM cards WHERE product_id = ? AND status = 0', [$id]);
+                if ($cnt > 0) { $skip++; continue; }
+                DB::exec('DELETE FROM products WHERE id = ?', [$id]);
+                $done++;
+            }
+            $msg = '已移除 ' . $done . ' 个商品' . ($skip > 0 ? ', ' . $skip . ' 个商品有未售卡密已跳过' : '');
+            add_log('system', '管理员批量移除商品: ' . $msg);
+            json_out(['code' => $done > 0 ? 0 : 1, 'msg' => $msg]);
+        }
+        json_out(['code' => 1, 'msg' => '无效操作']);
     }
 
     public function actionProductEdit()
