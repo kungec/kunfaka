@@ -91,8 +91,19 @@
             <div class="form-row">
                 <label>前台客服</label>
                 <input type="hidden" name="service_contacts" id="serviceContactsInput" value="<?= e(setting('service_contacts', '')) ?>">
-                <div id="csList"></div>
-                <button type="button" class="btn gray sm" id="csAdd" style="margin-top:6px">＋ 添加</button>
+                <style>
+                    .cs-head{display:grid;grid-template-columns:130px 1fr 1fr 36px;gap:8px;font-size:11px;color:var(--muted);font-weight:600;padding:0 2px;margin-bottom:6px}
+                    .cs-list{display:flex;flex-direction:column;gap:8px}
+                    .cs-row{display:grid;grid-template-columns:130px 1fr 1fr 36px;gap:8px;align-items:center}
+                    .cs-row select,.cs-row input{height:36px;padding:0 10px;font-size:12.5px;width:100%;margin:0}
+                    .cs-del{width:36px;height:36px;border:1px solid var(--input-border);background:transparent;border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.12s;flex:none}
+                    .cs-del:hover{color:var(--bad);border-color:var(--bad);background:rgba(220,38,68,.06)}
+                    .cs-add{width:100%;height:38px;border:1.5px dashed var(--input-border);background:transparent;border-radius:8px;color:var(--text2);cursor:pointer;font-size:12.5px;font-weight:600;font-family:inherit;transition:.12s;margin-top:8px}
+                    .cs-add:hover{border-color:var(--muted);color:var(--text);background:var(--input-bg)}
+                </style>
+                <div class="cs-head"><span>联系方式</span><span>客服账号</span><span>备注(选填)</span><span></span></div>
+                <div class="cs-list" id="csList"></div>
+                <button type="button" class="cs-add" id="csAdd">＋ 添加联系方式</button>
                 <div class="desc">Telegram / 邮箱 / QQ / 微信 / 电话，留空不显示。</div>
             </div>
             <div class="form-row">
@@ -258,7 +269,7 @@ document.querySelectorAll('.settings-tab').forEach(function (t) {
         row.innerHTML = '<select class="cs-type">' + opts + '</select>' +
             '<input class="cs-value" placeholder="客服账号">' +
             '<input class="cs-note" placeholder="备注(选填)">' +
-            '<button type="button" class="btn sm red cs-del">删除</button>';
+            '<button type="button" class="cs-del" title="删除该行">🗑</button>';
         if (item) {
             row.querySelector('.cs-type').value = item.type || 'qq';
             row.querySelector('.cs-value').value = item.value || '';
