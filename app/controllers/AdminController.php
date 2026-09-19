@@ -273,26 +273,89 @@ class AdminController
 
     public function actionOrders()
     {
-        $status = arr_get($_GET, 'status', '');
-        $kw = trim(arr_get($_GET, 'kw'));
+        [$where, $params] = $this->orderFilter();
         $page = max(1, (int)arr_get($_GET, 'page', 1));
         $per = 20;
+        $total = (int)DB::value("SELECT COUNT(*) FROM orders o WHERE {$where}", $params);
+        $list = DB::fetchAll("SELECT o.*, u.username AS member_name FROM orders o LEFT JOIN users u ON u.id = o.user_id WHERE {$where} ORDER BY o.id DESC LIMIT {$per} OFFSET " . (($page - 1) * $per), $params);
+        $stats = [
+            'count' => $total,
+            'paid' => (float)DB::value("SELECT COALESCE(SUM(o.total),0) FROM orders o WHERE {$where} AND o.status = 1", $params),
+            'pending' => (float)DB::value("SELECT COALESCE(SUM(o.total),0) FROM orders o WHERE {$where} AND o.status = 0", $params),
+        ];
+        $plugins = [];
+        foreach (DB::fetchAll("SELECT DISTINCT pay_plugin FROM orders WHERE pay_plugin <> ''") as $r) {
+            $plugins[] = $r['pay_plugin'];
+        }
+        View::admin('orders', [
+            'list' => $list, 'total' => $total, 'page' => $page, 'per' => $per, 'stats' => $stats,
+            'plugins' => $plugins,
+        ]);
+    }
+
+    /** 订单筛选条件(列表/统计/导出共用) */
+    protected function orderFilter()
+    {
         $where = '1';
         $params = [];
-        if ($status !== '') {
-            $where .= ' AND status = ?';
-            $params[] = (int)$status;
+        $sn = trim(arr_get($_GET, 'sn'));
+        if ($sn !== '') { $where .= ' AND o.sn LIKE ?'; $params[] = $sn . '%'; }
+        $pid = (int)arr_get($_GET, 'product_id');
+        if ($pid > 0) { $where .= ' AND o.product_id = ?'; $params[] = $pid; }
+        $card = trim(arr_get($_GET, 'card'));
+        if ($card !== '') { $where .= ' AND o.cards_content LIKE ?'; $params[] = '%' . $card . '%'; }
+        $contact = trim(arr_get($_GET, 'contact'));
+        if ($contact !== '') { $where .= ' AND o.contact LIKE ?'; $params[] = '%' . $contact . '%'; }
+        $status = arr_get($_GET, 'status', '');
+        if ($status !== '') { $where .= ' AND o.status = ?'; $params[] = (int)$status; }
+        $plugin = trim(arr_get($_GET, 'plugin'));
+        if ($plugin !== '') { $where .= ' AND o.pay_plugin = ?'; $params[] = $plugin; }
+        $ip = trim(arr_get($_GET, 'ip'));
+        if ($ip !== '') { $where .= ' AND o.ip = ?'; $params[] = $ip; }
+        $uid = arr_get($_GET, 'user_id', '');
+        if ($uid !== '') { $where .= ' AND o.user_id = ?'; $params[] = (int)$uid; }
+        $from = trim(arr_get($_GET, 'date_from'));
+        if ($from !== '' && ($ts = strtotime($from)) > 0) { $where .= ' AND o.created_at >= ?'; $params[] = $ts; }
+        $to = trim(arr_get($_GET, 'date_to'));
+        if ($to !== '' && ($ts = strtotime($to)) > 0) { $where .= ' AND o.created_at <= ?'; $params[] = $ts + 86399; }
+        return [$where, $params];
+    }
+
+    /** 导出筛选订单(CSV, 最多5000条) */
+    public function actionOrdersExport()
+    {
+        [$where, $params] = $this->orderFilter();
+        $rows = DB::fetchAll("SELECT o.*, u.username AS member_name FROM orders o LEFT JOIN users u ON u.id = o.user_id WHERE {$where} ORDER BY o.id DESC LIMIT 5000", $params);
+        $stMap = [0 => '待支付', 1 => '已完成', 2 => '已过期', 3 => '待处理'];
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="orders-' . date('Ymd-His') . '.csv"');
+        $out = fopen('php://output', 'w');
+        fwrite($out, "\xEF\xBB\xBF");
+        fputcsv($out, ['订单号', '商品ID', '商品', '数量', '单价', '金额', '联系方式', '联系类型', '支付方式', '支付状态', '发货内容', '会员', 'IP', '下单时间', '支付时间']);
+        foreach ($rows as $o) {
+            fputcsv($out, [
+                $o['sn'], $o['product_id'], $o['product_name'], $o['num'], $o['unit_price'], $o['total'],
+                $o['contact'], $o['contact_type'], $o['pay_plugin'],
+                $stMap[(int)$o['status']] ?? (string)$o['status'],
+                (string)$o['cards_content'],
+                $o['member_name'] !== null && $o['member_name'] !== '' ? $o['member_name'] : ($o['user_id'] > 0 ? 'UID' . $o['user_id'] : '游客'),
+                $o['ip'],
+                date('Y-m-d H:i:s', $o['created_at']),
+                $o['paid_at'] > 0 ? date('Y-m-d H:i:s', $o['paid_at']) : '',
+            ]);
         }
-        if ($kw !== '') {
-            $where .= ' AND (sn LIKE ? OR contact LIKE ? OR product_name LIKE ?)';
-            $params = array_merge($params, ['%' . $kw . '%', '%' . $kw . '%', '%' . $kw . '%']);
-        }
-        $total = (int)DB::value("SELECT COUNT(*) FROM orders WHERE {$where}", $params);
-        $list = DB::fetchAll("SELECT * FROM orders WHERE {$where} ORDER BY id DESC LIMIT {$per} OFFSET " . (($page - 1) * $per), $params);
-        View::admin('orders', [
-            'list' => $list, 'total' => $total, 'page' => $page, 'per' => $per,
-            'status' => $status, 'kw' => $kw,
-        ]);
+        exit;
+    }
+
+    /** 批量销毁选中订单 */
+    public function actionOrdersDestroy()
+    {
+        $ids = array_values(array_filter(array_map('intval', is_array($_POST['ids'] ?? null) ? $_POST['ids'] : [])));
+        if (!$ids) json_out(['code' => 1, 'msg' => '未选择订单']);
+        $in = implode(',', $ids);
+        $n = DB::exec("DELETE FROM orders WHERE id IN ({$in})");
+        add_log('system', '管理员批量销毁订单, 共 ' . $n . ' 条');
+        json_out(['code' => 0, 'msg' => '已销毁 ' . $n . ' 条订单']);
     }
 
     public function actionOrderDetail()
@@ -326,8 +389,8 @@ class AdminController
         $id = (int)arr_get($_POST, 'id');
         $order = DB::fetch('SELECT * FROM orders WHERE id = ?', [$id]);
         if (!$order) json_out(['code' => 1, 'msg' => '订单不存在']);
-        if ((int)$order['status'] === 1) json_out(['code' => 1, 'msg' => '已完成订单不允许删除']);
         DB::exec('DELETE FROM orders WHERE id = ?', [$id]);
+        add_log('system', '管理员删除订单: ' . $order['sn']);
         json_out(['code' => 0, 'msg' => '删除成功']);
     }
 
