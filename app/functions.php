@@ -177,6 +177,11 @@ function member_open() {
     return setting('member_open', '1') === '1';
 }
 
+/** 前台可用分类(已启用; 后台管理用 actionCategories 全量查询) */
+function cat_list() {
+    return DB::fetchAll('SELECT * FROM categories WHERE status = 1 ORDER BY sort ASC, id ASC');
+}
+
 /** 当前登录前台会员ID(未登录0; 会员功能关闭时视为游客) */
 function current_user_id() {
     if (!member_open()) return 0;

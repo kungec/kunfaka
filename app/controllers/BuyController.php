@@ -12,7 +12,7 @@ class BuyController
             View::theme('error', ['msg' => '商品不存在或已下架', 'pageTitle' => '商品不存在']);
             return;
         }
-        $categories = DB::fetchAll('SELECT * FROM categories ORDER BY sort ASC, id ASC');
+        $categories = cat_list();
         $contactTypes = contact_types_enabled();
         $contactPrefill = '';
         $uid = current_user_id();

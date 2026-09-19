@@ -7,7 +7,7 @@ class HomeController
     public function actionIndex()
     {
         $catId = isset($_GET['cat']) ? (int)$_GET['cat'] : 0;
-        $categories = DB::fetchAll('SELECT * FROM categories ORDER BY sort ASC, id ASC');
+        $categories = cat_list();
         $where = 'status = 1';
         $params = [];
         if ($catId > 0) {

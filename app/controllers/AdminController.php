@@ -145,9 +145,18 @@ class AdminController
 
     public function actionCategories()
     {
-        View::admin('categories', [
-            'list' => DB::fetchAll('SELECT * FROM categories ORDER BY sort ASC, id ASC'),
-        ]);
+        $where = '1';
+        $params = [];
+        $name = trim(arr_get($_GET, 'name'));
+        if ($name !== '') { $where .= ' AND name LIKE ?'; $params[] = '%' . $name . '%'; }
+        $status = arr_get($_GET, 'status', '');
+        if ($status !== '') { $where .= ' AND status = ?'; $params[] = (int)$status; }
+        $list = DB::fetchAll("SELECT *, (SELECT COUNT(*) FROM products p WHERE p.category_id = categories.id) AS products_count FROM categories WHERE {$where} ORDER BY sort ASC, id ASC", $params);
+        $stats = [
+            'total' => (int)DB::value('SELECT COUNT(*) FROM categories'),
+            'enabled' => (int)DB::value('SELECT COUNT(*) FROM categories WHERE status = 1'),
+        ];
+        View::admin('categories', ['list' => $list, 'stats' => $stats]);
     }
 
     public function actionCategorySave()
@@ -155,8 +164,9 @@ class AdminController
         $id = (int)arr_get($_POST, 'id');
         $data = [
             'name' => trim(arr_get($_POST, 'name')),
-            'icon' => trim(arr_get($_POST, 'icon')),
+            'icon' => mb_substr(trim(arr_get($_POST, 'icon')), 0, 50),
             'sort' => (int)arr_get($_POST, 'sort'),
+            'status' => arr_get($_POST, 'status') === '0' ? 0 : 1,
         ];
         if ($data['name'] === '') json_out(['code' => 1, 'msg' => '分类名称不能为空']);
         if ($id > 0) {
@@ -166,6 +176,48 @@ class AdminController
             DB::insert('categories', $data);
         }
         json_out(['code' => 0, 'msg' => '保存成功']);
+    }
+
+    /** 单个分类启用/停用开关 */
+    public function actionCategoryToggle()
+    {
+        $id = (int)arr_get($_POST, 'id');
+        $cat = DB::fetch('SELECT * FROM categories WHERE id = ?', [$id]);
+        if (!$cat) json_out(['code' => 1, 'msg' => '分类不存在']);
+        $status = (int)$cat['status'] === 1 ? 0 : 1;
+        DB::update('categories', ['status' => $status], 'id = ?', [$id]);
+        json_out(['code' => 0, 'msg' => $status ? '已启用' : '已停用(前台隐藏)']);
+    }
+
+    /** 批量操作选中分类(启用/停用/移除) */
+    public function actionCategoriesBatch()
+    {
+        $op = trim(arr_get($_POST, 'op'));
+        $ids = array_values(array_filter(array_map('intval', is_array($_POST['ids'] ?? null) ? $_POST['ids'] : [])));
+        if (!$ids) json_out(['code' => 1, 'msg' => '未选择分类']);
+        $in = implode(',', $ids);
+        if ($op === 'enable') {
+            $n = DB::exec("UPDATE categories SET status = 1 WHERE id IN ({$in})");
+            json_out(['code' => 0, 'msg' => '已启用 ' . $n . ' 个分类']);
+        }
+        if ($op === 'disable') {
+            $n = DB::exec("UPDATE categories SET status = 0 WHERE id IN ({$in})");
+            json_out(['code' => 0, 'msg' => '已停用 ' . $n . ' 个分类(前台隐藏)']);
+        }
+        if ($op === 'delete') {
+            $done = 0;
+            $skip = 0;
+            foreach ($ids as $id) {
+                $cnt = (int)DB::value('SELECT COUNT(*) FROM products WHERE category_id = ?', [$id]);
+                if ($cnt > 0) { $skip++; continue; }
+                DB::exec('DELETE FROM categories WHERE id = ?', [$id]);
+                $done++;
+            }
+            $msg = '已移除 ' . $done . ' 个分类' . ($skip > 0 ? ', ' . $skip . ' 个分类下有商品已跳过' : '');
+            add_log('system', '管理员批量移除分类: ' . $msg);
+            json_out(['code' => $done > 0 ? 0 : 1, 'msg' => $msg]);
+        }
+        json_out(['code' => 1, 'msg' => '无效操作']);
     }
 
     public function actionCategoryDel()

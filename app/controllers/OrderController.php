@@ -15,7 +15,7 @@ class OrderController
         View::theme('query', [
             'orders' => $orders,
             'kw' => $kw,
-            'categories' => DB::fetchAll('SELECT * FROM categories ORDER BY sort ASC, id ASC'),
+            'categories' => cat_list(),
             'pageTitle' => '订单查询',
         ]);
     }
@@ -36,7 +36,7 @@ class OrderController
         View::theme('result', [
             'order' => $order,
             'pluginName' => $pluginName,
-            'categories' => DB::fetchAll('SELECT * FROM categories ORDER BY sort ASC, id ASC'),
+            'categories' => cat_list(),
             'pageTitle' => '订单详情',
         ]);
     }

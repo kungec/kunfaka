@@ -67,6 +67,15 @@ if ((int)$stmt->fetchColumn() === 0) {
     echo "SKIP: orders.contact_type 已存在\n";
 }
 
+// categories 表补 status 列(v2.9.0 分类启用/停用)
+$stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'categories' AND COLUMN_NAME = 'status'");
+if ((int)$stmt->fetchColumn() === 0) {
+    $pdo->exec("ALTER TABLE `categories` ADD COLUMN `status` tinyint NOT NULL DEFAULT 1 COMMENT '1启用 0停用(前台隐藏)'");
+    echo "OK: categories 表已添加 status 列\n";
+} else {
+    echo "SKIP: categories.status 已存在\n";
+}
+
 // 系统日志表(v1.4→v1.5)
 $pdo->exec("CREATE TABLE IF NOT EXISTS `logs` (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,

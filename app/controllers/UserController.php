@@ -114,7 +114,7 @@ class UserController
         $orders = DB::fetchAll('SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC LIMIT 100', [$uid]);
         View::theme('myorders', [
             'orders' => $orders,
-            'categories' => DB::fetchAll('SELECT * FROM categories ORDER BY sort ASC, id ASC'),
+            'categories' => cat_list(),
             'pageTitle' => '我的订单',
         ]);
     }

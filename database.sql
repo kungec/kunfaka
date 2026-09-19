@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
   `name` varchar(100) NOT NULL,
   `icon` varchar(50) DEFAULT '',
   `sort` int NOT NULL DEFAULT 0,
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '1启用 0停用(前台隐藏)',
   `created_at` int unsigned NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
