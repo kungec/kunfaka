@@ -72,30 +72,73 @@ class AdminController
 
     public function actionDashboard()
     {
+        $now = now();
         $todayStart = strtotime(date('Y-m-d'));
         $yStart = $todayStart - 86400;
+        $monthStart = strtotime(date('Y-m-01'));
+        $lastMonthStart = strtotime('-1 month', $monthStart);
+        $paidStat = function ($from, $to) {
+            return [
+                'amount' => (float)DB::value('SELECT IFNULL(SUM(total),0) FROM orders WHERE status = 1 AND paid_at >= ? AND paid_at < ?', [$from, $to]),
+                'orders' => (int)DB::value('SELECT COUNT(*) FROM orders WHERE status = 1 AND paid_at >= ? AND paid_at < ?', [$from, $to]),
+            ];
+        };
         $stats = [
-            'today_orders' => (int)DB::value('SELECT COUNT(*) FROM orders WHERE created_at >= ? AND status IN (1)', [$todayStart]),
-            'today_amount' => (float)DB::value('SELECT IFNULL(SUM(total),0) FROM orders WHERE created_at >= ? AND status = 1', [$todayStart]),
-            'yesterday_orders' => (int)DB::value('SELECT COUNT(*) FROM orders WHERE created_at >= ? AND created_at < ? AND status = 1', [$yStart, $todayStart]),
-            'yesterday_amount' => (float)DB::value('SELECT IFNULL(SUM(total),0) FROM orders WHERE created_at >= ? AND created_at < ? AND status = 1', [$yStart, $todayStart]),
-            'total_orders' => (int)DB::value('SELECT COUNT(*) FROM orders WHERE status = 1'),
-            'total_amount' => (float)DB::value('SELECT IFNULL(SUM(total),0) FROM orders WHERE status = 1'),
-            'pending_orders' => (int)DB::value('SELECT COUNT(*) FROM orders WHERE status = 0 AND expired_at > ?', [now()]),
-            'pending_cards' => (int)DB::value('SELECT COUNT(*) FROM orders WHERE status = 3'),
-            'cards_left' => (int)DB::value('SELECT COUNT(*) FROM cards WHERE status = 0'),
+            'today' => $paidStat($todayStart, PHP_INT_MAX),
+            'ySame' => $paidStat($yStart, $yStart + ($now - $todayStart)),
+            'yesterday' => $paidStat($yStart, $todayStart),
+            'dayBefore' => $paidStat($yStart - 86400, $yStart),
+            'month' => $paidStat($monthStart, PHP_INT_MAX),
+            'lMonthSame' => $paidStat($lastMonthStart, $lastMonthStart + ($now - $monthStart)),
+            'lMonthFull' => $paidStat($lastMonthStart, $monthStart),
         ];
-        $lowStock = DB::fetchAll(
-            'SELECT p.id, p.name, (SELECT COUNT(*) FROM cards c WHERE c.product_id = p.id AND c.status = 0) AS stock FROM products p WHERE p.status = 1 AND (SELECT COUNT(*) FROM cards c2 WHERE c2.product_id = p.id AND c2.status = 0) < 10 ORDER BY stock ASC LIMIT 8'
-        );
-        $recent = DB::fetchAll('SELECT * FROM orders ORDER BY id DESC LIMIT 10');
-        $week = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $day = strtotime(date('Y-m-d')) - $i * 86400;
-            $cnt = (int)DB::value('SELECT COUNT(*) FROM orders WHERE status = 1 AND paid_at >= ? AND paid_at < ?', [$day, $day + 86400]);
-            $week[] = ['day' => date('m-d', $day), 'count' => $cnt];
+        // 待处理事项
+        $todo = [
+            'pending_cards' => (int)DB::value('SELECT COUNT(*) FROM orders WHERE status = 3'),
+            'pending_pay' => (int)DB::value('SELECT COUNT(*) FROM orders WHERE status = 0'),
+            'expired' => (int)DB::value('SELECT COUNT(*) FROM orders WHERE status = 2'),
+            'low_stock' => (int)DB::value('SELECT COUNT(*) FROM products p WHERE p.status = 1 AND (SELECT COUNT(*) FROM cards c WHERE c.product_id = p.id AND c.status = 0) < 10'),
+        ];
+        // 近30天成交趋势(按支付日聚合)
+        $aggA = [];
+        $aggO = [];
+        foreach (DB::fetchAll('SELECT paid_at, total FROM orders WHERE status = 1 AND paid_at >= ?', [$todayStart - 29 * 86400]) as $r) {
+            $k = date('Y-m-d', (int)$r['paid_at']);
+            $aggA[$k] = ($aggA[$k] ?? 0) + (float)$r['total'];
+            $aggO[$k] = ($aggO[$k] ?? 0) + 1;
         }
-        View::admin('dashboard', ['stats' => $stats, 'lowStock' => $lowStock, 'recent' => $recent, 'week' => $week]);
+        $buildTrend = function ($days) use ($todayStart, $aggA, $aggO) {
+            $out = [];
+            for ($i = $days - 1; $i >= 0; $i--) {
+                $k = date('Y-m-d', $todayStart - $i * 86400);
+                $out[] = ['d' => date('n/j', $todayStart - $i * 86400), 'amount' => round($aggA[$k] ?? 0, 2), 'orders' => $aggO[$k] ?? 0];
+            }
+            return $out;
+        };
+        $trend = ['7' => $buildTrend(7), '30' => $buildTrend(30)];
+        // 经营数据(多时段)
+        $weekStart = $todayStart - ((int)date('N') - 1) * 86400;
+        $memberCount = function ($from, $to = null) {
+            if ($to === null) return (int)DB::value('SELECT COUNT(*) FROM users');
+            return (int)DB::value('SELECT COUNT(*) FROM users WHERE created_at >= ? AND created_at < ?', [$from, $to]);
+        };
+        $bizPeriods = [
+            'today' => ['label' => '今日', 'stat' => $paidStat($todayStart, PHP_INT_MAX), 'members' => $memberCount($todayStart, PHP_INT_MAX)],
+            'yesterday' => ['label' => '昨日', 'stat' => $paidStat($yStart, $todayStart), 'members' => $memberCount($yStart, $todayStart)],
+            'week' => ['label' => '本周', 'stat' => $paidStat($weekStart, PHP_INT_MAX), 'members' => $memberCount($weekStart, PHP_INT_MAX)],
+            'month' => ['label' => '本月', 'stat' => $paidStat($monthStart, PHP_INT_MAX), 'members' => $memberCount($monthStart, PHP_INT_MAX)],
+            'all' => ['label' => '全部', 'stat' => $paidStat(0, PHP_INT_MAX), 'members' => $memberCount(0)],
+        ];
+        array_walk($bizPeriods, function (&$p) {
+            $p['avg'] = $p['stat']['orders'] > 0 ? round($p['stat']['amount'] / $p['stat']['orders'], 2) : 0;
+        });
+        // 站内公告 + 登录信息
+        $notices = DB::fetchAll('SELECT id, title, created_at FROM notices WHERE status = 1 ORDER BY sort DESC, id DESC LIMIT 6');
+        $logins = DB::fetchAll("SELECT ip, created_at FROM logs WHERE type = 'admin' AND message LIKE '%登录成功%' ORDER BY id DESC LIMIT 2");
+        View::admin('dashboard', [
+            'stats' => $stats, 'todo' => $todo, 'trend' => $trend, 'bizPeriods' => $bizPeriods,
+            'notices' => $notices, 'curLogin' => $logins[0] ?? null, 'prevLogin' => $logins[1] ?? null,
+        ]);
     }
 
     // ---------- 分类管理 ----------

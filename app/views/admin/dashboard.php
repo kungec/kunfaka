@@ -1,67 +1,240 @@
-<?php $activeMenu = 'dashboard'; ?>
-<div class="page-head">
-    <div>
-        <h2>📊 仪表盘</h2>
-        <div class="sub">经营概览 · <?= e(date('Y年m月d日')) ?></div>
-    </div>
-    <div class="page-actions">
-        <a class="btn sm gray" href="<?= au('orders') ?>">全部订单</a>
-        <a class="btn sm" href="<?= au('products') ?>">商品管理</a>
-    </div>
-</div>
+<?php $activeMenu = 'dashboard';
+/* 同期对比文案 */
+$cmp = function ($nowV, $base) {
+    $diff = round($nowV - $base, 2);
+    if (abs($diff) < 0.005) return '<span class="dim">持平</span>';
+    return $diff > 0
+        ? '<span style="color:var(--ok)">↑ ¥' . nf($diff) . '</span>'
+        : '<span style="color:var(--bad)">↓ ¥' . nf(abs($diff)) . '</span>';
+};
+?>
+<style>
+.dash-grid{display:grid;grid-template-columns:288px minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:1100px){.dash-grid{grid-template-columns:1fr}}
+.dash-side{display:flex;flex-direction:column;gap:14px}
+.dash-side .card{margin-bottom:0}
+.n-list{display:flex;flex-direction:column}
+.n-item{display:flex;gap:9px;padding:9px 0;border-bottom:1px dashed var(--input-border);text-decoration:none;color:var(--text)}
+.n-item:last-child{border-bottom:none}
+.n-item:hover .n-title{color:var(--muted)}
+.n-badge{flex:none;font-size:10px;padding:1px 6px;border-radius:4px;height:fit-content;background:var(--ok-bg);color:var(--ok);font-weight:600}
+.n-main{min-width:0}
+.n-title{font-size:12.5px;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.n-date{font-size:10.5px;color:var(--muted);margin-top:3px}
+.d-top{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0}
+.d-top .cell{padding:2px 18px;border-left:1px solid var(--input-border)}
+.d-top .cell:first-child{border-left:none;padding-left:2px}
+.d-top .t-label{font-size:12px;color:var(--muted)}
+.d-top .t-val{font-size:26px;font-weight:800;letter-spacing:-.5px;margin:5px 0 2px}
+.d-top .t-cmp{font-size:11.5px;color:var(--muted)}
+.d-top .t-foot{margin-top:12px;padding-top:9px;border-top:1px dashed var(--input-border);font-size:11.5px;color:var(--muted)}
+.todo-row{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.todo-row .t-title{font-weight:700;font-size:14px;padding-right:14px;border-right:1px solid var(--input-border);margin-right:8px}
+.todo-item{flex:1;min-width:150px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 10px;border-radius:8px;text-decoration:none;color:var(--text);font-size:13px;transition:.12s}
+.todo-item:hover{background:var(--input-bg)}
+.todo-item .n{font-size:19px;font-weight:800}
+.todo-item .arr{color:var(--muted);font-size:12px}
+.trend-head,.biz-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.trend-head h3,.biz-head h3{margin:0}
+.seg{display:inline-flex;border:1px solid var(--input-border);border-radius:8px;overflow:hidden}
+.seg button{border:none;background:transparent;color:var(--text2);font-size:12px;font-weight:600;padding:5px 14px;cursor:pointer;font-family:inherit}
+.seg button.on{background:var(--text);color:var(--bg)}
+.range-label{font-size:11.5px;color:var(--muted)}
+.m-tabs{display:flex;gap:26px;margin:14px 0 4px;border-bottom:1px solid var(--input-border)}
+.m-tab{background:none;border:none;padding:0 2px 10px;cursor:pointer;font-family:inherit;text-align:left;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--muted)}
+.m-tab .m-l{display:block;font-size:12px}
+.m-tab .m-v{display:block;font-size:19px;font-weight:800;color:var(--text);margin-top:2px}
+.m-tab.on{border-bottom-color:var(--text)}
+.m-tab.on .m-l{color:var(--text)}
+.t-chart{display:flex;align-items:flex-end;height:230px;gap:4px;padding-top:18px}
+.t-col{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;min-width:0}
+.t-col .bar{width:min(36px,72%);background:var(--text);opacity:.88;border-radius:5px 5px 0 0;min-height:2px;transition:height .25s}
+.t-col .bar:hover{opacity:.65}
+.t-col .v{font-size:10px;color:var(--muted)}
+.t-x{display:flex;gap:4px;margin-top:8px}
+.t-x span{flex:1;text-align:center;font-size:10.5px;color:var(--muted);min-width:0;overflow:hidden;white-space:nowrap}
+.biz-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:8px 2px 2px}
+.biz-metrics .bm .l{font-size:12px;color:var(--muted)}
+.biz-metrics .bm .v{font-size:22px;font-weight:800;margin-top:4px}
+</style>
 
-<div class="stat-grid">
-    <div class="stat"><div class="s-label">今日成功订单</div><div class="s-val v-primary"><?= (int)$stats['today_orders'] ?></div><div class="s-sub">昨日 <?= (int)$stats['yesterday_orders'] ?> 单</div></div>
-    <div class="stat"><div class="s-label">今日销售额</div><div class="s-val v-ok">¥<?= e(nf($stats['today_amount'])) ?></div><div class="s-sub">昨日 ¥<?= e(nf($stats['yesterday_amount'])) ?></div></div>
-    <div class="stat"><div class="s-label">累计销售额</div><div class="s-val">¥<?= e(nf($stats['total_amount'])) ?></div><div class="s-sub">累计 <?= (int)$stats['total_orders'] ?> 单</div></div>
-    <div class="stat"><div class="s-label">进行中订单</div><div class="s-val v-warn"><?= (int)$stats['pending_orders'] ?></div><div class="s-sub">待人工处理 <?= (int)$stats['pending_cards'] ?> 单</div></div>
-    <div class="stat"><div class="s-label">剩余卡密库存</div><div class="s-val"><?= (int)$stats['cards_left'] ?></div><div class="s-sub">全部商品合计</div></div>
-</div>
-
-<div class="card">
-    <h3>近7日成交趋势</h3>
-    <div class="week-chart">
-        <?php $max = 1; foreach ($week as $w) $max = max($max, $w['count']); ?>
-        <?php foreach ($week as $w): ?>
-            <div class="w-bar">
-                <div title="<?= $w['count'] ?> 单" style="height:100%;display:flex;align-items:flex-end;justify-content:center;width:100%">
-                    <i style="height:<?= max(4, (int)($w['count'] / $max * 105)) ?>px"></i>
-                </div>
-                <span><?= (int)$w['count'] ?></span>
-                <span><?= e($w['day']) ?></span>
+<div class="dash-grid">
+    <!-- ====== 左栏: 公告 + 账号 ====== -->
+    <div class="dash-side">
+        <div class="card">
+            <h3>📣 站内公告</h3>
+            <?php if (!$notices): ?><p class="dim" style="margin:0">暂无公告, 前往「公告单页」发布。</p><?php endif; ?>
+            <div class="n-list">
+                <?php foreach ($notices as $n): ?>
+                    <a class="n-item" href="<?= e(site_url('index.php?s=/notice/detail&id=' . (int)$n['id'])) ?>" target="_blank" rel="noopener">
+                        <span class="n-badge">公告</span>
+                        <span class="n-main">
+                            <span class="n-title"><?= e($n['title']) ?></span>
+                            <span class="n-date"><?= e(date('Y-m-d', $n['created_at'])) ?></span>
+                        </span>
+                    </a>
+                <?php endforeach; ?>
             </div>
-        <?php endforeach; ?>
+            <?php if ($notices): ?><div style="margin-top:10px"><a class="btn sm gray" href="<?= au('notices') ?>">管理公告 →</a></div><?php endif; ?>
+        </div>
+
+        <div class="card">
+            <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px">
+                <span class="mark" style="width:40px;height:40px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;background:var(--text);color:var(--bg);font-weight:800;font-size:17px">坤</span>
+                <div>
+                    <div style="font-weight:700;font-size:14px"><?= e(isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : '管理员') ?></div>
+                    <div class="dim" style="font-size:11px">站点管理员</div>
+                </div>
+            </div>
+            <table class="tb">
+                <tr><td class="dim">本次登录IP</td><td class="mono" style="text-align:right"><?= e($curLogin['ip'] ?? client_ip()) ?></td></tr>
+                <tr><td class="dim">本次登录时间</td><td style="text-align:right"><?= e($curLogin ? date('Y-m-d H:i:s', $curLogin['created_at']) : date('Y-m-d H:i:s')) ?></td></tr>
+                <tr><td class="dim">上次登录</td><td style="text-align:right"><?= e($prevLogin ? date('m-d H:i', $prevLogin['created_at']) . ' · ' . $prevLogin['ip'] : '—') ?></td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- ====== 右栏: 统计 / 待处理 / 趋势 / 经营 ====== -->
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+        <div class="card">
+            <div class="d-top">
+                <div class="cell">
+                    <div class="t-label">今日销售额</div>
+                    <div class="t-val">¥<?= e(nf($stats['today']['amount'])) ?></div>
+                    <div class="t-cmp">较昨日同时段 <?= $cmp($stats['today']['amount'], $stats['ySame']['amount']) ?></div>
+                    <div class="t-foot">成交 <?= (int)$stats['today']['orders'] ?> 单</div>
+                </div>
+                <div class="cell">
+                    <div class="t-label">昨日销售额</div>
+                    <div class="t-val">¥<?= e(nf($stats['yesterday']['amount'])) ?></div>
+                    <div class="t-cmp">较前日 <?= $cmp($stats['yesterday']['amount'], $stats['dayBefore']['amount']) ?></div>
+                    <div class="t-foot">成交 <?= (int)$stats['yesterday']['orders'] ?> 单</div>
+                </div>
+                <div class="cell">
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+                        <div class="t-label">本月销售额</div>
+                        <span class="range-label">上月 ¥<?= e(nf($stats['lMonthFull']['amount'])) ?></span>
+                    </div>
+                    <div class="t-val">¥<?= e(nf($stats['month']['amount'])) ?></div>
+                    <div class="t-cmp">较上月同期 <?= $cmp($stats['month']['amount'], $stats['lMonthSame']['amount']) ?></div>
+                    <div class="t-foot">成交 <?= (int)$stats['month']['orders'] ?> 单</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="todo-row">
+                <span class="t-title">待处理</span>
+                <a class="todo-item" href="<?= au('orders', ['status' => 3]) ?>"><span>待处理订单</span><span class="n <?= $todo['pending_cards'] > 0 ? 'v-warn' : '' ?>" <?= $todo['pending_cards'] > 0 ? 'style="color:var(--warn)"' : '' ?>><?= (int)$todo['pending_cards'] ?></span><span class="arr">›</span></a>
+                <a class="todo-item" href="<?= au('orders', ['status' => 0]) ?>"><span>待支付订单</span><span class="n"><?= (int)$todo['pending_pay'] ?></span><span class="arr">›</span></a>
+                <a class="todo-item" href="<?= au('orders', ['status' => 2]) ?>"><span>已过期订单</span><span class="n"><?= (int)$todo['expired'] ?></span><span class="arr">›</span></a>
+                <a class="todo-item" href="<?= au('products') ?>"><span>库存预警商品</span><span class="n" <?= $todo['low_stock'] > 0 ? 'style="color:var(--bad)"' : '' ?>><?= (int)$todo['low_stock'] ?></span><span class="arr">›</span></a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="trend-head">
+                <div style="display:flex;align-items:baseline;gap:10px">
+                    <h3>趋势</h3>
+                    <span class="range-label" id="trendRange"></span>
+                </div>
+                <div class="seg" id="trendRangeSeg">
+                    <button data-range="7" class="on">7天</button>
+                    <button data-range="30">30天</button>
+                </div>
+            </div>
+            <div class="m-tabs" id="trendTabs">
+                <button class="m-tab on" data-metric="amount"><span class="m-l">销售额</span><span class="m-v" id="tv-amount">¥0.00</span></button>
+                <button class="m-tab" data-metric="orders"><span class="m-l">订单数</span><span class="m-v" id="tv-orders">0</span></button>
+            </div>
+            <div class="t-chart" id="trendChart"></div>
+            <div class="t-x" id="trendX"></div>
+        </div>
+
+        <div class="card">
+            <div class="biz-head">
+                <div style="display:flex;align-items:baseline;gap:10px">
+                    <h3>经营数据</h3>
+                    <span class="range-label"><?= e(date('Y年n月j日')) ?> <?= e(['日', '一', '二', '三', '四', '五', '六'][(int)date('w')]) ?></span>
+                </div>
+                <div class="seg" id="bizSeg">
+                    <?php $first = true; foreach ($bizPeriods as $k => $p): ?>
+                        <button data-period="<?= e($k) ?>" class="<?= $first ? 'on' : '' ?>"> <?= e($p['label']) ?></button>
+                    <?php $first = false; endforeach; ?>
+                </div>
+            </div>
+            <div class="biz-metrics">
+                <div class="bm"><div class="l">成交额</div><div class="v" id="bm-amount">¥0.00</div></div>
+                <div class="bm"><div class="l">成交订单</div><div class="v" id="bm-orders">0</div></div>
+                <div class="bm"><div class="l">客单价</div><div class="v" id="bm-avg">¥0.00</div></div>
+                <div class="bm"><div class="l">新增会员</div><div class="v" id="bm-members">0</div></div>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="card">
-    <h3>库存预警(少于10张)</h3>
-    <?php if (!$lowStock): ?><p class="dim">库存充足, 无预警商品 ✓</p>
-    <?php else: ?>
-        <table class="tb">
-            <tr><th>商品</th><th>剩余库存</th><th></th></tr>
-            <?php foreach ($lowStock as $p): ?>
-                <tr><td><?= e($p['name']) ?></td>
-                    <td><span class="tag <?= $p['stock'] == 0 ? 'bad' : 'warn' ?>"><?= (int)$p['stock'] ?></span></td>
-                    <td class="actions"><a class="btn sm gray" href="<?= au('cards', ['product_id' => $p['id']]) ?>">去补货</a></td></tr>
-            <?php endforeach; ?>
-        </table>
-    <?php endif; ?>
-</div>
+<script>
+var TREND = <?= json_encode($trend) ?>;
+var BIZ = <?= json_encode($bizPeriods) ?>;
+var trendRange = '7', trendMetric = 'amount';
 
-<div class="card">
-    <h3>最新订单</h3>
-    <table class="tb">
-        <tr><th>订单号</th><th>商品</th><th>金额</th><th>状态</th><th>时间</th><th></th></tr>
-        <?php foreach ($recent as $o): ?>
-            <tr>
-                <td class="mono"><?= e($o['sn']) ?></td>
-                <td><?= e($o['product_name']) ?> × <?= (int)$o['num'] ?></td>
-                <td>¥<?= e(nf($o['total'])) ?></td>
-                <td><span class="tag <?= (int)$o['status'] === 1 ? 'ok' : ((int)$o['status'] === 0 ? 'warn' : 'bad') ?>"><?= (int)$o['status'] === 1 ? '已完成' : ((int)$o['status'] === 0 ? '待支付' : ((int)$o['status'] === 2 ? '已过期' : '待处理')) ?></span></td>
-                <td class="dim"><?= e(date('m-d H:i:s', $o['created_at'])) ?></td>
-                <td class="actions"><a class="btn sm gray" href="<?= au('order_detail', ['id' => $o['id']]) ?>">详情</a></td>
-            </tr>
-        <?php endforeach; ?>
-    </table>
-</div>
+function nf2(n) { return Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+function renderTrend() {
+    var data = TREND[trendRange], chart = document.getElementById('trendChart'), x = document.getElementById('trendX');
+    var max = 1;
+    data.forEach(function (it) { max = Math.max(max, it[trendMetric]); });
+    chart.innerHTML = '';
+    x.innerHTML = '';
+    data.forEach(function (it, i) {
+        var col = document.createElement('div');
+        col.className = 't-col';
+        var v = it[trendMetric];
+        var h = Math.round(v / max * 100);
+        var label = trendMetric === 'amount' ? '¥' + nf2(v) : String(v);
+        col.innerHTML = '<span class="v">' + (v > 0 ? label : '') + '</span><i class="bar" style="height:' + Math.max(h, 1.5) + '%" title="' + it.d + ' ' + label + '"></i>';
+        chart.appendChild(col);
+        var xs = document.createElement('span');
+        xs.textContent = data.length > 10 && i % 3 !== 0 && i !== data.length - 1 ? '' : it.d;
+        x.appendChild(xs);
+    });
+    var sum = 0, cnt = 0;
+    data.forEach(function (it) { sum += Number(it.amount); cnt += Number(it.orders); });
+    document.getElementById('tv-amount').textContent = '¥' + nf2(round2(sum));
+    document.getElementById('tv-orders').textContent = String(cnt);
+    document.getElementById('trendRange').textContent = data[0].d.replace('/', '月') + '日 ~ ' + data[data.length - 1].d.replace('/', '月') + '日';
+}
+function round2(n) { return Math.round(Number(n) * 100) / 100; }
+document.getElementById('trendRangeSeg').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    this.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
+    b.classList.add('on');
+    trendRange = b.getAttribute('data-range');
+    renderTrend();
+});
+document.getElementById('trendTabs').addEventListener('click', function (ev) {
+    var b = ev.target.closest('.m-tab'); if (!b) return;
+    this.querySelectorAll('.m-tab').forEach(function (x) { x.classList.remove('on'); });
+    b.classList.add('on');
+    trendMetric = b.getAttribute('data-metric');
+    renderTrend();
+});
+
+function renderBiz(period) {
+    var d = BIZ[period];
+    if (!d) return;
+    document.getElementById('bm-amount').textContent = '¥' + nf2(d.stat.amount);
+    document.getElementById('bm-orders').textContent = String(d.stat.orders);
+    document.getElementById('bm-avg').textContent = '¥' + nf2(d.avg);
+    document.getElementById('bm-members').textContent = String(d.members);
+}
+document.getElementById('bizSeg').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    this.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
+    b.classList.add('on');
+    renderBiz(b.getAttribute('data-period'));
+});
+
+renderTrend();
+renderBiz('today');
+</script>
