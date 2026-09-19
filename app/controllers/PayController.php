@@ -25,10 +25,10 @@ class PayController
     /** 发起支付 */
     public function actionGo()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') redirect(u('home/index'));
-        csrf_check();
-        $sn = trim(arr_get($_POST, 'sn'));
-        $code = trim(arr_get($_POST, 'plugin'));
+        // 双入口: 商品页直购(GET, 买家已选支付方式) 与 收银台选择(POST); 发起支付无状态变更危害, GET 免CSRF
+        $sn = trim((string)($_REQUEST['sn'] ?? ''));
+        $code = trim((string)($_REQUEST['plugin'] ?? ''));
+        if ($sn === '' || $code === '') redirect(u('home/index'));
         $order = DB::fetch('SELECT * FROM orders WHERE sn = ?', [$sn]);
         if (!$order) {
             View::theme('error', ['msg' => '订单不存在', 'pageTitle' => '错误']);
@@ -45,7 +45,7 @@ class PayController
             return;
         }
         // 聚合支付渠道(多渠道开放时买家所选的那一个)
-        $channel = trim(arr_get($_POST, 'channel'));
+        $channel = trim((string)($_REQUEST['channel'] ?? ''));
         $channels = $plugin->channels();
         if ($channels && $channel !== '') {
             if (!in_array($channel, $channels, true)) {

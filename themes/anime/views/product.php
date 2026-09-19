@@ -44,6 +44,38 @@
             });
         })();
         </script>
+        <?php if ($payments): ?>
+        <div class="form-row">
+            <label>支付方式</label>
+            <div class="pay-list">
+                <?php $pi = 0; foreach ($payments as $pm): ?>
+                    <label class="pay-item<?= $pi === 0 ? ' selected' : '' ?>" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;border:1px solid var(--border, rgba(0,0,0,.1));border-radius:8px">
+                        <input type="radio" name="pay_choice" value="<?= e($pm['code']) ?>" data-channel="<?= e($pm['channel'] ?? '') ?>" <?= $pi === 0 ? 'checked' : '' ?> style="width:auto;margin:0">
+                        <span class="pay-icon"><?= $pm['icon'] ?></span>
+                        <span><?= e($pm['title']) ?></span>
+                    </label>
+                <?php $pi++; endforeach; ?>
+            </div>
+            <input type="hidden" name="plugin" id="payPlugin" value="<?= e($payments[0]['code']) ?>">
+            <input type="hidden" name="channel" id="payChannel" value="<?= e($payments[0]['channel'] ?? '') ?>">
+        </div>
+        <?php endif; ?>
         <button class="btn-buy big" type="submit" <?= $stock <= 0 ? 'disabled' : '' ?>>下单购买 · 全自动秒发</button>
     </form>
 </div>
+<?php if ($payments): ?>
+<script>
+(function () {
+    var radios = document.querySelectorAll('input[name="pay_choice"]');
+    var plugin = document.getElementById('payPlugin');
+    var channel = document.getElementById('payChannel');
+    function sync() {
+        radios.forEach(function (r) {
+            if (r.checked) { plugin.value = r.value; channel.value = r.getAttribute('data-channel') || ''; }
+        });
+    }
+    radios.forEach(function (r) { r.addEventListener('change', sync); });
+    sync();
+})();
+</script>
+<?php endif; ?>

@@ -35,6 +35,7 @@ class BuyController
             'categories' => $categories,
             'contactTypes' => $contactTypes,
             'contactPrefill' => $contactPrefill,
+            'payments' => enabled_payments(),
             'pageTitle' => $product['name'] . ' - ' . setting('site_name', '坤发卡'),
         ]);
     }
@@ -47,6 +48,8 @@ class BuyController
         $num = isset($_POST['num']) ? (int)$_POST['num'] : 1;
         $contact = trim(arr_get($_POST, 'contact'));
         $contactType = trim(arr_get($_POST, 'contact_type'));
+        // 买家在商品页选择的支付方式(直购模式: 创建后直接跳转支付)
+        $pluginCode = trim(arr_get($_POST, 'plugin'));
         $product = DB::fetch('SELECT * FROM products WHERE id = ? AND status = 1', [$productId]);
         if (!$product) {
             View::theme('error', ['msg' => '商品不存在或已下架', 'pageTitle' => '错误']);
@@ -100,6 +103,10 @@ class BuyController
             'created_at' => now(),
             'expired_at' => now() + order_timeout_minutes() * 60,
         ]);
+        // 直购模式: 买家已在商品页选择支付方式, 直接跳转支付发起(免选择页)
+        if ($pluginCode !== '') {
+            redirect(u('pay/go', array_filter(['sn' => $sn, 'plugin' => $pluginCode])));
+        }
         redirect(u('pay/choose', ['sn' => $sn]));
     }
 }
