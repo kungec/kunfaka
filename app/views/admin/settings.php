@@ -92,19 +92,20 @@
                 <label>前台客服</label>
                 <input type="hidden" name="service_contacts" id="serviceContactsInput" value="<?= e(setting('service_contacts', '')) ?>">
                 <style>
-                    .cs-head{display:grid;grid-template-columns:130px 1fr 1fr 36px;gap:8px;font-size:11px;color:var(--muted);font-weight:600;padding:0 2px;margin-bottom:6px}
                     .cs-list{display:flex;flex-direction:column;gap:8px}
-                    .cs-row{display:grid;grid-template-columns:130px 1fr 1fr 36px;gap:8px;align-items:center}
-                    .cs-row select,.cs-row input{height:36px;padding:0 10px;font-size:12.5px;width:100%;margin:0}
-                    .cs-del{width:36px;height:36px;border:1px solid var(--input-border);background:transparent;border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.12s;flex:none}
-                    .cs-del:hover{color:var(--bad);border-color:var(--bad);background:rgba(220,38,68,.06)}
-                    .cs-add{width:100%;height:38px;border:1.5px dashed var(--input-border);background:transparent;border-radius:8px;color:var(--text2);cursor:pointer;font-size:12.5px;font-weight:600;font-family:inherit;transition:.12s;margin-top:8px}
+                    .cs-row{display:grid;grid-template-columns:148px 1.2fr 1fr 30px;gap:8px;align-items:center;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;transition:border-color .15s}
+                    .cs-row:hover{border-color:var(--input-border)}
+                    .cs-row select,.cs-row input{height:34px;padding:0 10px;font-size:12.5px;width:100%;margin:0}
+                    .cs-del{width:30px;height:30px;border:none;background:transparent;border-radius:7px;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;transition:.12s;flex:none}
+                    .cs-del:hover{color:var(--bad);background:var(--bad-bg)}
+                    .cs-empty{border:1.5px dashed var(--input-border);border-radius:10px;padding:18px;text-align:center;font-size:12px;color:var(--muted)}
+                    .cs-add{width:100%;height:38px;border:1.5px dashed var(--input-border);background:transparent;border-radius:10px;color:var(--text2);cursor:pointer;font-size:12.5px;font-weight:600;font-family:inherit;transition:.12s;margin-top:8px}
                     .cs-add:hover{border-color:var(--muted);color:var(--text);background:var(--input-bg)}
                 </style>
-                <div class="cs-head"><span>联系方式</span><span>客服账号</span><span>备注(选填)</span><span></span></div>
                 <div class="cs-list" id="csList"></div>
-                <button type="button" class="cs-add" id="csAdd">＋ 添加联系方式</button>
-                <div class="desc">Telegram / 邮箱 / QQ / 微信 / 电话，留空不显示。</div>
+                <div class="cs-empty" id="csEmpty">暂未添加客服方式，点击下方按钮添加</div>
+                <button type="button" class="cs-add" id="csAdd">＋ 添加客服方式</button>
+                <div class="desc">支持 Telegram / 邮箱 / QQ / 微信 / 电话，留空则前台不显示客服入口。</div>
             </div>
             <div class="form-row">
                 <label>公告与单页</label>
@@ -249,8 +250,11 @@ document.querySelectorAll('.settings-tab').forEach(function (t) {
 (function () {
     var types = <?= json_encode(contact_type_all(), JSON_UNESCAPED_UNICODE) ?>;
     var data = <?= json_encode(service_contacts(), JSON_HEX_TAG | JSON_UNESCAPED_UNICODE) ?>;
+    var icons = { telegram: '💬', email: '📧', qq: '🐧', wechat: '💚', phone: '📞' };
+    var phs = { telegram: '@用户名 或 t.me 链接', email: 'name@example.com', qq: 'QQ 号码', wechat: '微信号', phone: '+86 手机号' };
     var list = document.getElementById('csList');
     var hidden = document.getElementById('serviceContactsInput');
+    var empty = document.getElementById('csEmpty');
     if (!list || !hidden) return;
     function serialize() {
         var rows = [];
@@ -261,29 +265,43 @@ document.querySelectorAll('.settings-tab').forEach(function (t) {
         });
         hidden.value = JSON.stringify(rows);
     }
+    function syncPh(row) {
+        var t = row.querySelector('.cs-type').value;
+        row.querySelector('.cs-value').placeholder = phs[t] || '客服账号';
+    }
+    function syncEmpty() {
+        empty.style.display = list.querySelector('.cs-row') ? 'none' : 'block';
+    }
     function addRow(item) {
         var row = document.createElement('div');
         row.className = 'cs-row';
         var opts = '';
-        for (var k in types) opts += '<option value="' + k + '">' + types[k] + '</option>';
+        for (var k in types) opts += '<option value="' + k + '">' + (icons[k] ? icons[k] + ' ' : '') + types[k] + '</option>';
         row.innerHTML = '<select class="cs-type">' + opts + '</select>' +
             '<input class="cs-value" placeholder="客服账号">' +
             '<input class="cs-note" placeholder="备注(选填)">' +
-            '<button type="button" class="cs-del" title="删除该行">🗑</button>';
+            '<button type="button" class="cs-del" title="删除该行">×</button>';
         if (item) {
             row.querySelector('.cs-type').value = item.type || 'qq';
             row.querySelector('.cs-value').value = item.value || '';
             row.querySelector('.cs-note').value = item.note || '';
         }
+        syncPh(row);
         list.appendChild(row);
+        syncEmpty();
     }
     list.addEventListener('click', function (ev) {
         var del = ev.target.closest ? ev.target.closest('.cs-del') : null;
-        if (del) { del.closest('.cs-row').remove(); serialize(); }
+        if (del) { del.closest('.cs-row').remove(); serialize(); syncEmpty(); }
     });
     list.addEventListener('input', serialize);
-    list.addEventListener('change', serialize);
+    list.addEventListener('change', function (ev) {
+        var row = ev.target.closest ? ev.target.closest('.cs-row') : null;
+        if (row && ev.target.classList.contains('cs-type')) syncPh(row);
+        serialize();
+    });
     document.getElementById('csAdd').addEventListener('click', function () { addRow(null); });
     data.forEach(function (item) { addRow(item); });
+    syncEmpty();
 })();
 </script>
