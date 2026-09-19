@@ -39,6 +39,11 @@
             <a href="<?= au('license') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'license') ? 'on' : '' ?>"><span class="ico">👑</span>授权中心</a>
             <div class="side-group">系统</div>
             <a href="<?= au('logs') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'logs') ? 'on' : '' ?>"><span class="ico">📜</span>操作日志</a>
+            <?php $curAdm = current_admin(); ?>
+            <a href="<?= au('profile') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'profile') ? 'on' : '' ?>"><span class="ico">👤</span>个人设置</a>
+            <?php if ($curAdm && $curAdm['role'] === 'super'): ?>
+            <a href="<?= au('admins') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'admins') ? 'on' : '' ?>"><span class="ico">🛡</span>管理员</a>
+            <?php endif; ?>
             <a href="<?= au('settings') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'settings') ? 'on' : '' ?>"><span class="ico">⚙️</span>系统设置</a>
         </nav>
         <div class="side-foot">
@@ -57,7 +62,7 @@
                 <button type="button" class="theme-btn" id="adminThemeBtn" aria-label="切换主题">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
                 </button>
-                <span class="admin-user"><?= e(isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : '管理员') ?></span>
+                <a href="<?= au('profile') ?>" style="text-decoration:none"><span class="admin-user"><?= e(isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : '管理员') ?></span></a>
             </div>
         </header>
         <div class="admin-content"><?= $content ?></div>

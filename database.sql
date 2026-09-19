@@ -161,6 +161,13 @@ CREATE TABLE IF NOT EXISTS `admin_users` (
   `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
+  `nickname` varchar(50) NOT NULL DEFAULT '' COMMENT '昵称',
+  `role` varchar(10) NOT NULL DEFAULT 'normal' COMMENT 'super超级管理员 normal普通管理员',
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '1启用 0禁用',
+  `last_login_at` int unsigned NOT NULL DEFAULT 0,
+  `last_login_ip` varchar(45) NOT NULL DEFAULT '',
+  `prev_login_at` int unsigned NOT NULL DEFAULT 0,
+  `prev_login_ip` varchar(45) NOT NULL DEFAULT '',
   `created_at` int unsigned NOT NULL DEFAULT 0,
   UNIQUE KEY `uk_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

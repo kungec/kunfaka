@@ -8,7 +8,8 @@ class AdminController
     {
         $public = ['actionLogin', 'actionCaptchaImage'];
         if (!in_array($method, $public)) {
-            if (empty($_SESSION['admin_id'])) {
+            if (empty($_SESSION['admin_id']) || !current_admin()) {
+                unset($_SESSION['admin_id'], $_SESSION['admin_name']);
                 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
                     json_out(['code' => 401, 'msg' => '登录已失效']);
                 }
@@ -18,11 +19,18 @@ class AdminController
         }
     }
 
+    /** 当前管理员是否超级管理员 */
+    protected function isSuper()
+    {
+        $a = current_admin();
+        return $a && $a['role'] === 'super';
+    }
+
     // ---------- 登录 ----------
 
     public function actionLogin()
     {
-        if (!empty($_SESSION['admin_id'])) redirect(au('dashboard'));
+        if (!empty($_SESSION['admin_id']) && current_admin()) redirect(au('dashboard'));
         $error = '';
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = trim(arr_get($_POST, 'username'));
@@ -38,17 +46,23 @@ class AdminController
                 } else {
                     $row = DB::fetch('SELECT * FROM admin_users WHERE username = ?', [$user]);
                     if ($row && password_verify($pass, $row['password'])) {
-                        Security::loginClear('admin', $user, client_ip());
-                        session_regenerate_id(true);
-                        $_SESSION['admin_id'] = $row['id'];
-                        $_SESSION['admin_name'] = $row['username'];
-                        add_log('admin', '管理员「' . $user . '」登录成功');
-                        redirect(au('dashboard'));
+                        if ((int)$row['status'] !== 1) {
+                            $error = '账号已被禁用, 请联系超级管理员';
+                        } else {
+                            Security::loginClear('admin', $user, client_ip());
+                            session_regenerate_id(true);
+                            $_SESSION['admin_id'] = $row['id'];
+                            $_SESSION['admin_name'] = $row['nickname'] !== '' ? $row['nickname'] : $row['username'];
+                            DB::exec('UPDATE admin_users SET prev_login_at = last_login_at, prev_login_ip = last_login_ip, last_login_at = ?, last_login_ip = ? WHERE id = ?', [now(), client_ip(), $row['id']]);
+                            add_log('admin', '管理员「' . $user . '」登录成功');
+                            redirect(au('dashboard'));
+                        }
+                    } else {
+                        Security::loginFail('admin', $user, client_ip());
+                        add_log('admin', '管理员登录失败: ' . $user);
+                        $left = Security::LOGIN_MAX_FAILS - $lock['fails'] - 1;
+                        $error = '用户名或密码错误' . ($left > 0 ? ", 今日还可尝试 {$left} 次" : ', 已触发锁定(60分钟)');
                     }
-                    Security::loginFail('admin', $user, client_ip());
-                    add_log('admin', '管理员登录失败: ' . $user);
-                    $left = Security::LOGIN_MAX_FAILS - $lock['fails'] - 1;
-                    $error = '用户名或密码错误' . ($left > 0 ? ", 今日还可尝试 {$left} 次" : ', 已触发锁定(60分钟)');
                 }
             }
         }
@@ -375,6 +389,144 @@ class AdminController
         if ($count > 0) json_out(['code' => 1, 'msg' => '该商品还有 ' . $count . ' 张未售卡密, 请先清空库存']);
         DB::exec('DELETE FROM products WHERE id = ?', [$id]);
         json_out(['code' => 0, 'msg' => '删除成功']);
+    }
+
+    // ---------- 管理员系统 ----------
+
+    public function actionAdmins()
+    {
+        if (!$this->isSuper()) redirect(au('dashboard'));
+        $where = '1';
+        $params = [];
+        $kw = trim(arr_get($_GET, 'kw'));
+        if ($kw !== '') {
+            $where .= ' AND (username LIKE ? OR nickname LIKE ?)';
+            $params = array_merge($params, ['%' . $kw . '%', '%' . $kw . '%']);
+        }
+        $status = arr_get($_GET, 'status', '');
+        if ($status !== '') {
+            $where .= ' AND status = ?';
+            $params[] = (int)$status;
+        }
+        $list = DB::fetchAll("SELECT * FROM admin_users WHERE {$where} ORDER BY id ASC LIMIT 200", $params);
+        View::admin('admins', ['list' => $list]);
+    }
+
+    /** 新增/修改管理员(仅超级管理员) */
+    public function actionAdminSave()
+    {
+        if (!$this->isSuper()) json_out(['code' => 1, 'msg' => '仅超级管理员可管理管理员']);
+        $id = (int)arr_get($_POST, 'id');
+        $me = current_admin();
+        if ($id > 0) {
+            $target = DB::fetch('SELECT * FROM admin_users WHERE id = ?', [$id]);
+            if (!$target) json_out(['code' => 1, 'msg' => '管理员不存在']);
+            $data = ['nickname' => mb_substr(trim(arr_get($_POST, 'nickname')), 0, 50)];
+            $role = arr_get($_POST, 'role') === 'super' ? 'super' : 'normal';
+            // 不能修改自己的角色; 不能降级最后一个超级管理员
+            if ($id === (int)$me['id'] && $role !== 'super') json_out(['code' => 1, 'msg' => '不能修改自己的角色']);
+            if ($target['role'] === 'super' && $role === 'normal') {
+                $left = (int)DB::value("SELECT COUNT(*) FROM admin_users WHERE role = 'super' AND status = 1 AND id <> ?", [$id]);
+                if ($left === 0) json_out(['code' => 1, 'msg' => '至少保留一个启用的超级管理员']);
+            }
+            $data['role'] = $role;
+            $pass = (string)arr_get($_POST, 'password');
+            if ($pass !== '') {
+                if (strlen($pass) < 6) json_out(['code' => 1, 'msg' => '密码至少6位']);
+                $data['password'] = password_hash($pass, PASSWORD_DEFAULT);
+            }
+            DB::update('admin_users', $data, 'id = ?', [$id]);
+            add_log('admin', '超级管理员修改管理员: ' . $target['username']);
+            json_out(['code' => 0, 'msg' => '保存成功']);
+        }
+        $username = trim(arr_get($_POST, 'username'));
+        $password = (string)arr_get($_POST, 'password');
+        $role = arr_get($_POST, 'role') === 'super' ? 'super' : 'normal';
+        if (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $username)) json_out(['code' => 1, 'msg' => '用户名需3-20位字母/数字/下划线']);
+        if (strlen($password) < 6) json_out(['code' => 1, 'msg' => '密码至少6位']);
+        if (DB::value('SELECT id FROM admin_users WHERE username = ?', [$username])) json_out(['code' => 1, 'msg' => '用户名已存在']);
+        DB::insert('admin_users', [
+            'username' => $username,
+            'password' => password_hash($password, PASSWORD_DEFAULT),
+            'nickname' => mb_substr(trim(arr_get($_POST, 'nickname')), 0, 50),
+            'role' => $role,
+            'created_at' => now(),
+        ]);
+        add_log('admin', '超级管理员新增管理员: ' . $username);
+        json_out(['code' => 0, 'msg' => '管理员已创建']);
+    }
+
+    /** 启用/禁用管理员(仅超级管理员) */
+    public function actionAdminToggle()
+    {
+        if (!$this->isSuper()) json_out(['code' => 1, 'msg' => '仅超级管理员可执行此操作']);
+        $id = (int)arr_get($_POST, 'id');
+        $me = current_admin();
+        $target = DB::fetch('SELECT * FROM admin_users WHERE id = ?', [$id]);
+        if (!$target) json_out(['code' => 1, 'msg' => '管理员不存在']);
+        if ($id === (int)$me['id']) json_out(['code' => 1, 'msg' => '不能禁用自己的账号']);
+        if ($target['role'] === 'super' && (int)$target['status'] === 1) {
+            $left = (int)DB::value("SELECT COUNT(*) FROM admin_users WHERE role = 'super' AND status = 1 AND id <> ?", [$id]);
+            if ($left === 0) json_out(['code' => 1, 'msg' => '至少保留一个启用的超级管理员']);
+        }
+        $status = (int)$target['status'] === 1 ? 0 : 1;
+        DB::update('admin_users', ['status' => $status], 'id = ?', [$id]);
+        json_out(['code' => 0, 'msg' => $status ? '已启用' : '已禁用']);
+    }
+
+    /** 删除管理员(仅超级管理员) */
+    public function actionAdminDel()
+    {
+        if (!$this->isSuper()) json_out(['code' => 1, 'msg' => '仅超级管理员可执行此操作']);
+        $id = (int)arr_get($_POST, 'id');
+        $me = current_admin();
+        $target = DB::fetch('SELECT * FROM admin_users WHERE id = ?', [$id]);
+        if (!$target) json_out(['code' => 1, 'msg' => '管理员不存在']);
+        if ($id === (int)$me['id']) json_out(['code' => 1, 'msg' => '不能删除自己的账号']);
+        if ($target['role'] === 'super') {
+            $left = (int)DB::value("SELECT COUNT(*) FROM admin_users WHERE role = 'super' AND status = 1 AND id <> ?", [$id]);
+            if ($left === 0) json_out(['code' => 1, 'msg' => '至少保留一个启用的超级管理员']);
+        }
+        DB::exec('DELETE FROM admin_users WHERE id = ?', [$id]);
+        add_log('admin', '超级管理员删除管理员: ' . $target['username']);
+        json_out(['code' => 0, 'msg' => '已删除']);
+    }
+
+    // ---------- 个人设置 ----------
+
+    public function actionProfile()
+    {
+        View::admin('profile', ['admin' => current_admin()]);
+    }
+
+    public function actionProfileSave()
+    {
+        $me = current_admin();
+        $data = [];
+        if (isset($_POST['nickname'])) {
+            $data['nickname'] = mb_substr(trim(arr_get($_POST, 'nickname')), 0, 50);
+        }
+        $oldPass = (string)arr_get($_POST, 'old_password');
+        $newPass = (string)arr_get($_POST, 'new_password');
+        $confirmPass = (string)arr_get($_POST, 'confirm_password');
+        $changingPass = $oldPass !== '' || $newPass !== '' || $confirmPass !== '';
+        if ($changingPass) {
+            if (!password_verify($oldPass, $me['password'])) json_out(['code' => 1, 'msg' => '旧密码不正确']);
+            if (strlen($newPass) < 6) json_out(['code' => 1, 'msg' => '新密码至少6位']);
+            if ($newPass !== $confirmPass) json_out(['code' => 1, 'msg' => '两次输入的新密码不一致']);
+            $data['password'] = password_hash($newPass, PASSWORD_DEFAULT);
+        }
+        if (!$data) json_out(['code' => 1, 'msg' => '没有需要保存的修改']);
+        DB::update('admin_users', $data, 'id = ?', [$me['id']]);
+        if (isset($data['password'])) {
+            // 改密后更换会话ID(防会话固定), 登录态保留
+            session_regenerate_id(true);
+        }
+        if (isset($data['nickname']) && $data['nickname'] !== '') {
+            $_SESSION['admin_name'] = $data['nickname'];
+        }
+        add_log('admin', '管理员修改个人设置' . (isset($data['password']) ? '(含密码)' : ''));
+        json_out(['code' => 0, 'msg' => '保存成功']);
     }
 
     // ---------- 卡密管理 ----------

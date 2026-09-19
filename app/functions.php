@@ -202,6 +202,17 @@ function product_visible(array $product, $level = null) {
     return $level >= $cache[$gid];
 }
 
+/** 当前登录的管理员行(未登录/已禁用返回null; 每请求缓存) */
+function current_admin() {
+    static $row = null, $loaded = false;
+    if (!$loaded) {
+        $loaded = true;
+        $id = isset($_SESSION['admin_id']) ? (int)$_SESSION['admin_id'] : 0;
+        $row = $id > 0 ? DB::fetch('SELECT * FROM admin_users WHERE id = ? AND status = 1', [$id]) : null;
+    }
+    return $row;
+}
+
 /** 当前登录前台会员ID(未登录0; 会员功能关闭时视为游客) */
 function current_user_id() {
     if (!member_open()) return 0;

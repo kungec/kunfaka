@@ -89,11 +89,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->exec($stmt);
         }
 
-        // 管理员账号(仅当无账号时创建)
+        // 管理员账号(仅当无账号时创建; 首个管理员为超级管理员)
         $cnt = $pdo->query('SELECT COUNT(*) FROM admin_users')->fetchColumn();
         if ((int)$cnt === 0) {
-            $st = $pdo->prepare('INSERT INTO admin_users (username, password, created_at) VALUES (?, ?, ?)');
-            $st->execute([$adminUser, password_hash($adminPass, PASSWORD_DEFAULT), time()]);
+            $st = $pdo->prepare('INSERT INTO admin_users (username, password, nickname, role, created_at) VALUES (?, ?, ?, ?, ?)');
+            $st->execute([$adminUser, password_hash($adminPass, PASSWORD_DEFAULT), $adminUser, 'super', time()]);
         }
 
         // 随机后台入口: 复制 admin.php → admin_xxxxxx.php, 并移除原入口

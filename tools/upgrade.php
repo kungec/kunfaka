@@ -114,6 +114,28 @@ if ((int)$stmt->fetchColumn() === 0) {
     echo "SKIP: products.group_id 已存在\n";
 }
 
+// 管理员系统(v2.14.0): 多管理员/角色/启停/登录记录
+foreach ([
+    ['nickname', "varchar(50) NOT NULL DEFAULT '' COMMENT '昵称'", 'username'],
+    ['role', "varchar(10) NOT NULL DEFAULT 'normal' COMMENT 'super超级管理员 normal普通管理员'", 'nickname'],
+    ['status', "tinyint NOT NULL DEFAULT 1 COMMENT '1启用 0禁用'", 'role'],
+    ['last_login_at', 'int unsigned NOT NULL DEFAULT 0', 'status'],
+    ['last_login_ip', "varchar(45) NOT NULL DEFAULT ''", 'last_login_at'],
+    ['prev_login_at', 'int unsigned NOT NULL DEFAULT 0', 'last_login_ip'],
+    ['prev_login_ip', "varchar(45) NOT NULL DEFAULT ''", 'prev_login_at'],
+] as [$col, $def, $after]) {
+    $stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'admin_users' AND COLUMN_NAME = '{$col}'");
+    if ((int)$stmt->fetchColumn() === 0) {
+        $pdo->exec("ALTER TABLE `admin_users` ADD COLUMN `{$col}` {$def} AFTER `{$after}`");
+        echo "OK: admin_users 表已添加 {$col} 列\n";
+    } else {
+        echo "SKIP: admin_users.{$col} 已存在\n";
+    }
+}
+// 最早创建的管理员设为超级管理员(仅一次)
+$pdo->exec("UPDATE admin_users SET role = 'super' WHERE id = (SELECT id FROM (SELECT id FROM admin_users ORDER BY id ASC LIMIT 1) t) AND role <> 'super'");
+echo "OK: 首个管理员已设为超级管理员\n";
+
 // 系统日志表(v1.4→v1.5)
 $pdo->exec("CREATE TABLE IF NOT EXISTS `logs` (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
