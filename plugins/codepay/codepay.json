@@ -1,0 +1,11 @@
+{
+  "name": "codepay",
+  "title": "码支付",
+  "type": "payment",
+  "version": "1.0.0",
+  "author": "坤发卡官方",
+  "desc": "码支付聚合收款(易支付协议), 支持支付宝/微信/QQ收款。参考 https://xpay.shw1.com/doc/epay_submit 接口开发, 填写平台商户ID与密钥即可收款。",
+  "price": 0,
+  "pro": false,
+  "class": "CodepayPlugin"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "epay",
+  "title": "易支付",
+  "type": "payment",
+  "version": "1.0.0",
+  "author": "坤发卡官方",
+  "desc": "标准易支付协议插件, 兼容彩虹易支付等各类易支付平台, 填写网关地址/商户ID/商户密钥即可使用。",
+  "price": 0,
+  "pro": false,
+  "class": "EpayPlugin"
+}

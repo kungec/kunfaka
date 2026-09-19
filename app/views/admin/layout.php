@@ -1,0 +1,81 @@
+<?php /** 管理后台布局 v3「曜石工作台」(移动端抽屉侧栏 + 明暗双模式) */ ?>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1222">
+<title><?= e(isset($pageTitle) ? $pageTitle : '管理后台') ?> - 坤发卡</title>
+<link rel="stylesheet" href="<?= site_url('assets/css/admin.css') ?>?v=3.0.0">
+<script>
+(function () {
+    var t = null;
+    try { t = localStorage.getItem('yf-admin-theme'); } catch (e) {}
+    if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+    else if (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+})();
+</script>
+</head>
+<body>
+<div class="admin-shell">
+    <div class="side-mask" id="sideMask"></div>
+    <aside class="side" id="sideNav">
+        <div class="side-logo">
+            <em class="mark">坤</em>
+            <div><b>坤发卡</b><small>ADMIN CONSOLE</small></div>
+        </div>
+        <nav class="side-nav">
+            <a href="<?= au('dashboard') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'dashboard') ? 'on' : '' ?>"><span class="ico">📊</span>仪表盘</a>
+            <div class="side-group">经营</div>
+            <a href="<?= au('orders') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'orders') ? 'on' : '' ?>"><span class="ico">🧾</span>订单管理</a>
+            <a href="<?= au('users') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'users') ? 'on' : '' ?>"><span class="ico">👥</span>会员管理</a>
+            <a href="<?= au('products') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'products') ? 'on' : '' ?>"><span class="ico">📦</span>商品管理</a>
+            <a href="<?= au('categories') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'categories') ? 'on' : '' ?>"><span class="ico">🗂</span>分类管理</a>
+            <a href="<?= au('notices') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'notices') ? 'on' : '' ?>"><span class="ico">📣</span>公告单页</a>
+            <a href="<?= au('cards') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'cards') ? 'on' : '' ?>"><span class="ico">🔑</span>卡密库存</a>
+            <div class="side-group">应用</div>
+            <a href="<?= au('apps', ['type' => 'payment']) ?>" class="<?= (isset($activeMenu) && $activeMenu === 'apps') ? 'on' : '' ?>"><span class="ico">🛒</span>应用商店</a>
+            <a href="<?= au('license') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'license') ? 'on' : '' ?>"><span class="ico">👑</span>授权中心</a>
+            <div class="side-group">系统</div>
+            <a href="<?= au('logs') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'logs') ? 'on' : '' ?>"><span class="ico">📜</span>系统日志</a>
+            <a href="<?= au('settings') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'settings') ? 'on' : '' ?>"><span class="ico">⚙️</span>系统设置</a>
+        </nav>
+        <div class="side-foot">
+            <a href="<?= au('logout') ?>">↩ 退出登录</a>
+            <a class="foot-home" href="<?= site_url('index.php') ?>" target="_blank">🏠 前台</a>
+        </div>
+    </aside>
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <div class="topbar-left">
+                <button class="burger" id="sideBurger" aria-label="打开菜单">☰</button>
+                <span class="topbar-title"><?= e(isset($pageTitle) ? $pageTitle : '管理台') ?></span>
+            </div>
+            <div class="topbar-right">
+                <span class="license-tag <?= License::isPro() ? 'pro' : '' ?>"><?= License::isPro() ? '👑 专业版会员' : '商店会员未开通' ?></span>
+                <button type="button" class="theme-btn" id="adminThemeBtn" aria-label="切换明暗模式" title="切换明/暗模式">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+                </button>
+                <span class="admin-user">👤 <?= e(isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : '管理员') ?></span>
+            </div>
+        </header>
+        <div class="admin-content"><?= $content ?></div>
+    </div>
+</div>
+<script src="<?= site_url('assets/js/admin.js') ?>"></script>
+<script>
+(function () {
+    var btn = document.getElementById('adminThemeBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+        var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var next = dark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('yf-admin-theme', next); } catch (e) {}
+    });
+})();
+</script>
+</body>
+</html>

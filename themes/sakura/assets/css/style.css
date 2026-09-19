@@ -1,0 +1,23 @@
+/* 坤发卡 · 樱花季二次元主题 (继承默认主题视图, 仅重定义配色) */
+@import url("../../anime/assets/css/style.css");
+
+:root {
+    --bg: linear-gradient(135deg, #fff5f8 0%, #ffe9f2 45%, #ffdcE9 100%);
+    --primary: #ff9ec7;
+    --primary-deep: #ff6fa5;
+    --secondary: #ffb0c8;
+    --accent: #c99bff;
+    --card: rgba(255, 255, 255, .95);
+    --text: #6b4459;
+    --muted: #b58fa3;
+    --shadow: 0 8px 26px rgba(255, 111, 165, .22);
+    --shadow-hover: 0 14px 34px rgba(255, 111, 165, .35);
+}
+.logo { background: linear-gradient(90deg, #ff6fa5, #c99bff); -webkit-background-clip: text; background-clip: text; }
+.panel-title { background: linear-gradient(90deg, #ff6fa5, #c99bff); -webkit-background-clip: text; background-clip: text; }
+.goods-price { color: #ff6fa5; }
+.price-text { color: #ff6fa5; }
+.usdt-amount { color: #ff6fa5; }
+.announce { background: linear-gradient(90deg, rgba(255,158,199,.16), rgba(201,155,255,.14)); border-color: rgba(255, 158, 199, .35); }
+.cat-tab.active { background: linear-gradient(90deg, #ff9ec7, #c99bff); }
+.btn-buy { background: linear-gradient(90deg, #ff9ec7, #c99bff); }

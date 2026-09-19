@@ -1,0 +1,11 @@
+{
+  "name": "wechat_native",
+  "title": "微信官方支付",
+  "type": "payment",
+  "version": "1.0.0",
+  "author": "坤发卡官方",
+  "desc": "微信支付官方V3接口(Native扫码支付), 按微信官方API开发, 需微信支付商户号并开通Native产品。扫码支付, 回调验签+AES-GCM解密, 自动发货。",
+  "price": 0,
+  "pro": false,
+  "class": "WechatNativePlugin"
+}

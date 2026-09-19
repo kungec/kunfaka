@@ -1,0 +1,53 @@
+/* 坤发卡 · 赛博暗黑科技主题 (继承默认主题视图, 深色霓虹换肤) */
+@import url("../../anime/assets/css/style.css");
+
+:root {
+    --bg: linear-gradient(135deg, #0b1020 0%, #101731 55%, #141428 100%);
+    --primary: #22d3ee;
+    --primary-deep: #38e8ff;
+    --secondary: #7c8cf8;
+    --accent: #a78bfa;
+    --card: rgba(23, 31, 54, .92);
+    --text: #dbe6ff;
+    --muted: #7d8ab0;
+    --radius: 12px;
+    --shadow: 0 8px 26px rgba(34, 211, 238, .12);
+    --shadow-hover: 0 12px 34px rgba(34, 211, 238, .25);
+}
+body { background: var(--bg) fixed; color: var(--text); }
+.sakura-bg { display: none; }
+.site-header { background: rgba(13, 18, 36, .85); border-bottom: 1px solid rgba(34, 211, 238, .2); }
+.logo { background: linear-gradient(90deg, #38e8ff, #a78bfa); -webkit-background-clip: text; background-clip: text; }
+.logo-icon { color: #38e8ff; -webkit-text-fill-color: #38e8ff; }
+.nav a { color: var(--text); }
+.nav a:hover { color: #38e8ff; border-bottom-color: #38e8ff; }
+.announce { background: linear-gradient(90deg, rgba(34,211,238,.08), rgba(167,139,250,.1)); border-color: rgba(34, 211, 238, .3); color: var(--text); }
+.panel { background: var(--card); border: 1px solid rgba(34, 211, 238, .16); box-shadow: var(--shadow); }
+.panel-title { background: linear-gradient(90deg, #38e8ff, #a78bfa); -webkit-background-clip: text; background-clip: text; }
+.cat-tab { background: rgba(23, 31, 54, .9); border-color: rgba(34, 211, 238, .25); color: var(--text); }
+.cat-tab.active { background: linear-gradient(90deg, #22d3ee, #a78bfa); color: #04101a; }
+.goods-card { background: var(--card); border-color: rgba(34, 211, 238, .14); box-shadow: var(--shadow); }
+.goods-price, .price-text { color: #38e8ff; }
+.usdt-amount { color: #38e8ff; }
+.btn-buy { background: linear-gradient(90deg, #22d3ee, #8b7cf8); color: #04101a; }
+.btn-ghost { border-color: rgba(34, 211, 238, .4); color: #38e8ff; }
+.btn-ghost:hover { background: rgba(34, 211, 238, .08); }
+.form-row input, .form-row textarea, .form-row select { background: rgba(10, 15, 30, .9); color: var(--text); border-color: rgba(34, 211, 238, .25); }
+.order-summary { background: linear-gradient(90deg, rgba(34,211,238,.08), rgba(167,139,250,.1)); }
+.pay-item { background: rgba(23, 31, 54, .9); border-color: rgba(34, 211, 238, .2); color: var(--text); }
+.pay-item:hover { border-color: #38e8ff; }
+.order-item { background: var(--card); border-color: rgba(34, 211, 238, .14); }
+.cards-box { background: linear-gradient(135deg, rgba(34,211,238,.08), rgba(139,124,248,.12)); border-color: rgba(34, 211, 238, .4); }
+.cards-content { background: #0a0f1e; color: #9ff3ff; }
+.wallet-line code { background: rgba(34, 211, 238, .1); color: #9ff3ff; }
+.site-footer { color: var(--muted); }
+.hero { background: linear-gradient(120deg, rgba(34,211,238,.28), rgba(139,124,248,.32) 55%, rgba(167,139,250,.26)); border: 1px solid rgba(34, 211, 238, .25); box-shadow: var(--shadow); }
+.hero-blob { opacity: .3; }
+.auth-tabs { background: rgba(23, 31, 54, .9); border-color: rgba(34, 211, 238, .2); }
+.auth-tab { color: var(--muted); }
+.auth-tab.active { background: linear-gradient(90deg, #22d3ee, #8b7cf8); color: #04101a; }
+.auth-err { background: rgba(239, 77, 110, .14); }
+.btn-copy { border-color: rgba(34, 211, 238, .4); background: rgba(34, 211, 238, .1); color: #38e8ff; }
+.captcha-img { border-color: rgba(34, 211, 238, .3); }
+.nav-burger { background: rgba(23, 31, 54, .9); border-color: rgba(34, 211, 238, .25); }
+.site-header .nav { background: rgba(13, 18, 36, .97); }

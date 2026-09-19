@@ -1,0 +1,11 @@
+{
+  "name": "alipay_page",
+  "title": "支付宝官方支付",
+  "type": "payment",
+  "version": "1.0.0",
+  "author": "坤发卡官方",
+  "desc": "支付宝官方开放平台接口(电脑网站支付/手机网站支付), 跳转支付宝官方收银台完成支付。需开通支付宝开放平台应用并签约相应产品。",
+  "price": 0,
+  "pro": false,
+  "class": "AlipayPagePlugin"
+}

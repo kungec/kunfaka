@@ -1,0 +1,11 @@
+{
+  "name": "alipay_f2f",
+  "title": "支付宝当面付",
+  "type": "payment",
+  "version": "1.0.0",
+  "author": "坤发卡官方",
+  "desc": "支付宝官方当面付(precreate扫码)接口, 需在支付宝开放平台签约当面付产品。生成收款二维码, 用户扫码支付, 回调自动发货。",
+  "price": 0,
+  "pro": false,
+  "class": "AlipayF2fPlugin"
+}
