@@ -146,11 +146,12 @@
             <div class="form-row">
                 <label>CDN 接入模式</label>
                 <select name="cdn_mode">
+                    <option value="auto" <?= setting('cdn_mode', 'auto') === 'auto' ? 'selected' : '' ?>>自动判断(推荐)</option>
                     <option value="off" <?= setting('cdn_mode', 'off') === 'off' ? 'selected' : '' ?>>未套CDN(直连)</option>
                     <option value="cloudflare" <?= setting('cdn_mode', 'off') === 'cloudflare' ? 'selected' : '' ?>>已套 Cloudflare</option>
                     <option value="cdn" <?= setting('cdn_mode', 'off') === 'cdn' ? 'selected' : '' ?>>其他CDN / 反向代理</option>
                 </select>
-                <div class="desc">套CDN后选择对应模式，系统自动从CDN头识别买家真实IP。</div>
+                <div class="desc">推荐保持「自动判断」: 系统自动识别请求是否经过 Cloudflare/反向代理并还原买家真实IP, 无需手动配置。</div>
             </div>
             <div class="form-row">
                 <label>套CDN时支付回调注意</label>

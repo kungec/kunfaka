@@ -220,4 +220,4 @@ INSERT IGNORE INTO `settings` (`k`,`v`) VALUES
 ('singlepage_open','0'),
 ('singlepage_title','关于我们'),
 ('singlepage_content',''),
-('cdn_mode','off');
+('cdn_mode','auto');

@@ -24,32 +24,93 @@ function curl_tls($ch) {
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 }
 
-/** 客户端IP(按接入模式识别真实IP; off=直连不信任任何头) */
+/** Cloudflare 官方IP段(用于自动识别请求是否经过CF) */
+function cf_ip_ranges() {
+    return [
+        '173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22',
+        '141.101.64.0/18', '108.162.192.0/18', '190.93.240.0/20', '188.114.96.0/20',
+        '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15', '104.16.0.0/13',
+        '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
+        '2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32', '2405:8100::/32', '2a06:98c0::/29', '2c0f:f248::/32',
+    ];
+}
+
+/** IP是否落在CIDR段内(支持IPv4/IPv6) */
+function ip_in_cidr($ip, $cidr) {
+    if (strpos($cidr, '/') === false) return strcasecmp($ip, $cidr) === 0;
+    [$net, $bits] = explode('/', $cidr, 2);
+    $ipBin = @inet_pton($ip);
+    $netBin = @inet_pton($net);
+    if ($ipBin === false || $netBin === false || strlen($ipBin) !== strlen($netBin)) return false;
+    $bits = (int)$bits;
+    $full = intdiv($bits, 8);
+    $rem = $bits % 8;
+    if ($full > 0 && substr($ipBin, 0, $full) !== substr($netBin, 0, $full)) return false;
+    if ($rem > 0) {
+        $mask = (0xFF << (8 - $rem)) & 0xFF;
+        if ((ord($ipBin[$full]) & $mask) !== (ord($netBin[$full]) & $mask)) return false;
+    }
+    return true;
+}
+
+function ip_in_cidrs($ip, array $cidrs) {
+    foreach ($cidrs as $c) if (ip_in_cidr($ip, $c)) return true;
+    return false;
+}
+
+function is_public_ip($ip) {
+    return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
+}
+
+/**
+ * 客户端真实IP(全自动判断, 无需手动配置CDN模式):
+ * ① REMOTE_ADDR 是回环/内网地址 → 请求来自本机反代, 依次取 CF-Connecting-IP / X-Real-IP / XFF中最右公网IP;
+ * ② REMOTE_ADDR 属于 Cloudflare 官方IP段 → 自动识别为经CF, 取 CF-Connecting-IP;
+ * ③ 其余情况(直连) → REMOTE_ADDR 即真实IP。
+ * cdn_mode 设置仍兼容: cloudflare 模式下优先取 CF 头; cdn 模式下按 XFF 规则解析。
+ */
 function client_ip() {
-    $mode = setting('cdn_mode', 'off');
-    if ($mode === 'cloudflare') {
-        // Cloudflare模式: 信任 CF-Connecting-IP
-        if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
-            $ip = trim((string)$_SERVER['HTTP_CF_CONNECTING_IP']);
-            if (filter_var($ip, FILTER_VALIDATE_IP)) return $ip;
-        }
-    } elseif ($mode === 'cdn') {
-        // 通用CDN/反代模式: 从右往左取第一个非内网/保留段IP。
-        // XFF左侧值由客户端可控(可伪造), 只有最靠近服务器的受信代理追加以右的部分才可信。
+    $remote = isset($_SERVER['REMOTE_ADDR']) ? trim((string)$_SERVER['REMOTE_ADDR']) : '';
+    if ($remote === '') $remote = '0.0.0.0';
+    $cfIp = isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? trim((string)$_SERVER['HTTP_CF_CONNECTING_IP']) : '';
+    if ($cfIp === '' || !filter_var($cfIp, FILTER_VALIDATE_IP)) $cfIp = '';
+    $mode = setting('cdn_mode', 'auto');
+    // 严格直连模式(off): 不信任任何代理头, 直接返回TCP对端
+    if ($mode === 'off') return $remote;
+
+    // 兼容旧配置: 显式设置的模式优先生效
+    if ($mode === 'cloudflare' && $cfIp !== '') return $cfIp;
+    if ($mode === 'cdn') {
+        $fromXff = '';
         if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $parts = array_reverse(array_map('trim', explode(',', (string)$_SERVER['HTTP_X_FORWARDED_FOR'])));
-            foreach ($parts as $ip) {
-                if ($ip === '' || !filter_var($ip, FILTER_VALIDATE_IP)) continue;
-                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) return $ip;
+            foreach (array_reverse(array_map('trim', explode(',', (string)$_SERVER['HTTP_X_FORWARDED_FOR']))) as $ip) {
+                if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP) && is_public_ip($ip)) { $fromXff = $ip; break; }
             }
         }
-        // 部分CDN用 X-Real-IP (通常由受信反代覆盖设置)
-        if (!empty($_SERVER['HTTP_X_REAL_IP'])) {
-            $ip = trim((string)$_SERVER['HTTP_X_REAL_IP']);
-            if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP)) return $ip;
+        if ($fromXff !== '') return $fromXff;
+        if (!empty($_SERVER['HTTP_X_REAL_IP']) && filter_var(trim((string)$_SERVER['HTTP_X_REAL_IP']), FILTER_VALIDATE_IP)) {
+            return trim((string)$_SERVER['HTTP_X_REAL_IP']);
         }
     }
-    return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
+
+    // ---- 自动判断(不依赖设置) ----
+    // ① REMOTE_ADDR 是回环/内网 → 请求经过本机/内网反代, 从代理头还原真实IP
+    if (!filter_var($remote, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+        if ($cfIp !== '') return $cfIp;
+        if (!empty($_SERVER['HTTP_X_REAL_IP']) && filter_var(trim((string)$_SERVER['HTTP_X_REAL_IP']), FILTER_VALIDATE_IP)) {
+            return trim((string)$_SERVER['HTTP_X_REAL_IP']);
+        }
+        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            foreach (array_reverse(array_map('trim', explode(',', (string)$_SERVER['HTTP_X_FORWARDED_FOR']))) as $ip) {
+                if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP) && is_public_ip($ip)) return $ip;
+            }
+        }
+        return $remote; // 本机直连访问, 如实返回
+    }
+    // ② REMOTE_ADDR 属于 Cloudflare 官方IP段 → 自动识别为经CF
+    if ($cfIp !== '' && ip_in_cidrs($remote, cf_ip_ranges())) return $cfIp;
+    // ③ 直连
+    return $remote;
 }
 
 /** 金额显示 */

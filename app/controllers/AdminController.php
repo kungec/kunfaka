@@ -1544,7 +1544,7 @@ class AdminController
             setting_set('logo_image', 'uploads/' . $fname);
         }
         // CDN模式白名单兜底(仅允许三个合法值)
-        if (isset($_POST['cdn_mode']) && !in_array($_POST['cdn_mode'], ['off', 'cloudflare', 'cdn'], true)) {
+        if (isset($_POST['cdn_mode']) && !in_array($_POST['cdn_mode'], ['auto', 'off', 'cloudflare', 'cdn'], true)) {
             setting_set('cdn_mode', 'off');
         }
         // 伪静态开关白名单兜底

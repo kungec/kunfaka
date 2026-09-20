@@ -255,7 +255,7 @@ if ($col && ((int)$col['NUMERIC_SCALE'] < 10)) {
 
 // CDN接入模式(INSERT IGNORE, 不覆盖已有配置)
 $chk = $pdo->prepare('SELECT COUNT(*) FROM settings WHERE k = ?');
-foreach (['cdn_mode' => 'off'] as $k => $v) {
+foreach (['cdn_mode' => 'auto'] as $k => $v) {
     $chk->execute([$k]);
     if ((int)$chk->fetchColumn() === 0) {
         $st->execute([$k, $v]);
