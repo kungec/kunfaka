@@ -1,52 +1,57 @@
 <?php $activeMenu = 'license'; $pro = $license['is_pro']; ?>
 <style>
-.qq-bar{display:flex;align-items:center;gap:10px;padding:11px 16px;border:1px solid var(--input-border);border-radius:12px;background:var(--input-bg);margin:0 0 16px;font-size:12.5px;color:var(--text2)}
-.qq-bar b{color:var(--text)}
-.qq-ico{flex:none;width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
-.lic-hero{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:center;border-radius:16px;padding:26px 28px;margin-bottom:16px;position:relative;overflow:hidden}
-.lic-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(420px 200px at 92% 0%,rgba(255,255,255,.14),transparent 60%);pointer-events:none}
-.lic-hero.is-pro{background:linear-gradient(120deg,#b45309,#d97706 45%,#f59e0b);color:#fff;box-shadow:0 18px 44px -18px rgba(217,119,6,.55)}
-.lic-hero:not(.is-pro){background:linear-gradient(120deg,#4f46e5,#7c3aed 55%,#a855f7);color:#fff;box-shadow:0 18px 44px -18px rgba(124,58,237,.5)}
-.lic-badge{display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:.5px;padding:5px 13px;border-radius:999px;background:rgba(255,255,255,.2);backdrop-filter:blur(4px);margin-bottom:12px}
-.lic-title{font-size:21px;font-weight:800;letter-spacing:.3px}
-.lic-sub{margin-top:8px;font-size:13px;opacity:.92}
-.lic-sub .mono{opacity:.8}
-.lic-feats{display:flex;flex-direction:column;gap:9px;position:relative;z-index:1}
-.lic-feat{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600}
-.lic-feat i{flex:none;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;font-style:normal;font-size:11px;display:inline-flex;align-items:center;justify-content:center;font-weight:800}
-@media (max-width:1000px){.lic-hero{grid-template-columns:1fr}.lic-feats{flex-direction:row;flex-wrap:wrap;gap:8px}}
-.lic-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-bottom:16px}
+.lic-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 18px;border-radius:14px;margin-bottom:16px;background:var(--input-bg);border:1px solid var(--input-border)}
+.qq-ico{flex:none;width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 6px 14px -6px rgba(37,99,235,.5)}
+.qq-bar-tx{flex:1;min-width:200px;font-size:12.5px;color:var(--text2)}
+.qq-bar-tx b{color:var(--text)}
+.qq-join{flex:none;font-size:12px;font-weight:700;color:var(--info);text-decoration:none}
+.lic-hero{position:relative;overflow:hidden;border-radius:18px;padding:34px 34px 30px;margin-bottom:16px;color:#fff;background:linear-gradient(130deg,#111827 0%,#1f2937 55%,#312e81 100%);box-shadow:0 24px 60px -24px rgba(0,0,0,.6)}
+.lic-hero::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;right:-120px;top:-180px;background:radial-gradient(circle,rgba(250,204,21,.28),transparent 65%);pointer-events:none}
+.lic-hero::after{content:'';position:absolute;width:340px;height:340px;border-radius:50%;left:-120px;bottom:-200px;background:radial-gradient(circle,rgba(99,102,241,.3),transparent 65%);pointer-events:none}
+.lic-hero.is-pro{background:linear-gradient(130deg,#0f172a 0%,#1e2438 55%,#3b2f14 100%)}
+.lic-hero.is-pro::before{background:radial-gradient(circle,rgba(250,204,21,.4),transparent 62%)}
+.lic-badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;letter-spacing:1px;padding:6px 15px;border-radius:999px;margin-bottom:14px;background:rgba(250,204,21,.16);color:#fbbf24;border:1px solid rgba(250,204,21,.35)}
+.lic-hero:not(.is-pro) .lic-badge{background:rgba(129,140,248,.16);color:#a5b4fc;border-color:rgba(129,140,248,.35)}
+.lic-title{font-size:24px;font-weight:800;letter-spacing:.4px;margin-bottom:10px}
+.lic-sub{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px;color:rgba(255,255,255,.72)}
+.lic-sub .mono{padding:3px 10px;border-radius:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14)}
+.lic-exp{display:inline-flex;align-items:center;gap:6px}
+.lic-exp i{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade80}
+.lic-feats{position:relative;z-index:1;display:flex;flex-direction:column;gap:10px;margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14)}
+.lic-feat{display:flex;align-items:center;gap:10px;font-size:12.5px;color:rgba(255,255,255,.85)}
+.lic-feat i{flex:none;width:20px;height:20px;border-radius:50%;background:rgba(250,204,21,.2);color:#fbbf24;font-style:normal;font-size:11px;display:inline-flex;align-items:center;justify-content:center;font-weight:800}
+.lic-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 @media (max-width:1000px){.lic-grid{grid-template-columns:1fr}}
 .lic-card h3{margin-bottom:12px}
 .lic-card .hint{font-size:12.5px;color:var(--muted);line-height:1.8;margin:0 0 14px}
 .lic-card .hint b{color:var(--text)}
 .lic-key{display:flex;gap:8px;align-items:center;margin-bottom:12px}
-.lic-key input{flex:1;min-width:0;height:40px;padding:0 14px;border:1.5px solid var(--input-border);border-radius:10px;background:var(--input-bg);color:var(--text);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;outline:none}
+.lic-key input{flex:1;min-width:0;height:40px;padding:0 14px;border:1.5px solid var(--input-border);border-radius:10px;background:var(--input-bg);color:var(--text);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;outline:none;transition:border-color .15s}
 .lic-key input:focus{border-color:var(--info)}
-.lic-acts{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
 .perx{font-size:22px;font-weight:800}
 </style>
 
-<div class="qq-bar">
+<div class="lic-top">
     <span class="qq-ico">💬</span>
-    <span>官方售后QQ群: <b>307386089</b> —— 授权购买、部署协助、插件咨询请加群。</span>
+    <span class="qq-bar-tx">官方售后QQ群: <b>307386089</b> —— 授权购买、部署协助、插件咨询请加群。</span>
+    <a class="qq-join" href="https://qm.qq.com/cgi-bin/qm/qr?k=307386089" target="_blank" rel="noopener">前往加群 ›</a>
 </div>
 
 <div class="lic-hero <?= $pro ? 'is-pro' : '' ?>">
-    <div class="lic-hero-main">
-        <div class="lic-badge"><?= $pro ? '👑 专业版授权' : '免费版' ?></div>
-        <div class="lic-title"><?= $pro ? '已解锁全部商店内容' : '解锁应用商店全部插件与主题' ?></div>
-        <div class="lic-sub">
-            <?= $pro
-                ? ((int)$license['license_expires'] > 0 ? '有效期至 ' . e(date('Y-m-d', $license['license_expires'])) : '永久授权 · 后续新增付费应用同样免费')
-                : '专业版(¥' . e($price) . ') · 一次购买 永久授权 · 一码绑定一个站点'
-            ?>
-            <?php if ($license['license_key']): ?><span class="mono"> · 授权码 <?= e($license['license_key']) ?></span><?php endif; ?>
-        </div>
+    <div class="lic-badge"><?= $pro ? '👑 专业版授权 · 已激活' : '免费版 · 未激活专业版' ?></div>
+    <div class="lic-title"><?= $pro ? '已解锁全部商店内容' : '解锁应用商店全部插件与主题' ?></div>
+    <div class="lic-sub">
+        <?php if ($pro): ?>
+            <span class="lic-exp"><i></i><?= (int)$license['license_expires'] > 0 ? '有效期至 ' . e(date('Y-m-d', $license['license_expires'])) : '永久授权' ?></span>
+            <span>后续新增付费应用同步免费</span>
+            <?php if ($license['license_key']): ?><span class="mono"><?= e($license['license_key']) ?></span><?php endif; ?>
+        <?php else: ?>
+            <span>专业版 ¥<?= e($price) ?> · 一次购买 永久授权 · 一码绑定一个站点</span>
+        <?php endif; ?>
     </div>
     <div class="lic-feats">
         <div class="lic-feat"><i>✓</i> 全部付费插件免费下载</div>
-        <div class="lic-feat"><i>✓</i> 全部付费主题免费使用</div>
+        <div class="lic-feat"><i>✓</i> 全部付费主题免费使用与切换</div>
         <div class="lic-feat"><i>✓</i> 后续新增付费应用同步免费</div>
     </div>
 </div>
@@ -58,8 +63,8 @@
     <p class="dim" id="buy-status" style="margin:0">⟳ 正在查询订单状态…</p>
     <div id="buy-done" style="display:none;margin-top:12px">
         <p style="margin:0 0 8px;color:var(--ok);font-weight:700">✅ 支付成功! 您的永久授权码:</p>
-        <div class="form-inline">
-            <input type="text" id="buy-key" readonly class="mono" style="width:280px;font-weight:700">
+        <div class="lic-key">
+            <input type="text" id="buy-key" readonly class="mono" style="font-weight:700">
             <button class="btn gray" id="buy-copy" type="button">复制授权码</button>
             <button class="btn" id="buy-activate" type="button">⚡ 一键激活本站</button>
         </div>
@@ -76,11 +81,11 @@
             <div class="lic-acts"><button class="btn gray" id="verify-btn">✓ 验证授权</button></div>
         <?php else: ?>
             <p class="hint">填写邮箱后跳转官方收银台, 支持 <b>支付宝 / 微信 / USDT(TRC20)</b>。支付成功后系统自动生成<b>永久授权码</b>: 本页直接展示并同步发送到您的邮箱。</p>
-            <form class="form-inline" id="buy-form">
-                <input type="email" id="buy-email" placeholder="接收授权码的邮箱" style="width:220px" required>
-                <button class="btn" type="submit" style="height:42px;padding:0 26px;font-size:14px">⚡ 立即购买 <span class="perx">¥<?= e($price) ?></span></button>
+            <form class="lic-key" id="buy-form">
+                <input type="email" id="buy-email" placeholder="接收授权码的邮箱" required>
+                <button class="btn" type="submit">⚡ 立即购买 ¥<?= e($price) ?></button>
             </form>
-            <p class="hint" style="margin:10px 0 0">一个授权码可激活一个站点; 已有授权码可直接在右侧粘贴激活。</p>
+            <p class="hint" style="margin:0">一个授权码可激活一个站点; 已有授权码可直接在右侧「激活授权码」粘贴激活。</p>
         <?php endif; ?>
     </div>
 
