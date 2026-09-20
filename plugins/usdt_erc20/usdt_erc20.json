@@ -1,0 +1,11 @@
+{
+    "name": "usdt_erc20",
+    "title": "USDT免挂支付(ERC20)",
+    "type": "payment",
+    "version": "1.0.0",
+    "author": "坤发卡官方",
+    "desc": "以太坊主网USDT免挂机收款插件: 填写以太坊收款地址与Etherscan免费API密钥, 系统自动识别链上USDT转账到账并实时发货, 无需节点、无需钱包软件。自动实时汇率换算, 每笔订单唯一金额精准对账。注意: ERC20转账需消耗ETH作Gas, 到账确认略慢于BSC\/Polygon。",
+    "price": 99,
+    "pro": true,
+    "class": "UsdtErc20Plugin"
+}
