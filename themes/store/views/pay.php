@@ -5,8 +5,8 @@
         <div class="os-row"><span>支付方式</span><b class="pay-brand-row"><?= isset($pay['icon']) ? $pay['icon'] : '' ?> <?= e($pay['plugin_name']) ?></b></div>
         <div class="os-row"><span>订单编号</span><b class="mono"><?= e($order['sn']) ?></b></div>
         <div class="os-row"><span>商品</span><b><?= e($order['product_name']) ?> × <?= (int)$order['num'] ?></b></div>
-        <?php if ($pay['plugin_code'] === 'usdt_trc20' && !empty($pay['extra']['expected_amount'])): ?>
-            <div class="os-row"><span>需支付USDT</span><b class="usdt-amount"><?= e(number_format((float)$pay['extra']['expected_amount'], 6, '.', '')) ?></b></div>
+        <?php if (!empty($pay['extra']['expected_amount'])): ?>
+            <div class="os-row"><span>需支付<?= e(!empty($pay['extra']['unit']) ? $pay['extra']['unit'] : '链上资产') ?></span><b class="usdt-amount"><?= e(number_format((float)$pay['extra']['expected_amount'], 6, '.', '')) ?></b></div>
             <div class="os-row warn-line">⚠ 必须转入与上方完全一致的金额, 系统按金额自动识别到账</div>
         <?php else: ?>
             <div class="os-row"><span>应付金额</span><b class="price-text">¥<?= e(nf($order['total'])) ?></b></div>

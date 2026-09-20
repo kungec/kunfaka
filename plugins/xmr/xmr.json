@@ -1,0 +1,11 @@
+{
+  "name": "xmr",
+  "title": "XMR门罗币免挂支付",
+  "type": "payment",
+  "version": "1.0.0",
+  "author": "坤发卡官方",
+  "desc": "门罗币(XMR)收款插件: 门罗为隐私币, 收款须运行官方 monero-wallet-rpc 钱包服务(本机或内网即可), 插件通过其RPC接口自动识别到账并实时发货。自动实时汇率换算, 每笔订单唯一金额精准对账。适合已有门罗钱包运行环境的站长。",
+  "price": 99,
+  "pro": true,
+  "class": "XmrPlugin"
+}

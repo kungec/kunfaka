@@ -53,19 +53,18 @@ class OrderService
         return true;
     }
 
-    /** 是否需要检查USDT到账(前台轮询时触发) */
+    /** 是否需要检查链上免挂支付到账(前台轮询时触发) */
     public static function pollCheck($sn)
     {
         $order = DB::fetch('SELECT * FROM orders WHERE sn = ?', [$sn]);
         if (!$order) return null;
-        if ((int)$order['status'] === 0 && $order['pay_plugin'] === 'usdt_trc20') {
-            $config = app_config('usdt_trc20');
-            $wallet = isset($config['wallet_address']) ? trim($config['wallet_address']) : '';
-            if ($wallet !== '') {
+        if ((int)$order['status'] === 0 && $order['pay_plugin'] !== '') {
+            $plugin = Plugin::payment($order['pay_plugin']);
+            if ($plugin && $plugin->enabled) {
                 try {
-                    TronService::checkOrder($order, $wallet);
+                    $plugin->pollOrder($order);
                 } catch (Exception $ex) {
-                    if (defined('YF_DEBUG_LOG')) file_put_contents(YF_DEBUG_LOG, date('H:i:s') . ' usdt err: ' . $ex->getMessage() . "\n", FILE_APPEND);
+                    if (defined('YF_DEBUG_LOG')) file_put_contents(YF_DEBUG_LOG, date('H:i:s') . ' ' . $order['pay_plugin'] . ' err: ' . $ex->getMessage() . "\n", FILE_APPEND);
                 }
             }
         }

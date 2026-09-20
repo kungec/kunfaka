@@ -15,6 +15,30 @@ class UsdtTrc20Plugin extends PaymentBase
         ];
     }
 
+    /* ---- 链上免挂钩子实现(委托 TronService) ---- */
+
+    public function chainUnit()
+    {
+        return 'USDT';
+    }
+
+    public function assignAmount(array $order)
+    {
+        return TronService::assignAmount($order);
+    }
+
+    public function pollOrder(array $order)
+    {
+        $wallet = $this->cfg('wallet_address');
+        if ($wallet === '') return false;
+        return TronService::checkOrder($order, $wallet);
+    }
+
+    public function sweep()
+    {
+        return TronService::sweep();
+    }
+
     public function pay(array $order)
     {
         $wallet = $this->cfg('wallet_address');

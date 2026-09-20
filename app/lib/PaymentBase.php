@@ -32,6 +32,32 @@ abstract class PaymentBase
         return [];
     }
 
+    /* ---- 链上免挂支付钩子(USDT/BTC/ETH/XMR等轮询到账类插件覆盖) ---- */
+
+    /** 为订单分配唯一应付金额(币种单位), 非链上插件返回 null */
+    public function assignAmount(array $order)
+    {
+        return null;
+    }
+
+    /** 应付金额的币种单位(展示用), 非链上插件返回空串 */
+    public function chainUnit()
+    {
+        return '';
+    }
+
+    /** 检查单笔订单是否到账(到账则自动发货), 返回是否支付成功 */
+    public function pollOrder(array $order)
+    {
+        return false;
+    }
+
+    /** 扫描全部待支付订单(供计划任务调用), 返回本次支付成功笔数 */
+    public function sweep()
+    {
+        return 0;
+    }
+
     /**
      * 支付同步回跳时的服务端二次核实(可选实现)
      * 返回 ['sn'=>..,'trade_no'=>..,'money'=>..] 表示已核实到账, 由控制器发货; null=不处理

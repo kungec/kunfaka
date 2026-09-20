@@ -3,7 +3,7 @@
  * 坤发卡 - 计划任务入口
  * 宝塔计划任务(Shell脚本):  php /www/wwwroot/你的站点/cron.php
  * 或(访问URL):             curl -s "http://你的站点/cron.php?key=YF_KEY的值"(见 data/config.php)
- * 建议: 每1分钟执行一次, 负责 1)过期订单处理 2)USDT免挂支付轮询到账检测
+ * 建议: 每1分钟执行一次, 负责 1)过期订单处理 2)链上免挂支付(USDT/BTC/ETH/XMR等)轮询到账检测
  */
 require __DIR__ . '/app/bootstrap.php';
 
@@ -22,10 +22,14 @@ require YF_ROOT . '/app/lib/Router.php';
 $n = DB::exec('UPDATE orders SET status = 2 WHERE status = 0 AND expired_at > 0 AND expired_at < ?', [now()]);
 echo '[expire] ' . $n . " orders expired\n";
 
-// 2. USDT免挂支付轮询
-try {
-    $c = TronService::sweep();
-    echo "[usdt] checked, {$c} paid\n";
-} catch (Exception $ex) {
-    echo '[usdt] error: ' . $ex->getMessage() . "\n";
+// 2. 链上免挂支付轮询(USDT/BTC/ETH/XMR等, 由各插件实现sweep)
+foreach (Plugin::scan('payment') as $pname => $pmeta) {
+    try {
+        $plugin = Plugin::payment($pname);
+        if (!$plugin || !$plugin->enabled) continue;
+        $c = $plugin->sweep();
+        echo "[{$pname}] checked, {$c} paid\n";
+    } catch (Exception $ex) {
+        echo "[{$pname}] error: " . $ex->getMessage() . "\n";
+    }
 }

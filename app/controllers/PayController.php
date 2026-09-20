@@ -57,18 +57,18 @@ class PayController
         DB::update('orders', ['pay_plugin' => $code], 'id = ?', [$order['id']]);
         $order['pay_plugin'] = $code;
 
-        // USDT: 分配唯一金额
+        // 链上免挂支付: 分配唯一应付金额(插件各自实现)
         $extra = [];
-        if ($code === 'usdt_trc20') {
-            try {
-                $amount = TronService::assignAmount($order);
-                $extra['expected_amount'] = $amount;
-                $cfg = $plugin->config;
-                $extra['wallet'] = isset($cfg['wallet_address']) ? $cfg['wallet_address'] : '';
-            } catch (Exception $ex) {
-                View::theme('error', ['msg' => $ex->getMessage(), 'pageTitle' => '错误']);
-                return;
+        try {
+            $assigned = $plugin->assignAmount($order);
+            if ($assigned !== null && (float)$assigned > 0) {
+                $extra['expected_amount'] = $assigned;
+                $extra['unit'] = $plugin->chainUnit();
+                $extra['wallet'] = isset($plugin->config['wallet_address']) ? $plugin->config['wallet_address'] : '';
             }
+        } catch (Exception $ex) {
+            View::theme('error', ['msg' => $ex->getMessage(), 'pageTitle' => '错误']);
+            return;
         }
 
         try {
