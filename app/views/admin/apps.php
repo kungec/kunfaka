@@ -2,6 +2,8 @@
 $curName = isset($_GET['name']) ? (string)$_GET['name'] : '';
 $curAuthor = isset($_GET['author']) ? (string)$_GET['author'] : '';
 $curFilter = isset($_GET['filter']) ? (string)$_GET['filter'] : '';
+/* 当前启用主题(主题市场显示"使用中"状态) */
+$activeTheme = $isTheme ? (string)setting('theme', 'store') : '';
 /* 页签链接保留名称/作者筛选 */
 $tabLink = function ($filter) use ($curName, $curAuthor, $type) {
     $p = ['type' => $type];
@@ -157,6 +159,8 @@ td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
                         <?php if ($isTheme): ?>
                             <?php if ($proLocked): ?>
                                 <a class="btn sm green" href="<?= au('license') ?>">👑 开通专业版</a>
+                            <?php elseif ($app['name'] === $activeTheme): ?>
+                                <span class="tag ok">✓ 使用中</span>
                             <?php else: ?>
                                 <button class="btn sm" data-usetheme="<?= e($app['name']) ?>">使用该主题</button>
                             <?php endif; ?>

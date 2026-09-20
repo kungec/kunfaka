@@ -182,19 +182,16 @@ document.addEventListener('click', function (ev) {
     if (t.id === 'destroyBtn') {
         var ids = rowChks().filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
         if (!ids.length) return;
-        if (!confirm(t.getAttribute('data-confirm') || '确定销毁选中订单?')) return;
         ids.forEach(function (v) { fd.append('ids[]', v); });
         yfPost('<?= au('orders_destroy') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
         return;
     }
     if (t.hasAttribute('data-del')) {
-        if (!confirm(t.getAttribute('data-confirm') || '确定删除该订单?')) return;
         fd.append('id', t.getAttribute('data-del'));
         yfPost('<?= au('order_del') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
         return;
     }
     if (t.hasAttribute('data-clean')) {
-        if (!confirm(t.getAttribute('data-confirm') || '确定清理?')) return;
         fd.append('scope', t.getAttribute('data-clean'));
         yfPost('<?= au('order_clean') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
         return;

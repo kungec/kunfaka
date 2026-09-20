@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0e1013">
 <title><?= e(isset($pageTitle) ? $pageTitle : '管理后台') ?> - 坤发卡</title>
-<link rel="stylesheet" href="<?= site_url('assets/css/admin.css') ?>?v=6.3.0">
+<link rel="stylesheet" href="<?= site_url('assets/css/admin.css') ?>?v=<?= YF_VERSION ?>">
 <script>
 (function () {
     var t = null;
@@ -68,7 +68,16 @@
         <div class="admin-content"><?= $content ?></div>
     </div>
 </div>
-<script src="<?= site_url('assets/js/admin.js') ?>"></script>
+<script>
+/* 弹窗兜底定义: 若 admin.js 未加载成功(缓存/CDN异常), 回退原生弹窗保证操作可用 */
+if (typeof kAlert !== 'function') {
+    window.kAlert = function (msg, cb) { window.alert(msg || ''); if (cb) cb(); };
+}
+if (typeof kConfirm !== 'function') {
+    window.kConfirm = function (msg, onOk) { if (window.confirm(msg || '确定?')) { if (onOk) onOk(); } };
+}
+</script>
+<script src="<?= site_url('assets/js/admin.js') ?>?v=<?= YF_VERSION ?>"></script>
 <script>
 (function () {
     var btn = document.getElementById('adminThemeBtn');

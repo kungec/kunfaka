@@ -100,7 +100,6 @@ $pillLink = function ($risk) use ($curKw, $curIp, $curType) {
 document.addEventListener('click', function (ev) {
     var t = ev.target.closest ? ev.target.closest('[data-clean]') : null;
     if (!t) return;
-    if (!confirm(t.getAttribute('data-confirm') || '确定清理?')) return;
     var fd = new FormData();
     fd.append('_csrf', '<?= e(csrf_token()) ?>');
     fd.append('scope', t.getAttribute('data-clean'));

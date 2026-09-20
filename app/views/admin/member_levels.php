@@ -188,7 +188,6 @@ document.addEventListener('click', function (ev) {
         return;
     }
     if (t.hasAttribute('data-del-level')) {
-        if (!confirm(t.getAttribute('data-confirm'))) return;
         var fd = new FormData(); fd.append('id', t.getAttribute('data-del-level'));
         yfPost('<?= au('level_del') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
         return;
@@ -202,7 +201,6 @@ document.addEventListener('click', function (ev) {
         document.getElementById('gp-min').value = g.min_level;
         return;
     }
-    if (!confirm(t.getAttribute('data-confirm'))) return;
     var fd2 = new FormData(); fd2.append('id', t.getAttribute('data-del-group'));
     yfPost('<?= au('group_del') ?>', fd2).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });

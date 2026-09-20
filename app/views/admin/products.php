@@ -356,13 +356,11 @@ document.addEventListener('click', function (ev) {
     if (t.hasAttribute('data-op')) {
         var ids = rowChks().filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
         if (!ids.length) return;
-        if (!confirm(t.getAttribute('data-confirm') || '确定执行该操作?')) return;
         ids.forEach(function (v) { fd.append('ids[]', v); });
         fd.append('op', t.getAttribute('data-op'));
         yfPost('<?= au('products_batch') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
         return;
     }
-    if (!confirm(t.getAttribute('data-confirm') || '确定执行该操作?')) return;
     fd.append('id', t.getAttribute('data-del'));
     yfPost('<?= au('product_del') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });

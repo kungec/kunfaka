@@ -150,7 +150,6 @@ document.addEventListener('click', function (ev) {
         openModal(JSON.parse(t.getAttribute('data-edit')));
         return;
     }
-    if (!confirm(t.getAttribute('data-confirm') || '确定执行该操作?')) return;
     if (t.hasAttribute('data-toggle')) {
         fd.append('id', t.getAttribute('data-toggle'));
         yfPost('<?= au('admin_toggle') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
