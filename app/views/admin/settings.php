@@ -43,14 +43,15 @@
                 <input type="text" name="logo_text" value="<?= e(setting('logo_text', '')) ?>" maxlength="20" placeholder="如 KUNFAKA">
             </div>
             <div class="form-row" id="logoImageRow" style="display:<?= $logoType === 'image' ? 'block' : 'none' ?>">
-                <label>Logo 图片(png / webp / jpg, ≤2MB, 建议透明底; 换用其他类型会自动停用图片)</label>
-                <input type="file" name="logo_image_file" accept=".png,.webp,.jpg,.jpeg">
-                <?php if (setting('logo_image')): ?>
-                    <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
-                        <span style="font-size:11.5px;color:var(--muted)">当前:</span>
-                        <img src="<?= e(site_url(setting('logo_image'))) ?>" alt="logo" style="height:34px;max-width:160px;object-fit:contain;background:var(--input-bg);border-radius:6px;padding:3px">
+                <label>Logo 图片</label>
+                <div class="up-zone" id="logoZone">
+                    <span class="up-ico" id="logoPrev"><?php if (setting('logo_image')): ?><img src="<?= e(site_url(setting('logo_image'))) ?>" alt="logo"><?php else: ?>🖼<?php endif; ?></span>
+                    <div class="up-txt">
+                        <b>点击上传 Logo 图片</b>
+                        png / webp / jpg, ≤2MB, 建议透明底; 换用其他类型会自动停用图片<span class="up-file" id="logoFileName"></span>
                     </div>
-                <?php endif; ?>
+                    <input type="file" class="up-input" name="logo_image_file" id="logoFile" accept=".png,.webp,.jpg,.jpeg">
+                </div>
             </div>
             <div class="form-row">
                 <label>网站地址(支付回调用)</label>
@@ -267,6 +268,21 @@ document.querySelectorAll('.settings-tab').forEach(function (t) {
         document.getElementById(t.getAttribute('data-panel')).classList.add('on');
     });
 });
+
+/* Logo 上传组件交互 */
+(function () {
+    var zone = document.getElementById('logoZone');
+    var input = document.getElementById('logoFile');
+    if (!zone || !input) return;
+    zone.addEventListener('click', function () { input.click(); });
+    input.addEventListener('change', function () {
+        var f = input.files && input.files[0];
+        if (!f) return;
+        document.getElementById('logoPrev').innerHTML = '<img src="' + URL.createObjectURL(f) + '" alt="logo">';
+        document.getElementById('logoFileName').textContent = '已选择: ' + f.name + ' (' + Math.max(1, Math.round(f.size / 1024)) + 'KB)';
+        zone.classList.add('has');
+    });
+})();
 
 /* 客服行编辑器 */
 (function () {

@@ -165,13 +165,15 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
             <label>商品图标(可选, 上传后前台商品卡与详情页展示; 不传则用默认样式)</label>
             <input type="hidden" id="f-icon_current" value="">
             <input type="hidden" id="f-icon_reset" value="0">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px">
-                <span id="iconPrev" style="width:56px;height:56px;border-radius:10px;border:1.5px dashed var(--input-border);display:inline-flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;flex:none;background:var(--input-bg)">🎁</span>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                    <input type="file" id="f-icon_file" accept=".jpg,.jpeg,.png,.webp,.gif" style="font-size:12px;max-width:230px">
-                    <button type="button" class="btn sm gray" id="iconResetBtn" style="align-self:flex-start;display:none">↺ 恢复默认图标</button>
+            <div class="up-zone" id="iconZone">
+                <span class="up-ico" id="iconPrev">🎁</span>
+                <div class="up-txt">
+                    <b>点击上传商品图标</b>
+                    jpg / png / webp / gif, 建议正方形<span class="up-file" id="iconFileName"></span>
                 </div>
+                <input type="file" class="up-input" id="f-icon_file" accept=".jpg,.jpeg,.png,.webp,.gif">
             </div>
+            <button type="button" class="btn sm gray" id="iconResetBtn" style="display:none;margin-top:8px">↺ 恢复默认图标</button>
             <label>商品分类</label>
             <select id="f-category_id">
                 <option value="0">未分类</option>
@@ -254,6 +256,8 @@ function openDrawer(data) {
     document.getElementById('f-icon_current').value = icon;
     document.getElementById('f-icon_reset').value = '0';
     document.getElementById('f-icon_file').value = '';
+    document.getElementById('iconFileName').textContent = '';
+    document.getElementById('iconZone').classList.remove('has');
     var prev = document.getElementById('iconPrev');
     var rst = document.getElementById('iconResetBtn');
     if (icon !== '') {
@@ -290,16 +294,22 @@ document.getElementById('addBtn').addEventListener('click', function () {
     document.getElementById('saveId').value = 0;
 });
 /* 图标选择预览 + 恢复默认 */
+var iconZone = document.getElementById('iconZone');
+iconZone.addEventListener('click', function () { document.getElementById('f-icon_file').click(); });
 document.getElementById('f-icon_file').addEventListener('change', function () {
     var f = this.files && this.files[0];
     if (!f) return;
     document.getElementById('f-icon_reset').value = '0';
     document.getElementById('iconPrev').innerHTML = '<img src="' + URL.createObjectURL(f) + '" style="width:100%;height:100%;object-fit:cover" alt="">';
+    document.getElementById('iconFileName').textContent = '已选择: ' + f.name + ' (' + Math.max(1, Math.round(f.size / 1024)) + 'KB)';
+    iconZone.classList.add('has');
 });
 document.getElementById('iconResetBtn').addEventListener('click', function () {
     document.getElementById('f-icon_file').value = '';
     document.getElementById('f-icon_reset').value = '1';
     document.getElementById('iconPrev').innerHTML = '🎁';
+    document.getElementById('iconFileName').textContent = '';
+    iconZone.classList.remove('has');
     this.style.display = 'none';
 });
 mask.addEventListener('click', function (ev) { if (ev.target === mask) mask.classList.remove('on'); });
