@@ -3,67 +3,107 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0f1222">
+<meta name="theme-color" content="#0b0e1f">
 <title>管理后台登录 - 坤发卡</title>
-<link rel="stylesheet" href="<?= site_url('assets/css/admin.css') ?>?v=3.0.0">
+<link rel="stylesheet" href="<?= site_url('assets/css/admin.css') ?>?v=6.2.0">
 </head>
 <body>
-<div class="login-page">
-    <form class="login-box" method="post" action="<?= au('login') ?>">
-        <div class="login-brand">
+<div class="lg-page">
+    <span class="lg-orb o1" aria-hidden="true"></span>
+    <span class="lg-orb o2" aria-hidden="true"></span>
+    <span class="lg-orb o3" aria-hidden="true"></span>
+    <div class="lg-grid" aria-hidden="true"></div>
+    <form class="lg-card" method="post" action="<?= au('login') ?>">
+        <div class="lg-brand">
             <em>坤</em>
             <div><b>坤发卡</b><small>全自动发卡系统 · 管理后台</small></div>
         </div>
-        <?php if ($error): ?><div class="login-err"><?= e($error) ?></div><?php endif; ?>
+        <?php if ($error): ?><div class="lg-err">⚠ <?= e($error) ?></div><?php endif; ?>
         <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
-        <div class="form-row">
-            <label>管理员账号</label>
-            <input type="text" name="username" required autofocus autocomplete="username">
-        </div>
-        <div class="form-row">
-            <label>密码</label>
-            <input type="password" name="password" required autocomplete="current-password">
-        </div>
-        <div class="form-row">
-            <label>安全验证</label>
+        <label class="lg-field">
+            <span class="lg-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <input type="text" name="username" placeholder="管理员账号" required autofocus autocomplete="username">
+        </label>
+        <label class="lg-field">
+            <span class="lg-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+            <input type="password" name="password" placeholder="密码" required autocomplete="current-password">
+        </label>
+        <div class="lg-caprow">
             <?= Captcha::render('admin') ?>
         </div>
-        <button class="btn" style="width:100%;margin-top:6px;height:44px;font-size:14.5px" type="submit">登 录</button>
-        <p class="login-foot">Powered by 坤发卡</p>
+        <button class="lg-btn" type="submit">登 录
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+        </button>
+        <p class="lg-foot">Powered by 坤发卡</p>
     </form>
 </div>
 <style>
-.login-page {
+* { box-sizing: border-box; }
+body { margin: 0; }
+.lg-page {
     min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
-    background: linear-gradient(135deg, #0f1222 0%, #151936 45%, #2b1d5e 100%);
+    background:
+        radial-gradient(1000px 500px at 80% -10%, rgba(99, 102, 241, .30), transparent 60%),
+        radial-gradient(800px 460px at -10% 110%, rgba(139, 92, 246, .26), transparent 60%),
+        linear-gradient(160deg, #0b0e1f 0%, #10142e 48%, #241d52 100%);
     position: relative; overflow: hidden;
 }
-.login-page::before {
-    content: ''; position: absolute; width: 460px; height: 460px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(99, 102, 241, .28), transparent 65%);
-    top: -140px; right: -100px;
+.lg-grid {
+    position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: radial-gradient(720px 480px at 50% 40%, #000 30%, transparent 100%);
+    mask-image: radial-gradient(720px 480px at 50% 40%, #000 30%, transparent 100%);
 }
-.login-page::after {
-    content: ''; position: absolute; width: 380px; height: 380px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(139, 92, 246, .22), transparent 65%);
-    bottom: -120px; left: -90px;
+.lg-orb { position: absolute; border-radius: 50%; filter: blur(58px); pointer-events: none; }
+.lg-orb.o1 { width: 340px; height: 340px; background: rgba(99, 102, 241, .42); top: -110px; right: -70px; }
+.lg-orb.o2 { width: 280px; height: 280px; background: rgba(168, 85, 247, .34); bottom: -90px; left: -60px; }
+.lg-orb.o3 { width: 190px; height: 190px; background: rgba(56, 189, 248, .22); top: 52%; left: 58%; }
+.lg-card {
+    position: relative; z-index: 1; width: 100%; max-width: 396px;
+    background: rgba(17, 21, 44, .62);
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 20px; padding: 34px 32px 24px;
+    backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+    box-shadow: 0 34px 90px -22px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .08);
+    animation: lgUp .5s cubic-bezier(.2, .7, .3, 1);
 }
-.login-box {
-    position: relative; z-index: 1; width: 100%; max-width: 380px;
-    background: #fff; border-radius: 18px; padding: 30px 30px 22px;
-    box-shadow: 0 30px 70px -20px rgba(0, 0, 0, .5);
+@keyframes lgUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.lg-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+.lg-brand em {
+    width: 46px; height: 46px; border-radius: 13px; font-style: normal; font-size: 20px; font-weight: 800; color: #fff;
+    display: flex; align-items: center; justify-content: center; flex: none;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    box-shadow: 0 10px 24px rgba(99, 102, 241, .55);
 }
-.login-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 20px; }
-.login-brand em {
-    width: 42px; height: 42px; border-radius: 12px; font-style: normal; font-size: 19px; font-weight: 800; color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, #4f46e5, #8b5cf6); box-shadow: 0 8px 18px rgba(99, 102, 241, .45);
+.lg-brand b { font-size: 18px; color: #fff; display: block; letter-spacing: .5px; }
+.lg-brand small { color: rgba(255, 255, 255, .55); font-size: 11.5px; }
+.lg-err { background: rgba(248, 113, 113, .14); border: 1px solid rgba(248, 113, 113, .35); color: #fda4af; font-size: 13px; border-radius: 11px; padding: 10px 13px; margin-bottom: 14px; }
+.lg-field { display: flex; align-items: center; gap: 10px; height: 48px; margin-bottom: 14px; padding: 0 13px; border-radius: 12px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .14); transition: .16s; }
+.lg-field:focus-within { border-color: rgba(129, 140, 248, .8); background: rgba(255, 255, 255, .09); box-shadow: 0 0 0 4px rgba(99, 102, 241, .18); }
+.lg-ico { flex: none; width: 19px; height: 19px; color: rgba(255, 255, 255, .45); display: inline-flex; }
+.lg-ico svg { width: 100%; height: 100%; }
+.lg-field input { flex: 1; min-width: 0; height: 100%; border: none; outline: none; background: transparent; font-size: 14px; color: #fff; letter-spacing: .3px; }
+.lg-field input::placeholder { color: rgba(255, 255, 255, .35); }
+.lg-caprow { margin-bottom: 16px; }
+.lg-caprow img { border-radius: 10px; cursor: pointer; vertical-align: middle; }
+.lg-caprow input { height: 44px; border-radius: 12px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .14); color: #fff; font-size: 14px; letter-spacing: 2px; }
+.lg-caprow input:focus { border-color: rgba(129, 140, 248, .8); background: rgba(255, 255, 255, .09); outline: none; box-shadow: 0 0 0 4px rgba(99, 102, 241, .18); }
+.lg-btn {
+    width: 100%; height: 48px; border: none; border-radius: 13px; cursor: pointer;
+    background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; font-size: 15px; font-weight: 700; letter-spacing: 6px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit;
+    transition: .18s; box-shadow: 0 12px 30px -8px rgba(99, 102, 241, .6);
 }
-.login-brand b { font-size: 17px; color: #111827; display: block; }
-.login-brand small { color: #6b7280; font-size: 11.5px; }
-.login-err { background: #fef2f2; color: #dc2626; font-size: 13px; border-radius: 10px; padding: 9px 13px; margin-bottom: 12px; }
-.login-foot { text-align: center; color: #9ca3af; font-size: 11px; margin: 14px 0 0; letter-spacing: 1px; }
-.login-box .btn { background: linear-gradient(135deg, #4f46e5, #8b5cf6); }
+.lg-btn svg { width: 17px; height: 17px; letter-spacing: 0; }
+.lg-btn:hover { transform: translateY(-1px); box-shadow: 0 16px 36px -8px rgba(99, 102, 241, .7); filter: brightness(1.06); }
+.lg-btn:active { transform: none; }
+.lg-foot { text-align: center; color: rgba(255, 255, 255, .38); font-size: 11px; margin: 16px 0 0; letter-spacing: 1.5px; }
+@media (max-width: 480px) { .lg-card { padding: 28px 22px 20px; } }
 </style>
 </body>
 </html>
