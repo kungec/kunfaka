@@ -453,15 +453,40 @@ html[data-theme="light"] .side-nav a.on {
 html[data-theme="light"] .side-nav a.on { color: #1c2130; background: linear-gradient(135deg, #e8edfa, #dbe4f8); box-shadow: 0 4px 12px -6px rgba(59, 130, 246, .45); }
 .side-group { color: var(--muted); padding-left: 16px; }
 
-/* 按钮: 浅蓝主按钮(acg特色) */
-.btn {
+/* 按钮: 浅蓝主按钮(acg特色), :not() 排除 gray/green/red 变体防误伤 */
+.btn:not(.gray):not(.green):not(.red) {
     background: linear-gradient(135deg, #a8c7fa, #8ab4f8);
     color: #0e2242; font-weight: 700;
     box-shadow: 0 6px 16px -6px rgba(138, 180, 248, .55);
 }
-.btn:hover { filter: brightness(1.05); }
-html[data-theme="light"] .btn { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; box-shadow: 0 6px 16px -6px rgba(37, 99, 235, .5); }
+.btn:not(.gray):not(.green):not(.red):hover { filter: brightness(1.05); }
+html[data-theme="light"] .btn:not(.gray):not(.green):not(.red) {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    box-shadow: 0 6px 16px -6px rgba(37, 99, 235, .5);
+}
 .btn.sm { border-radius: 9px; }
+/* 变体按钮明暗两态保底(防主按钮覆盖误伤: 亮色下gray白底白字/green红red变蓝) */
+html[data-theme="light"] .btn.gray,
+html[data-theme="dark"] .btn.gray {
+    background: transparent; color: var(--text2);
+    border: 1px solid var(--input-border); box-shadow: none;
+}
+html[data-theme="light"] .btn.gray:hover,
+html[data-theme="dark"] .btn.gray:hover {
+    transform: none; box-shadow: none; filter: none;
+    background: var(--input-bg); border-color: var(--muted); color: var(--text);
+}
+html[data-theme="light"] .btn.green,
+html[data-theme="dark"] .btn.green {
+    background: linear-gradient(135deg, #10b981, #059669); color: #fff;
+    box-shadow: 0 6px 18px -6px rgba(16,185,129,.55);
+}
+html[data-theme="light"] .btn.red,
+html[data-theme="dark"] .btn.red {
+    background: linear-gradient(135deg, #ef4444, #f43f5e); color: #fff;
+    box-shadow: 0 6px 18px -6px rgba(239,68,68,.55);
+}
 
 /* 数据概览: 彩色渐变图标统计块(acg特色) */
 .kgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
