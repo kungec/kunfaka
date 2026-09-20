@@ -1,0 +1,20 @@
+# 版本控制与本地垃圾
+.git
+.gitignore
+*.log
+
+# 敏感/运行时文件(绝不进镜像)
+data/config.php
+data/install.lock
+data/*.db
+data/*.sqlite
+uploads/*
+!uploads/.htaccess
+
+# 本地开发与测试
+php-tests
+tools/make_license.php
+.idea
+.vscode
+.DS_Store
+Thumbs.db

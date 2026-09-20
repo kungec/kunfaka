@@ -14,6 +14,8 @@
 > v2.2.0 新增: **CDN接入模式** —— 系统设置可选 未套CDN/Cloudflare/其他CDN 三种模式: 套CDN时自动从CDN头识别买家真实IP(注册限制/登录锁定/日志/订单不再误记节点IP), 动态页自动发送no-store禁缓存头(收银台/二维码/支付结果不被边缘缓存), 并内置套CDN时支付回调的配置注意事项, 避免回调失败不发货。
 > v2.22.3 安全加固: ①升级脚本仅限命令行执行; ②订单查询凭联系方式查看卡密需**邮箱验证码**验证(未开邮件功能时仅显示状态概览, 订单号直查不变); ③系统设置/主题切换/应用安装下载仅限超级管理员; ④易支付/码支付商户密钥为空时拒绝回调验签, 已停用插件回调入口关闭; ⑤出站HTTPS默认强制证书校验(网关证书异常时可在 data/config.php 定义 `YF_HTTP_INSECURE=true` 临时关闭); ⑥修复当面付(支付宝f2f)下单Fatal错误; ⑦离线激活密钥不再内置, 需在 data/config.php 自定义 `YF_OFFLINE_SECRET`; ⑧uploads目录禁止脚本执行; ⑨CDN模式真实IP解析改为从右往左取第一个公网IP(防XFF伪造绕过登录锁定)。
 > v2.23.0 新增: **加密币免挂支付三插件(BTC/ETH/XMR, 专业版专属)** —— BTC走比特币公链公开接口(mempool.space, 只填收款地址); ETH走Etherscan公开接口(填地址+免费API密钥, 仅支持ETH主链转账); XMR为隐私币需站长自建 monero-wallet-rpc 钱包服务(插件经RPC识别到账)。三款均按实时汇率(CNY)自动换算+溢价配置, 每笔订单唯一金额精准对账, 链上检测到账自动秒发; 计划任务泛化扫描全部链上插件, 支持在插件配置中自定义汇率接口。
+> v2.24.2: 商品图片增强——上传自动生成宽480等比缩略图(png/webp保留透明), 首页列表自动引用缩略图提速+懒加载, 商品详情页原图自适应展示, 二次元主题详情页补图片展示。
+> v2.25.0 新增: **Docker 部署支持** —— 无需宝塔面板, `docker compose up -d --build` 一条命令拉起「站点+MySQL+计划任务」三件套(见 README「Docker 部署」章节); 镜像内置 OPcache/GD/zip 等全部所需扩展, 配置与上传图片经命名卷持久化。
 
 ## 官方售后
 
@@ -51,6 +53,32 @@
 ```nginx
 location ^~ /data/ { deny all; }
 ```
+
+## 二点五、Docker 部署(可选, 无需宝塔)
+
+无需宝塔面板, 一条命令拉起「站点 + MySQL + 计划任务」三件套:
+
+```bash
+# 前提: 服务器已安装 Docker 与 Docker Compose 插件
+docker compose up -d --build
+```
+
+然后浏览器访问 `http://服务器IP:8080/install.php` 完成安装向导, 数据库连接信息填:
+
+| 项 | 值 |
+|---|---|
+| 数据库地址 | `db` |
+| 数据库名 | `kunfaka` |
+| 用户名 | `kunfaka` |
+| 密码 | `kunfaka123` |
+
+说明:
+
+- compose 已自带 **cron 服务**(每分钟自动执行订单过期与链上免挂支付轮询), 无需配置计划任务;
+- 配置与上传图片保存在命名卷 `app_data` / `app_uploads` 中, 升级镜像不丢失;
+- 修改端口: 编辑 `docker-compose.yml` 中 `"8080:80"` 左侧端口;
+- 常用命令: 查看日志 `docker compose logs -f app`; 升级 `docker compose up -d --build`; 停止 `docker compose down`(数据保留);
+- 生产建议: 前置 Cloudflare 或 Nginx 反代做 HTTPS 后再对外提供服务。
 
 ## 三、老版本升级(v1.0.0 / v1.1.0 → v1.2.0)
 

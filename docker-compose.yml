@@ -1,0 +1,46 @@
+services:
+  # 坤发卡站点(PHP 8.2 + Apache)
+  app:
+    build: .
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    depends_on:
+      - db
+    volumes:
+      # 配置(data/config.php)与上传图片持久化
+      - app_data:/var/www/html/data
+      - app_uploads:/var/www/html/uploads
+    environment:
+      TZ: Asia/Shanghai
+
+  # 计划任务(每分钟): 订单过期处理 + 链上免挂支付到账轮询
+  cron:
+    build: .
+    command: ["sh", "-c", "while true; do php /var/www/html/cron.php; sleep 60; done"]
+    restart: unless-stopped
+    depends_on:
+      - db
+    volumes:
+      - app_data:/var/www/html/data
+      - app_uploads:/var/www/html/uploads
+    environment:
+      TZ: Asia/Shanghai
+
+  # MySQL 8.0
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: kunfaka
+      MYSQL_USER: kunfaka
+      MYSQL_PASSWORD: kunfaka123
+      MYSQL_ROOT_PASSWORD: kunfaka_root_123
+      TZ: Asia/Shanghai
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  app_data:
+  app_uploads:
+  db_data:
