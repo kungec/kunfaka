@@ -591,10 +591,25 @@ class AdminController
         if (isset($_POST['nickname'])) {
             $data['nickname'] = mb_substr(trim(arr_get($_POST, 'nickname')), 0, 50);
         }
+        // 修改登录用户名: 需旧密码验证, 格式白名单+唯一性
+        $newUser = trim((string)arr_get($_POST, 'username', ''));
+        $changingUser = $newUser !== '' && $newUser !== $me['username'];
         $oldPass = (string)arr_get($_POST, 'old_password');
         $newPass = (string)arr_get($_POST, 'new_password');
         $confirmPass = (string)arr_get($_POST, 'confirm_password');
         $changingPass = $oldPass !== '' || $newPass !== '' || $confirmPass !== '';
+        if ($changingUser) {
+            if (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $newUser)) {
+                json_out(['code' => 1, 'msg' => '用户名仅限字母/数字/下划线, 长度3-20位']);
+            }
+            if (DB::value('SELECT id FROM admin_users WHERE username = ? AND id <> ?', [$newUser, $me['id']])) {
+                json_out(['code' => 1, 'msg' => '该用户名已被占用']);
+            }
+            if ($oldPass === '' || !password_verify($oldPass, $me['password'])) {
+                json_out(['code' => 1, 'msg' => '修改用户名需先通过旧密码验证']);
+            }
+            $data['username'] = $newUser;
+        }
         if ($changingPass) {
             if (!password_verify($oldPass, $me['password'])) json_out(['code' => 1, 'msg' => '旧密码不正确']);
             if (strlen($newPass) < 6) json_out(['code' => 1, 'msg' => '新密码至少6位']);
@@ -610,7 +625,7 @@ class AdminController
         if (isset($data['nickname']) && $data['nickname'] !== '') {
             $_SESSION['admin_name'] = $data['nickname'];
         }
-        add_log('admin', '管理员修改个人设置' . (isset($data['password']) ? '(含密码)' : ''));
+        add_log('admin', '管理员修改个人设置' . (isset($data['username']) ? '(含登录用户名)' : '') . (isset($data['password']) ? '(含密码)' : ''));
         json_out(['code' => 0, 'msg' => '保存成功']);
     }
 

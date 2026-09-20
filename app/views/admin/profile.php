@@ -1,56 +1,79 @@
 <?php $activeMenu = 'profile'; ?>
 <style>
-.pf-wrap{max-width:620px}
-.pf-info{display:flex;gap:14px;align-items:center;margin-bottom:16px}
-.pf-info .avatar{width:52px;height:52px;border-radius:14px;background:var(--text);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:22px}
-.pf-info .meta small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
-.pf-info .meta .tag{margin-left:6px}
-.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:640px){.pf-grid{grid-template-columns:1fr}}
-.pf-grid label{display:block;font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:5px}
+.pf-wrap{max-width:960px;display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:1000px){.pf-wrap{grid-template-columns:1fr}}
+.pf-id{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:26px 18px 22px}
+.pf-id .avatar{width:76px;height:76px;border-radius:22px;background:linear-gradient(135deg,#a8c7fa,#8ab4f8);color:#0e2242;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:30px;box-shadow:0 10px 26px -10px rgba(138,180,248,.6)}
+html[data-theme="light"] .pf-id .avatar{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;box-shadow:0 10px 26px -10px rgba(37,99,235,.55)}
+.pf-id .nm{font-size:16px;font-weight:800}
+.pf-id .rl{margin-top:4px}
+.pf-rows{width:100%;display:flex;flex-direction:column;gap:0;margin-top:4px}
+.pf-row{display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-top:1px dashed var(--input-border);font-size:12px}
+.pf-row:first-child{border-top:none}
+.pf-row .k{color:var(--muted);flex:none}
+.pf-row .v{color:var(--text2);text-align:right;word-break:break-all}
+.pf-tips{padding:16px 18px 18px}
+.pf-tips h3{font-size:13px;margin-bottom:10px}
+.pf-tips p{margin:0;font-size:12px;line-height:1.9;color:var(--muted)}
+.pf-form{padding:22px 24px 24px}
+.pf-form h3{font-size:14px;margin-bottom:16px}
+.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.pf-grid{grid-template-columns:1fr}}
+.pf-grid label{display:block;font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:6px}
 .pf-grid input{width:100%;height:40px;padding:0 12px;font-size:13px}
+.pf-form .ops{display:flex;gap:9px;margin-top:18px}
+.pf-note{margin:14px 0 0;font-size:11.5px;color:var(--muted);line-height:1.7}
 </style>
 
 <div class="page-head">
     <div>
         <h2>👤 个人设置</h2>
-        <div class="sub">修改昵称与登录密码</div>
+        <div class="sub">账号资料 · 登录密码 · 安全建议</div>
     </div>
 </div>
 
 <div class="pf-wrap">
-    <div class="card">
-        <div class="pf-info">
-            <span class="avatar">坤</span>
-            <div class="meta">
-                <b style="font-size:15px"><?= e($admin['nickname'] ?: $admin['username']) ?><span class="tag <?= $admin['role'] === 'super' ? 'pro' : '' ?>" style="margin-left:6px"><?= $admin['role'] === 'super' ? '超级管理员' : '普通管理员' ?></span></b>
-                <small>账号 <?= e($admin['username']) ?> · 创建于 <?= e(date('Y-m-d', $admin['created_at'])) ?></small>
-                <?php if ($admin['last_login_at'] > 0): ?><small>本次登录 <?= e(date('Y-m-d H:i:s', $admin['last_login_at'])) ?> · IP <?= e($admin['last_login_ip']) ?></small><?php endif; ?>
-                <?php if ($admin['prev_login_at'] > 0): ?><small>上次登录 <?= e(date('Y-m-d H:i:s', $admin['prev_login_at'])) ?> · IP <?= e($admin['prev_login_ip']) ?></small><?php endif; ?>
-            </div>
+    <div class="card pf-id">
+        <span class="avatar">坤</span>
+        <div>
+            <div class="nm"><?= e($admin['nickname'] ?: $admin['username']) ?></div>
+            <div class="rl"><span class="tag <?= $admin['role'] === 'super' ? 'pro' : '' ?>"><?= $admin['role'] === 'super' ? '👑 超级管理员' : '普通管理员' ?></span></div>
         </div>
-
-        <form id="profileForm">
-            <div class="pf-grid">
-                <div><label>昵称</label><input type="text" id="p-nickname" maxlength="50" value="<?= e($admin['nickname']) ?>"></div>
-                <div><label>旧密码(修改密码时必填)</label><input type="password" id="p-old" autocomplete="current-password"></div>
-                <div><label>新密码(至少6位, 留空不改)</label><input type="password" id="p-new" autocomplete="new-password"></div>
-                <div><label>确认新密码</label><input type="password" id="p-confirm" autocomplete="new-password"></div>
-            </div>
-            <div style="display:flex;gap:9px;margin-top:16px">
-                <button class="btn" type="submit">💾 确认修改</button>
-                <a class="btn gray" href="<?= au('logout') ?>">⏻ 注销登录</a>
-            </div>
-        </form>
+        <div class="pf-rows">
+            <div class="pf-row"><span class="k">登录账号</span><span class="v"><?= e($admin['username']) ?></span></div>
+            <div class="pf-row"><span class="k">创建时间</span><span class="v"><?= e(date('Y-m-d', $admin['created_at'])) ?></span></div>
+            <?php if ($admin['last_login_at'] > 0): ?><div class="pf-row"><span class="k">本次登录</span><span class="v"><?= e(date('m-d H:i', $admin['last_login_at'])) ?><br><?= e($admin['last_login_ip']) ?></span></div><?php endif; ?>
+            <?php if ($admin['prev_login_at'] > 0): ?><div class="pf-row"><span class="k">上次登录</span><span class="v"><?= e(date('m-d H:i', $admin['prev_login_at'])) ?><br><?= e($admin['prev_login_ip']) ?></span></div><?php endif; ?>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>🔐 安全提示</h3>
-        <p class="dim" style="font-size:12px;line-height:1.9;margin:0">
-            · 密码修改后当前登录状态保留, 建议修改后重新登录一次;<br>
-            · 定期修改密码, 不要与其他站点共用同一密码;<br>
-            · 超级管理员可在「管理员」页添加普通管理员并随时禁用。
-        </p>
+    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+        <div class="card pf-form">
+            <h3>🔐 修改资料与密码</h3>
+            <form id="profileForm">
+                <div class="pf-grid">
+                    <div><label>昵称(后台显示名)</label><input type="text" id="p-nickname" maxlength="50" value="<?= e($admin['nickname']) ?>"></div>
+                    <div><label>登录用户名(修改需旧密码验证)</label><input type="text" id="p-username" maxlength="20" value="<?= e($admin['username']) ?>" autocomplete="username"></div>
+                    <div><label>旧密码(改密码/用户名时必填)</label><input type="password" id="p-old" autocomplete="current-password" placeholder="••••••••"></div>
+                    <div><label>新密码(至少6位, 留空不改)</label><input type="password" id="p-new" autocomplete="new-password" placeholder="至少6位"></div>
+                    <div><label>确认新密码</label><input type="password" id="p-confirm" autocomplete="new-password" placeholder="再输入一次新密码"></div>
+                </div>
+                <div class="ops">
+                    <button class="btn" type="submit">💾 确认修改</button>
+                    <a class="btn gray" href="<?= au('logout') ?>">⏻ 注销登录</a>
+                </div>
+            </form>
+            <p class="pf-note">修改后当前登录状态保留; 建议修改完成后退出并重新登录一次确认新密码可用。</p>
+        </div>
+
+        <div class="card pf-tips">
+            <h3>🔐 安全建议</h3>
+            <p>
+                · 定期修改密码, 不要与其他站点共用同一密码;<br>
+                · 超级管理员可在「管理员」页添加普通管理员并随时禁用;<br>
+                · 发现异常登录记录(IP/时间不符)请立即修改密码并检查「管理员」列表。
+            </p>
+        </div>
     </div>
 </div>
 
@@ -60,6 +83,7 @@ document.getElementById('profileForm').addEventListener('submit', function (ev) 
     var fd = new FormData();
     fd.append('_csrf', '<?= e(csrf_token()) ?>');
     fd.append('nickname', document.getElementById('p-nickname').value.trim());
+    fd.append('username', document.getElementById('p-username').value.trim());
     fd.append('old_password', document.getElementById('p-old').value);
     fd.append('new_password', document.getElementById('p-new').value);
     fd.append('confirm_password', document.getElementById('p-confirm').value);

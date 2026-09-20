@@ -67,7 +67,19 @@ $activeMenu = isset($__menuMap[$__seg]) ? $__menuMap[$__seg] : $__seg;
                 <button type="button" class="theme-btn" id="adminThemeBtn" aria-label="切换主题">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
                 </button>
-                <a href="<?= au('profile') ?>" style="text-decoration:none"><span class="admin-user"><?= e(isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : '管理员') ?></span></a>
+                <div class="user-menu" id="userMenu">
+                    <button type="button" class="admin-user" id="userMenuBtn" aria-haspopup="true"><span class="uu-ava"><?= e(mb_substr(($_SESSION['admin_name'] ?? '管'), 0, 1)) ?></span><?= e(isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : '管理员') ?><span class="uu-caret">▾</span></button>
+                    <div class="um-panel" role="menu">
+                        <div class="um-head">
+                            <b><?= e(isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : '管理员') ?></b>
+                            <small><?= License::isPro() ? '👑 专业版' : '免费版' ?></small>
+                        </div>
+                        <a href="<?= au('profile') ?>">👤 个人设置 / 修改密码</a>
+                        <?php if ($curAdm && $curAdm['role'] === 'super'): ?><a href="<?= au('admins') ?>">🛡 管理员账号</a><?php endif; ?>
+                        <a href="<?= au('logs') ?>">📜 操作日志</a>
+                        <a href="<?= au('logout') ?>" class="um-out">🚪 退出登录</a>
+                    </div>
+                </div>
             </div>
         </header>
         <div class="admin-content"><?= $content ?></div>
@@ -83,6 +95,21 @@ if (typeof kConfirm !== 'function') {
 }
 </script>
 <script src="<?= site_url('assets/js/admin.js') ?>?v=<?= YF_VERSION ?>"></script>
+<script>
+/* 顶栏用户菜单: 点击展开/收起, 点击面板外部自动收起 */
+(function () {
+    var wrap = document.getElementById('userMenu');
+    var btn = document.getElementById('userMenuBtn');
+    if (!wrap || !btn) return;
+    btn.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        wrap.classList.toggle('open');
+    });
+    document.addEventListener('click', function (ev) {
+        if (!wrap.contains(ev.target)) wrap.classList.remove('open');
+    });
+})();
+</script>
 <script>
 (function () {
     var btn = document.getElementById('adminThemeBtn');
