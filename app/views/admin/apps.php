@@ -39,8 +39,8 @@ td.m-ico{width:62px}
 .m-title small{color:var(--muted);font-size:10.5px}
 .m-desc{font-size:12px;color:var(--text2);line-height:1.65;max-width:420px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 .m-price .tag{margin-right:4px}
-td.m-act{white-space:normal}
-td.m-act .btn{margin:2px 2px 2px 0}
+td.m-act{white-space:nowrap}
+td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
 </style>
 
 <div class="mkt-tabs">
@@ -100,7 +100,7 @@ td.m-act .btn{margin:2px 2px 2px 0}
             <th style="width:34%">简介</th>
             <th>版本</th>
             <th>价格</th>
-            <th style="width:190px">操作</th>
+            <th style="width:220px">操作</th>
         </tr>
         </thead>
         <tbody>
