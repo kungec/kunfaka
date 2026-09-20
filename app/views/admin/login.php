@@ -59,10 +59,10 @@ body { margin: 0; }
     -webkit-mask-image: radial-gradient(720px 480px at 50% 40%, #000 30%, transparent 100%);
     mask-image: radial-gradient(720px 480px at 50% 40%, #000 30%, transparent 100%);
 }
-.lg-orb { position: absolute; border-radius: 50%; filter: blur(58px); pointer-events: none; }
-.lg-orb.o1 { width: 340px; height: 340px; background: rgba(99, 102, 241, .42); top: -110px; right: -70px; }
-.lg-orb.o2 { width: 280px; height: 280px; background: rgba(168, 85, 247, .34); bottom: -90px; left: -60px; }
-.lg-orb.o3 { width: 190px; height: 190px; background: rgba(56, 189, 248, .22); top: 52%; left: 58%; }
+.lg-orb { position: absolute; border-radius: 50%; pointer-events: none; }
+.lg-orb.o1 { width: 520px; height: 520px; background: radial-gradient(circle, rgba(99, 102, 241, .40) 0%, rgba(99, 102, 241, .15) 45%, transparent 70%); top: -160px; right: -110px; }
+.lg-orb.o2 { width: 440px; height: 440px; background: radial-gradient(circle, rgba(168, 85, 247, .32) 0%, rgba(168, 85, 247, .12) 45%, transparent 70%); bottom: -140px; left: -100px; }
+.lg-orb.o3 { width: 320px; height: 320px; background: radial-gradient(circle, rgba(56, 189, 248, .22) 0%, rgba(56, 189, 248, .08) 45%, transparent 70%); top: 46%; left: 55%; }
 .lg-card {
     position: relative; z-index: 1; width: 100%; max-width: 396px;
     background: rgba(17, 21, 44, .62);

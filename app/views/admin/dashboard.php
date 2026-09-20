@@ -66,8 +66,36 @@ $cmp = function ($nowV, $base) {
 .biz-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:8px 2px 2px}
 .biz-metrics .bm .l{font-size:12px;color:var(--muted)}
 .biz-metrics .bm .v{font-size:22px;font-weight:800;margin-top:4px}
+/* ===== 视觉特效层 ===== */
+.dash-grid{position:relative}
+.dg-glow{position:fixed;border-radius:50%;pointer-events:none;z-index:0}
+.dg-glow.g1{width:640px;height:640px;background:radial-gradient(circle,rgba(99,102,241,.20) 0%,rgba(99,102,241,.08) 40%,transparent 68%);top:-220px;right:2%}
+.dg-glow.g2{width:560px;height:560px;background:radial-gradient(circle,rgba(34,211,238,.13) 0%,rgba(34,211,238,.05) 45%,transparent 70%);bottom:-240px;left:18%}
+.dash-grid>*{position:relative;z-index:1}
+.dash-grid .card{animation:dashIn .5s cubic-bezier(.2,.7,.3,1) backwards;transition:transform .18s ease,box-shadow .18s ease;background-image:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,0) 42%);border:1px solid rgba(255,255,255,.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 12px 32px -20px rgba(0,0,0,.5)}
+[data-theme="light"] .dash-grid .card{background-image:linear-gradient(180deg,#ffffff,#fbfbfd);border-color:var(--line);box-shadow:var(--shadow)}
+.dash-grid .card:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 18px 40px -16px rgba(0,0,0,.6);border-color:rgba(255,255,255,.14)}
+[data-theme="light"] .dash-grid .card:hover{box-shadow:0 14px 30px -14px rgba(30,40,90,.25);border-color:#d5d9e6}
+.dash-grid .card:hover{transform:translateY(-2px);box-shadow:0 16px 38px -16px rgba(0,0,0,.55)}
+[data-theme="light"] .dash-grid .card:hover{box-shadow:0 14px 30px -14px rgba(30,40,90,.25)}
+.dash-side .card:nth-child(1){animation-delay:.04s}
+.dash-side .card:nth-child(2){animation-delay:.11s}
+.dash-grid>div:last-child .card:nth-child(1){animation-delay:.08s}
+.dash-grid>div:last-child .card:nth-child(2){animation-delay:.15s}
+.dash-grid>div:last-child .card:nth-child(3){animation-delay:.22s}
+.dash-grid>div:last-child .card:nth-child(4){animation-delay:.29s}
+@keyframes dashIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.d-top .t-val,.biz-metrics .bm .v,.m-tab.on .m-v{background:linear-gradient(120deg,#f5f6ff 10%,#a5b4fc 55%,#67e8f9 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 14px rgba(129,140,248,.35))}
+[data-theme="light"] .d-top .t-val,[data-theme="light"] .biz-metrics .bm .v,[data-theme="light"] .m-tab.on .m-v{background:linear-gradient(120deg,#111827 10%,#4f46e5 70%);-webkit-background-clip:text;background-clip:text;filter:none}
+.todo-item .n{animation:nPulse 2.6s ease-in-out infinite}
+@keyframes nPulse{0%,100%{opacity:1}50%{opacity:.55}}
+.t-chart .bar{background:linear-gradient(180deg,#818cf8,#4f46e5);opacity:1;transform-origin:bottom;animation:barGrow .6s cubic-bezier(.2,.7,.3,1) backwards}
+.t-chart .bar:hover{background:linear-gradient(180deg,#a5b4fc,#6366f1);opacity:1}
+@keyframes barGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 </style>
 
+<span class="dg-glow g1" aria-hidden="true"></span>
+<span class="dg-glow g2" aria-hidden="true"></span>
 <div class="dash-grid">
     <!-- ====== 左栏: 公告 + 账号 ====== -->
     <div class="dash-side">
