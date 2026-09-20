@@ -1201,3 +1201,25 @@ html[data-theme="dark"] .hero {
 /* 页脚 */
 .site-footer { border-top: 1px solid rgba(31, 41, 92, .08); }
 html[data-theme="dark"] .site-footer { border-top-color: rgba(255, 255, 255, .07); }
+
+/* ---- 顶栏商品搜索(acg白卡风借鉴) ---- */
+.h-search { display: flex; align-items: stretch; gap: 0; flex: none; margin-left: auto; }
+.h-search input {
+    width: 220px; height: 38px; padding: 0 14px;
+    border: 1.5px solid var(--border); border-right: none;
+    border-radius: 999px 0 0 999px;
+    background: var(--card); color: var(--text);
+    font-size: 13px; outline: none;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+.h-search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.h-search button {
+    height: 38px; padding: 0 16px;
+    border: none; border-radius: 0 999px 999px 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: #fff; font-size: 13.5px; cursor: pointer; white-space: nowrap;
+    box-shadow: 0 6px 16px -8px rgba(37, 99, 235, .6);
+    transition: filter .15s;
+}
+.h-search button:hover { filter: brightness(1.07); }
+@media (max-width: 760px) { .h-search { display: none; } }

@@ -67,7 +67,10 @@
                     <div class="goods-name"><a href="<?= u('buy/index', ['product_id' => $p['id']]) ?>"><?= e($p['name']) ?></a></div>
                     <div class="goods-desc"><?= e(mb_substr(trim(strip_tags($p['description'])), 0, 42)) ?: '快速发货 · 支付即到' ?></div>
                     <div class="goods-foot">
-                        <span class="goods-price"><small>¥</small><?= e(nf($p['price'])) ?></span>
+                        <div style="display:flex;flex-direction:column;gap:2px">
+                            <span class="goods-price"><small>¥</small><?= e(nf($p['price'])) ?></span>
+                            <span class="g-sales">已售 <b><?= (int)($p['_sales'] ?? 0) ?></b></span>
+                        </div>
                         <a class="btn-buy" href="<?= u('buy/index', ['product_id' => $p['id']]) ?>"><?= $s > 0 ? '立即购买' : '已缺货' ?></a>
                     </div>
                 </div>

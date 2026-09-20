@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
 <title><?= e(isset($pageTitle) ? $pageTitle : setting('site_name', '坤发卡')) ?></title>
     <link rel="icon" href="<?= e(site_url('favicon.ico')) ?>" sizes="64x64">
+<link rel="stylesheet" href="<?= site_url('assets/css/base.css') ?>?v=1.0.0">
 <link rel="stylesheet" href="<?= $_theme_url ?>assets/css/style.css?v=1.3.0">
 <script>
 (function () {
@@ -38,6 +39,10 @@
                 <a href="<?= u('user/login') ?>">登录 / 注册</a>
             <?php endif; ?>
         </nav>
+        <form class="h-search" method="get" action="<?= u('home/index') ?>">
+            <input type="text" name="kw" value="<?= e(isset($kw) ? (string)$kw : '') ?>" placeholder="搜索商品关键词..." aria-label="搜索商品">
+            <button type="submit" aria-label="搜索">🔍</button>
+        </form>
         <div class="header-acts">
             <button type="button" class="icon-btn" id="themeToggle" aria-label="切换主题" title="切换亮/暗模式">
                 <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>

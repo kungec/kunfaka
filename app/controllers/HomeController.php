@@ -28,11 +28,16 @@ class HomeController
         $stock = [];
         $catName = [];
         foreach ($categories as $c) $catName[$c['id']] = $c['name'];
-        // 单次聚合全部分类商品的库存(避免逐商品N+1查询)
+        // 单次聚合全部分类商品的库存与已售销量(避免逐商品N+1查询)
         $stockMap = [];
+        $salesMap = [];
         if ($products) {
-            foreach (DB::fetchAll('SELECT product_id, COUNT(*) AS n FROM cards WHERE status = 0 AND product_id IN (' . implode(',', array_map(function ($p) { return (int)$p['id']; }, $products)) . ') GROUP BY product_id') as $r) {
+            $ids = implode(',', array_map(function ($p) { return (int)$p['id']; }, $products));
+            foreach (DB::fetchAll('SELECT product_id, COUNT(*) AS n FROM cards WHERE status = 0 AND product_id IN (' . $ids . ') GROUP BY product_id') as $r) {
                 $stockMap[(int)$r['product_id']] = (int)$r['n'];
+            }
+            foreach (DB::fetchAll('SELECT product_id, COUNT(*) AS n FROM orders WHERE status = 1 AND product_id IN (' . $ids . ') GROUP BY product_id') as $r) {
+                $salesMap[(int)$r['product_id']] = (int)$r['n'];
             }
         }
         $catCounts = [];
@@ -41,6 +46,7 @@ class HomeController
         }
         foreach ($products as &$p) {
             $p['cat_name'] = isset($catName[$p['category_id']]) ? $catName[$p['category_id']] : '商品';
+            $p['_sales'] = $salesMap[(int)$p['id']] ?? 0;
             $stock[$p['id']] = $stockMap[(int)$p['id']] ?? 0;
         }
         unset($p);

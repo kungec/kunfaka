@@ -1,0 +1,46 @@
+/* ==========================================================
+   坤发卡 前台公共兜底样式(全主题通用)
+   为视图引用但主题样式表未定义的类提供基础布局保底;
+   主题样式表在本文件之后加载, 可用同名类覆盖。
+   颜色尽量走主题变量(--card/--line/--muted等), 未定义时回退中性值。
+   ========================================================== */
+
+/* ---- 表单容器(购买/查询/登录等) ---- */
+.buy-form { margin-top: 14px; }
+.buy-form .form-row { margin-top: 14px; }
+.buy-form .form-row:first-child { margin-top: 0; }
+
+/* ---- 次级提示文字 ---- */
+.desc { font-size: 12.5px; color: var(--muted, #98928a); line-height: 1.7; margin-top: 6px; }
+
+/* ---- 支付页品牌图标行 ---- */
+.pay-brand-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ---- 商品详情面板(anime系视图) ---- */
+.product-panel { background: var(--card, #fff); border: 1px solid var(--line, #eee); border-radius: 12px; padding: 18px; }
+.product-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.product-desc { margin-top: 14px; font-size: 14px; line-height: 1.8; color: var(--text2, #555); white-space: pre-wrap; word-break: break-word; }
+
+/* ---- 错误/结果面板 ---- */
+.error-panel,
+.result-panel {
+    max-width: 560px; margin: 40px auto;
+    background: var(--card, #fff);
+    border: 1px solid var(--line, #eee);
+    border-radius: 12px; padding: 30px 26px; text-align: center;
+}
+
+/* ---- 公告列表 ---- */
+.notice-list { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---- 页脚与顶栏细节 ---- */
+.powered { opacity: .65; }
+.ico-sun { width: 18px; height: 18px; display: block; }
+.f-brand, .f-col { min-width: 0; }
+
+/* ---- 商品卡销量徽标 ---- */
+.g-sales {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11.5px; color: var(--muted, #98928a);
+}
+.g-sales b { font-weight: 700; color: var(--primary, #4f46e5); }
