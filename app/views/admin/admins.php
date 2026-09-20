@@ -140,7 +140,7 @@ document.getElementById('admSave').addEventListener('click', function () {
     fd.append('nickname', document.getElementById('f-nickname').value.trim());
     fd.append('role', document.getElementById('f-role').value);
     fd.append('password', document.getElementById('f-password').value);
-    yfPost('<?= au('admin_save') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+    yfPost('<?= au('admin_save') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });
 document.addEventListener('click', function (ev) {
     var t = ev.target.closest ? ev.target.closest('[data-edit],[data-toggle],[data-del]') : null;
@@ -153,10 +153,10 @@ document.addEventListener('click', function (ev) {
     if (!confirm(t.getAttribute('data-confirm') || '确定执行该操作?')) return;
     if (t.hasAttribute('data-toggle')) {
         fd.append('id', t.getAttribute('data-toggle'));
-        yfPost('<?= au('admin_toggle') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+        yfPost('<?= au('admin_toggle') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
         return;
     }
     fd.append('id', t.getAttribute('data-del'));
-    yfPost('<?= au('admin_del') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+    yfPost('<?= au('admin_del') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });
 </script>

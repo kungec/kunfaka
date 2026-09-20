@@ -38,6 +38,6 @@ document.addEventListener('click', function (ev) {
     var url = t.hasAttribute('data-deliver') ? '<?= au('order_deliver') ?>' : '<?= au('order_del') ?>';
     fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function (r) { return r.json(); })
-        .then(function (d) { alert(d.msg); if (d.code === 0) location.href = '<?= au('orders') ?>'; });
+        .then(function (d) { kAlert(d.msg); if (d.code === 0) location.href = '<?= au('orders') ?>'; });
 });
 </script>

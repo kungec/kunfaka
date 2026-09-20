@@ -1,3 +1,35 @@
+/* ---- 美化弹窗组件(替代原生alert/confirm) ---- */
+function kAlert(msg, cb) {
+    var ov = document.createElement('div');
+    ov.className = 'kmodal-ov';
+    ov.innerHTML = '<div class="kmodal"><div class="kmodal-ico ok">\u2726</div><div class="kmodal-msg"></div><button type="button" class="kmodal-btn">确 定</button></div>';
+    ov.querySelector('.kmodal-msg').textContent = msg || '';
+    document.body.appendChild(ov);
+    requestAnimationFrame(function () { ov.classList.add('show'); });
+    function close() {
+        ov.classList.remove('show');
+        setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 220);
+        if (cb) cb();
+    }
+    ov.querySelector('.kmodal-btn').addEventListener('click', close);
+    ov.addEventListener('click', function (ev) { if (ev.target === ov) close(); });
+}
+function kConfirm(msg, onOk) {
+    var ov = document.createElement('div');
+    ov.className = 'kmodal-ov';
+    ov.innerHTML = '<div class="kmodal"><div class="kmodal-ico warn">?</div><div class="kmodal-msg"></div><div class="kmodal-acts"><button type="button" class="kmodal-btn ghost">取 消</button><button type="button" class="kmodal-btn danger">确 认</button></div></div>';
+    ov.querySelector('.kmodal-msg').textContent = msg || '';
+    document.body.appendChild(ov);
+    requestAnimationFrame(function () { ov.classList.add('show'); });
+    function close() {
+        ov.classList.remove('show');
+        setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 220);
+    }
+    ov.querySelector('.kmodal-btn.ghost').addEventListener('click', close);
+    ov.querySelector('.kmodal-btn.danger').addEventListener('click', function () { close(); if (onOk) onOk(); });
+    ov.addEventListener('click', function (ev) { if (ev.target === ov) close(); });
+}
+
 /* ============ 坤发卡 后台公共JS ============ */
 // 移动端抽屉侧栏
 (function () {
@@ -37,21 +69,25 @@ document.addEventListener('submit', function (ev) {
     fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function (r) { return r.json(); })
         .then(function (d) {
-            alert(d.msg || (d.code === 0 ? '操作成功' : '操作失败'));
+            kAlert(d.msg || (d.code === 0 ? '操作成功' : '操作失败'));
             if (d.code === 0 && form.getAttribute('data-refresh') !== 'no') {
                 location.reload();
             }
         })
-        .catch(function () { alert('网络错误, 请重试'); });
+        .catch(function () { kAlert('网络错误, 请重试'); });
 });
 
 // 确认删除: data-confirm
 document.addEventListener('click', function (ev) {
     var el = ev.target.closest ? ev.target.closest('[data-confirm]') : null;
-    if (el && !confirm(el.getAttribute('data-confirm'))) {
-        ev.preventDefault();
-        ev.stopPropagation();
-    }
+    if (!el) return;
+    if (el.dataset.confirmed === '1') { delete el.dataset.confirmed; return; }
+    ev.preventDefault();
+    ev.stopPropagation();
+    kConfirm(el.getAttribute('data-confirm'), function () {
+        el.dataset.confirmed = '1';
+        el.click();
+    });
 }, true);
 
 // 复制

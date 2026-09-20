@@ -158,7 +158,7 @@ document.getElementById('lvSave').addEventListener('click', function () {
     fd.append('id', document.getElementById('lv-id').value);
     fd.append('name', document.getElementById('lv-name').value.trim());
     fd.append('level', document.getElementById('lv-level').value || '1');
-    yfPost('<?= au('level_save') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+    yfPost('<?= au('level_save') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });
 /* 分组 */
 var gpMask = bindModal('gpMask', 'addGroupBtn', ['gpClose', 'gpCancel'], function (data) {
@@ -172,7 +172,7 @@ document.getElementById('gpSave').addEventListener('click', function () {
     fd.append('id', document.getElementById('gp-id').value);
     fd.append('name', document.getElementById('gp-name').value.trim());
     fd.append('min_level', document.getElementById('gp-min').value || '0');
-    yfPost('<?= au('group_save') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+    yfPost('<?= au('group_save') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });
 /* 行内动作 */
 document.addEventListener('click', function (ev) {
@@ -190,7 +190,7 @@ document.addEventListener('click', function (ev) {
     if (t.hasAttribute('data-del-level')) {
         if (!confirm(t.getAttribute('data-confirm'))) return;
         var fd = new FormData(); fd.append('id', t.getAttribute('data-del-level'));
-        yfPost('<?= au('level_del') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+        yfPost('<?= au('level_del') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
         return;
     }
     if (t.hasAttribute('data-edit-group')) {
@@ -204,6 +204,6 @@ document.addEventListener('click', function (ev) {
     }
     if (!confirm(t.getAttribute('data-confirm'))) return;
     var fd2 = new FormData(); fd2.append('id', t.getAttribute('data-del-group'));
-    yfPost('<?= au('group_del') ?>', fd2).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+    yfPost('<?= au('group_del') ?>', fd2).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });
 </script>

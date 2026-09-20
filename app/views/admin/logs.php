@@ -106,6 +106,6 @@ document.addEventListener('click', function (ev) {
     fd.append('scope', t.getAttribute('data-clean'));
     fetch('<?= au('logs_clear') ?>', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function (r) { return r.json(); })
-        .then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+        .then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });
 </script>

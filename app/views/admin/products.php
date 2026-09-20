@@ -241,7 +241,7 @@ document.addEventListener('change', function (ev) {
         var fd = new FormData();
         fd.append('id', ev.target.getAttribute('data-id'));
         yfPost('<?= au('product_toggle') ?>', fd).then(function (d) {
-            if (d.code !== 0) alert(d.msg);
+            if (d.code !== 0) kAlert(d.msg);
             location.reload();
         });
     }
@@ -331,7 +331,7 @@ document.getElementById('drawerSave').addEventListener('click', function () {
     var cards = document.getElementById('f-cards_import').value.trim();
     if (cards !== '') fd.append('cards_import', cards);
     yfPost('<?= au('product_save') ?>', fd).then(function (d) {
-        alert(d.msg);
+        kAlert(d.msg);
         if (d.code === 0) location.reload();
     });
 });
@@ -359,11 +359,11 @@ document.addEventListener('click', function (ev) {
         if (!confirm(t.getAttribute('data-confirm') || '确定执行该操作?')) return;
         ids.forEach(function (v) { fd.append('ids[]', v); });
         fd.append('op', t.getAttribute('data-op'));
-        yfPost('<?= au('products_batch') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+        yfPost('<?= au('products_batch') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
         return;
     }
     if (!confirm(t.getAttribute('data-confirm') || '确定执行该操作?')) return;
     fd.append('id', t.getAttribute('data-del'));
-    yfPost('<?= au('product_del') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+    yfPost('<?= au('product_del') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });
 </script>

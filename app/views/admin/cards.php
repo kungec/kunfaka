@@ -200,7 +200,7 @@ document.getElementById('kSave').addEventListener('click', function () {
     fd.append('cards', document.getElementById('k-cards').value.trim());
     fd.append('dedup', document.getElementById('k-dedup').checked ? '1' : '0');
     yfPost('<?= au('cards_import') ?>', fd).then(function (d) {
-        alert(d.msg);
+        kAlert(d.msg);
         if (d.code === 0) location.reload();
     });
 });
@@ -226,18 +226,18 @@ document.addEventListener('click', function (ev) {
         if (!confirm(t.getAttribute('data-confirm') || '确定执行该操作?')) return;
         ids.forEach(function (v) { fd.append('ids[]', v); });
         fd.append('op', t.getAttribute('data-op'));
-        yfPost('<?= au('cards_batch') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+        yfPost('<?= au('cards_batch') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
         return;
     }
     if (t.hasAttribute('data-lock')) {
         if (!confirm(t.getAttribute('data-confirm') || '确定执行该操作?')) return;
         fd.append('id', t.getAttribute('data-id'));
         fd.append('op', t.getAttribute('data-lock'));
-        yfPost('<?= au('card_lock') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+        yfPost('<?= au('card_lock') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
         return;
     }
     if (!confirm(t.getAttribute('data-confirm') || '确定删除该卡密?')) return;
     fd.append('id', t.getAttribute('data-delcard'));
-    yfPost('<?= au('card_del') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+    yfPost('<?= au('card_del') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });
 </script>

@@ -66,7 +66,7 @@ document.getElementById('profileForm').addEventListener('submit', function (ev) 
     fetch('<?= au('profile_save') ?>', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function (r) { return r.json(); })
         .then(function (d) {
-            alert(d.msg);
+            kAlert(d.msg);
             if (d.code === 0) location.reload();
         });
 });

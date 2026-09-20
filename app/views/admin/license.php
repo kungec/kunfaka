@@ -72,7 +72,7 @@ function yfPost(url, data) {
 }
 document.getElementById('act-form').addEventListener('submit', function (ev) {
     ev.preventDefault();
-    yfPost('<?= au('license_activate') ?>', { key: document.getElementById('lic-key').value }).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+    yfPost('<?= au('license_activate') ?>', { key: document.getElementById('lic-key').value }).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });
 var bf = document.getElementById('buy-form');
 if (bf) bf.addEventListener('submit', function (ev) {
@@ -84,13 +84,13 @@ if (bf) bf.addEventListener('submit', function (ev) {
         if (d.code === 0 && d.redirect) { location.href = d.redirect; return; }
         btn.disabled = false;
         btn.textContent = '⚡ 立即购买 ¥<?= e($price) ?>';
-        alert(d.msg);
-    }).catch(function () { btn.disabled = false; btn.textContent = '⚡ 立即购买 ¥<?= e($price) ?>'; alert('网络错误'); });
+        kAlert(d.msg);
+    }).catch(function () { btn.disabled = false; btn.textContent = '⚡ 立即购买 ¥<?= e($price) ?>'; kAlert('网络错误'); });
 });
 var vb = document.getElementById('verify-btn');
 if (vb) vb.addEventListener('click', function () {
     vb.disabled = true;
-    yfPost('<?= au('license_verify') ?>', {}).then(function (d) { alert(d.msg); vb.disabled = false; });
+    yfPost('<?= au('license_verify') ?>', {}).then(function (d) { kAlert(d.msg); vb.disabled = false; });
 });
 /* 支付返回: 轮询订单, 出码即可复制/一键激活 */
 var bp = document.getElementById('buy-panel');
@@ -112,7 +112,7 @@ if (bp) {
             setTimeout(function () { b.textContent = '复制授权码'; }, 1500);
         });
         document.getElementById('buy-activate').addEventListener('click', function () {
-            yfPost('<?= au('license_activate') ?>', { key: key }).then(function (d) { alert(d.msg); if (d.code === 0) location.href = '<?= au('license') ?>'; });
+            yfPost('<?= au('license_activate') ?>', { key: key }).then(function (d) { kAlert(d.msg); if (d.code === 0) location.href = '<?= au('license') ?>'; });
         });
     }
     function poll() {

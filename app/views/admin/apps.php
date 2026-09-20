@@ -212,9 +212,9 @@ document.addEventListener('click', function (ev) {
     else if (t.hasAttribute('data-usetheme')) url = '<?= au('theme_set') ?>';
     t.disabled = true;
     appPost(url, name, type).then(function (d) {
-        alert(d.msg);
+        kAlert(d.msg);
         t.disabled = false;
         if (d.code === 0) location.reload();
-    }).catch(function () { t.disabled = false; alert('网络错误'); });
+    }).catch(function () { t.disabled = false; kAlert('网络错误'); });
 });
 </script>

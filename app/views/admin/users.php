@@ -196,7 +196,7 @@ document.getElementById('lvlSave').addEventListener('click', function () {
     checkedIds().forEach(function (v) { fd.append('ids[]', v); });
     fd.append('op', 'level');
     fd.append('level_id', document.getElementById('lvl-select').value);
-    yfPost('<?= au('users_batch') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+    yfPost('<?= au('users_batch') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });
 document.addEventListener('click', function (ev) {
     var t = ev.target.closest ? ev.target.closest('[data-toggle],[data-del],[data-op]') : null;
@@ -208,12 +208,12 @@ document.addEventListener('click', function (ev) {
         if (!confirm(t.getAttribute('data-confirm') || '确定执行该操作?')) return;
         ids.forEach(function (v) { fd.append('ids[]', v); });
         fd.append('op', t.getAttribute('data-op'));
-        yfPost('<?= au('users_batch') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+        yfPost('<?= au('users_batch') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
         return;
     }
     if (!confirm(t.getAttribute('data-confirm') || '确定执行该操作?')) return;
     fd.append('id', t.getAttribute('data-toggle') || t.getAttribute('data-del'));
     var url = t.hasAttribute('data-toggle') ? '<?= au('user_toggle') ?>' : '<?= au('user_del') ?>';
-    yfPost(url, fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
+    yfPost(url, fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });
 </script>
