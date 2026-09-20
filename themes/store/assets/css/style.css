@@ -1120,3 +1120,8 @@ a.announce:hover { transform: translateY(-1px); box-shadow: var(--shadow-1); }
 .n-time { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
 
 .notice-body { margin-top: 16px; color: var(--text-2); font-size: 14.5px; line-height: 1.85; word-break: break-word; }
+
+/* ---------- 下单人机验证 ---------- */
+.buy-captcha .captcha-row { display: flex; gap: 10px; align-items: stretch; }
+.buy-captcha .captcha-img { flex: none; height: 44px; border-radius: var(--r-sm); border: 1px solid var(--border-strong); cursor: pointer; background: var(--card); }
+.buy-captcha .captcha-input { flex: 1 1 140px; min-width: 0; width: auto; }

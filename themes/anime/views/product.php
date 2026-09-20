@@ -50,6 +50,7 @@
             });
         })();
         </script>
+        <?php if (Captcha::mode() !== 'off'): ?><div class="form-row buy-captcha"><?= Captcha::render('order') ?></div><?php endif; ?>
         <?php if ($payments): ?>
         <div class="form-row">
             <label>支付方式</label>

@@ -44,6 +44,16 @@ class BuyController
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') redirect(u('home/index'));
         csrf_check();
+        // 防恶意刷单: 人机验证(极验/Turnstile/图形验证码按配置自动匹配) + 同IP下单频控兜底
+        if (!Captcha::verify('order', $_POST)) {
+            View::theme('error', ['msg' => '人机验证未通过, 请返回上一步刷新后重试', 'pageTitle' => '验证失败']);
+            return;
+        }
+        $ipLimit = (int)setting('order_ip_limit', '30');
+        if ($ipLimit > 0 && (int)DB::value('SELECT COUNT(*) FROM orders WHERE ip = ? AND created_at > ?', [client_ip(), now() - 3600]) >= $ipLimit) {
+            View::theme('error', ['msg' => '下单过于频繁, 请一小时后再试', 'pageTitle' => '请稍后再试']);
+            return;
+        }
         $productId = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
         $num = isset($_POST['num']) ? (int)$_POST['num'] : 1;
         $contact = trim(arr_get($_POST, 'contact'));

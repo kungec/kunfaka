@@ -179,7 +179,7 @@
         <form method="post" action="<?= au('settings_save') ?>" data-ajax>
             <?= csrf_field() ?>
             <div class="form-row">
-                <label>验证方式(前台注册/登录 + 后台登录)</label>
+                <label>验证方式(注册/登录/后台登录/下单购买)</label>
                 <select name="verify_mode" onchange="document.getElementById('ts-fields').style.display=this.value==='turnstile'?'block':'none';document.getElementById('gt-fields').style.display=this.value==='geetest'?'block':'none';document.getElementById('cap-field').style.display=this.value==='captcha'?'block':'none'">
                     <option value="captcha" <?= $vm === 'captcha' ? 'selected' : '' ?>>图形验证码(默认)</option>
                     <option value="turnstile" <?= $vm === 'turnstile' ? 'selected' : '' ?>>Cloudflare Turnstile</option>
@@ -220,6 +220,11 @@
                     <label>验证有效期(秒)</label>
                     <input type="number" name="geetest_timeout" value="<?= e(setting('geetest_timeout', '120')) ?>" min="10" max="600" style="max-width:130px">
                 </div>
+            </div>
+            <div class="form-row">
+                <label>下单频控(同IP每小时最多下单数)</label>
+                <input type="number" name="order_ip_limit" value="<?= e(setting('order_ip_limit', '30')) ?>" min="0" max="1000" style="max-width:130px">
+                <div class="desc">防恶意刷单兜底: 超出后该IP本小时内无法再下单, 填 0 关闭频控(人机验证仍生效)。</div>
             </div>
             <button class="btn" type="submit">保存验证设置</button>
         </form>

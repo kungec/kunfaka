@@ -249,3 +249,9 @@ a.order-item:hover { border-color: var(--primary); }
     .home-top { grid-template-columns: 1fr; }
     .goods-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 }
+
+/* ---------- 下单人机验证 ---------- */
+.buy-captcha .captcha-row { display: flex; gap: 10px; align-items: stretch; }
+.buy-captcha .captcha-img { flex: none; height: 44px; padding: 0 10px; border-radius: 10px; border: 1.5px solid var(--line); cursor: pointer; background: var(--card); }
+.buy-captcha .captcha-input { flex: 1 1 140px; min-width: 0; width: auto; height: 44px; padding: 0 14px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--text); outline: none; font-size: 13.5px; }
+.buy-captcha .captcha-input:focus { border-color: var(--primary); }
