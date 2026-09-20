@@ -262,6 +262,14 @@ img { max-width: 100%; }
 .usdt-amount { color: var(--primary-deep); font-size: 18px; font-family: Consolas, Monaco, monospace; }
 
 /* ---------- 支付方式 ---------- */
+/* 购买数量步进器(隐藏原生spinner) */
+.num-step { display: inline-flex; align-items: stretch; border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,.9); }
+.num-step .ns-btn { width: 44px; border: none; background: transparent; color: var(--text2, #8a8f98); font-size: 18px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s; line-height: 1; }
+.num-step .ns-btn:hover { background: rgba(0,0,0,.05); color: var(--text, #333); }
+.num-step .ns-btn:active { transform: scale(.94); }
+.num-step input { width: 88px; text-align: center; border: none; border-left: 1.5px solid var(--line); border-right: 1.5px solid var(--line); border-radius: 0; background: transparent; font-weight: 700; -moz-appearance: textfield; appearance: textfield; }
+.num-step input::-webkit-outer-spin-button, .num-step input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
 .pay-list { display: flex; flex-direction: column; gap: 11px; }
 .pay-item {
     display: flex; align-items: center; width: 100%;

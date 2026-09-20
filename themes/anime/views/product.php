@@ -12,8 +12,12 @@
         <input type="hidden" name="product_id" value="<?= (int)$product['id'] ?>">
         <div class="form-row">
             <label>购买数量</label>
-            <input type="number" name="num" value="<?= e($product['min_num']) ?>" min="<?= (int)$product['min_num'] ?>"
-                   max="<?= max(1, (int)$product['max_num']) ?>" required>
+            <div class="num-step" data-min="<?= (int)$product['min_num'] ?>" data-max="<?= max(1, (int)$product['max_num']) ?>">
+                <button type="button" class="ns-btn" data-act="minus" aria-label="减少数量">−</button>
+                <input type="number" name="num" value="<?= e($product['min_num']) ?>" min="<?= (int)$product['min_num'] ?>"
+                       max="<?= max(1, (int)$product['max_num']) ?>" required>
+                <button type="button" class="ns-btn" data-act="plus" aria-label="增加数量">＋</button>
+            </div>
         </div>
         <div class="form-row">
             <label>联系方式类型</label>
@@ -63,6 +67,24 @@
         <button class="btn-buy big" type="submit" <?= $stock <= 0 ? 'disabled' : '' ?>>下单购买 · 全自动秒发</button>
     </form>
 </div>
+<script>
+/* 购买数量步进器 */
+(function () {
+    var step = document.querySelector('.num-step');
+    if (!step) return;
+    var input = step.querySelector('input');
+    var min = parseInt(step.getAttribute('data-min'), 10) || 1;
+    var max = parseInt(step.getAttribute('data-max'), 10) || 999999;
+    function clamp(v) { v = parseInt(v, 10); if (isNaN(v)) v = min; return Math.max(min, Math.min(max, v)); }
+    step.addEventListener('click', function (ev) {
+        var btn = ev.target.closest ? ev.target.closest('.ns-btn') : null;
+        if (!btn) return;
+        var cur = clamp(input.value);
+        input.value = btn.getAttribute('data-act') === 'plus' ? clamp(cur + 1) : clamp(cur - 1);
+    });
+    input.addEventListener('change', function () { input.value = clamp(input.value); });
+})();
+</script>
 <?php if ($payments): ?>
 <script>
 (function () {

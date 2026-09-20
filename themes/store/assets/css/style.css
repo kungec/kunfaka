@@ -661,8 +661,13 @@ input:focus, select:focus, textarea:focus {
 .ct-item:has(input:checked) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 .ct-item:has(input:focus-visible) { box-shadow: 0 0 0 3.5px var(--accent-ring); }
 
-.qty-row { display: flex; align-items: center; gap: 12px; }
-.qty-row input { width: 110px; text-align: center; }
+/* 购买数量步进器(隐藏原生spinner) */
+.num-step { display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--card); }
+.num-step .ns-btn { width: 44px; border: none; background: transparent; color: var(--text2); font-size: 18px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s; line-height: 1; }
+.num-step .ns-btn:hover { background: var(--card2, rgba(255,255,255,.05)); color: var(--text); }
+.num-step .ns-btn:active { transform: scale(.94); }
+.num-step input { width: 88px; text-align: center; border: none; border-left: 1px solid var(--border); border-right: 1px solid var(--border); border-radius: 0; background: transparent; font-weight: 700; -moz-appearance: textfield; appearance: textfield; }
+.num-step input::-webkit-outer-spin-button, .num-step input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 /* ---------------- 订单摘要/列表 ---------------- */
 .order-summary {
