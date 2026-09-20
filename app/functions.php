@@ -210,6 +210,23 @@ function cat_list() {
     return DB::fetchAll('SELECT * FROM categories WHERE status = 1 ORDER BY sort ASC, id ASC');
 }
 
+/** 商品缩略图路径(原图路径推导: p_x.ext → p_x_thumb.ext); 非上传图返回 null */
+function product_thumb_path($icon) {
+    if (!is_string($icon) || $icon === '' || strpos($icon, 'uploads/') !== 0) return null;
+    $info = pathinfo($icon);
+    return $info['dirname'] . '/' . $info['filename'] . '_thumb.' . strtolower(isset($info['extension']) ? $info['extension'] : 'jpg');
+}
+
+/** 商品图片URL: variant=thumb 优先返回缩略图(不存在回退原图); 无图返回 '' */
+function product_image_url($icon, $variant = 'full') {
+    if (!is_string($icon) || $icon === '' || strpos($icon, 'uploads/') !== 0) return '';
+    if ($variant === 'thumb') {
+        $t = product_thumb_path($icon);
+        if ($t !== null && is_file(YF_ROOT . '/' . $t)) return $t;
+    }
+    return $icon;
+}
+
 /** 前台站点Logo(按系统设置: 图片/文字; 返回null表示使用主题默认样式) */
 function site_logo_html($fallbackMark = '') {
     $type = setting('logo_type', 'default');

@@ -6,6 +6,9 @@
         <span>📦 库存 <b class="<?= $stock > 0 ? 'ok-text' : 'bad-text' ?>"><?= $stock ?></b> 件</span>
         <span>⚡ 支付成功立即自动发货</span>
     </div>
+    <?php if (!empty($product['icon'])): ?>
+        <img src="<?= e(site_url(product_image_url($product['icon']))) ?>" alt="<?= e($product['name']) ?>" style="width:auto;max-width:100%;height:auto;display:block;border-radius:12px;margin:10px 0">
+    <?php endif; ?>
     <div class="product-desc"><?= nl2br(e($product['description'])) ?></div>
     <form class="buy-form" method="post" action="<?= u('buy/create') ?>">
         <?= csrf_field() ?>

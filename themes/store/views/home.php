@@ -56,7 +56,7 @@
             <div class="goods-card">
                 <div class="goods-visual gv-<?= $gi ?>">
                     <?php if (!empty($p['icon'])): ?>
-                        <img src="<?= e(site_url($p['icon'])) ?>" alt="<?= e($p['name']) ?>" style="width:100%;height:100%;object-fit:cover">
+                        <img src="<?= e(site_url(product_image_url($p['icon'], 'thumb'))) ?>" alt="<?= e($p['name']) ?>" style="width:100%;height:100%;object-fit:cover" loading="lazy">
                     <?php else: ?>
                         <span><?= ['🎁','💎','🎮','📱','🎧','⭐','🔥','🛒'][$gi] ?></span>
                     <?php endif; ?>

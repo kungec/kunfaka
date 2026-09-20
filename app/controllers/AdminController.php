@@ -364,7 +364,7 @@ class AdminController
             'sort' => (int)arr_get($_POST, 'sort'),
         ];
         if ($data['name'] === '') json_out(['code' => 1, 'msg' => '商品名称不能为空']);
-        // 商品图标上传(jpg/png/webp/gif, ≤5MB)
+        // 商品图标上传(jpg/png/webp/gif, ≤5MB); 同步生成宽480等比缩略图供列表页使用
         $iconReset = arr_get($_POST, 'icon_reset') === '1';
         if (!empty($_FILES['icon_file']['tmp_name']) && $_FILES['icon_file']['error'] === UPLOAD_ERR_OK) {
             $f = $_FILES['icon_file'];
@@ -377,10 +377,44 @@ class AdminController
             if (!is_dir($dir)) @mkdir($dir, 0755, true);
             $fname = 'p_' . bin2hex(random_bytes(8)) . '.' . $ext;
             if (!move_uploaded_file($f['tmp_name'], $dir . '/' . $fname)) json_out(['code' => 1, 'msg' => '图标保存失败, 请检查目录权限']);
-            if ($old && (string)$old['icon'] !== '' && strpos($old['icon'], 'uploads/') === 0) @unlink(YF_ROOT . '/' . $old['icon']);
+            // 缩略图(宽≤480等比; gif跳过; png/webp保留透明)
+            if ($ext !== 'gif') {
+                $src = null;
+                if ($ext === 'jpg' || $ext === 'jpeg') $src = @imagecreatefromjpeg($dir . '/' . $fname);
+                elseif ($ext === 'png') $src = @imagecreatefrompng($dir . '/' . $fname);
+                elseif ($ext === 'webp' && function_exists('imagecreatefromwebp')) $src = @imagecreatefromwebp($dir . '/' . $fname);
+                if ($src) {
+                    $w = imagesx($src);
+                    $h = imagesy($src);
+                    $tw = min(480, $w);
+                    $th = max(1, (int)round($h * $tw / $w));
+                    $dst = imagecreatetruecolor($tw, $th);
+                    if (in_array($ext, ['png', 'webp'], true)) {
+                        imagealphablending($dst, false);
+                        imagesavealpha($dst, true);
+                        imagefilledrectangle($dst, 0, 0, $tw, $th, imagecolorallocatealpha($dst, 0, 0, 0, 127));
+                    }
+                    imagecopyresampled($dst, $src, 0, 0, 0, 0, $tw, $th, $w, $h);
+                    $thumbName = $dir . '/' . substr($fname, 0, strrpos($fname, '.')) . '_thumb.' . $ext;
+                    if ($ext === 'png') imagepng($dst, $thumbName, 6);
+                    elseif ($ext === 'webp' && function_exists('imagewebp')) imagewebp($dst, $thumbName, 80);
+                    else imagejpeg($dst, $thumbName, 82);
+                    imagedestroy($dst);
+                    imagedestroy($src);
+                }
+            }
+            if ($old && (string)$old['icon'] !== '' && strpos($old['icon'], 'uploads/') === 0) {
+                @unlink(YF_ROOT . '/' . $old['icon']);
+                $oldThumb = product_thumb_path($old['icon']);
+                if ($oldThumb) @unlink(YF_ROOT . '/' . $oldThumb);
+            }
             $data['icon'] = 'uploads/' . $fname;
         } elseif ($iconReset) {
-            if ($old && (string)$old['icon'] !== '' && strpos($old['icon'], 'uploads/') === 0) @unlink(YF_ROOT . '/' . $old['icon']);
+            if ($old && (string)$old['icon'] !== '' && strpos($old['icon'], 'uploads/') === 0) {
+                @unlink(YF_ROOT . '/' . $old['icon']);
+                $oldThumb = product_thumb_path($old['icon']);
+                if ($oldThumb) @unlink(YF_ROOT . '/' . $oldThumb);
+            }
             $data['icon'] = '';
         }
         if ($id > 0) {
