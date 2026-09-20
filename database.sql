@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `contact` varchar(200) NOT NULL DEFAULT '' COMMENT '联系邮箱/QQ',
   `contact_type` varchar(20) NOT NULL DEFAULT '' COMMENT '联系方式类型: telegram/email/qq/wechat/phone',
   `pay_plugin` varchar(40) NOT NULL DEFAULT '',
+  `channel` varchar(20) NOT NULL DEFAULT '' COMMENT '聚合支付渠道: alipay/wxpay/qqpay',
   `trade_no` varchar(64) NOT NULL DEFAULT '' COMMENT '第三方流水号',
   `txid` varchar(100) NOT NULL DEFAULT '' COMMENT '链上交易哈希',
   `status` tinyint NOT NULL DEFAULT 0 COMMENT '0待支付 1已完成 2已过期 3待处理',

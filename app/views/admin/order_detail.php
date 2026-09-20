@@ -10,7 +10,7 @@ $stMap = [0 => '待支付', 1 => '已完成', 2 => '已过期', 3 => '库存不�
             <tr><th>USDT应收</th><td class="mono"><?= e(number_format((float)$order['expected_amount'], 6, '.', '')) ?> USDT</td></tr>
         <?php endif; ?>
         <tr><th>联系方式</th><td><?= e($order['contact']) ?><?= $order['contact_type'] ? ' <span class="tag blue">' . e(contact_type_label($order['contact_type'])) . '</span>' : '' ?></td></tr>
-        <tr><th>支付方式</th><td><?= e($order['pay_plugin'] ?: '-') ?></td></tr>
+        <tr><th>支付方式</th><td><?= e(payment_display_name($order["pay_plugin"], $order["channel"] ?? "")) ?: "-" ?></td></tr>
         <tr><th>支付流水</th><td class="mono"><?= e($order['trade_no'] ?: $order['txid'] ?: '-') ?></td></tr>
         <tr><th>状态</th><td><span class="tag <?= (int)$order['status'] === 1 ? 'ok' : ((int)$order['status'] === 0 ? 'warn' : 'bad') ?>"><?= isset($stMap[(int)$order['status']]) ? $stMap[(int)$order['status']] : '未知' ?></span></td></tr>
         <tr><th>下单时间</th><td class="dim"><?= e(date('Y-m-d H:i:s', $order['created_at'])) ?></td></tr>

@@ -168,6 +168,10 @@ function active_theme() {
     if ($t !== 'store' && ($tmeta = Plugin::meta('theme', $t)) && !empty($tmeta['pro']) && !License::isPro()) {
         $t = 'store';
     }
+    // 付费主题加密版运行时门控: 授权/域名绑定不一致时回退默认主题(明文源码为开发模式豁免)
+    if ($t !== 'store' && Protector::isProApp('theme', $t) && !Protector::gate('theme', $t)) {
+        $t = 'store';
+    }
     return $cached = $t;
 }
 
@@ -464,7 +468,9 @@ function enabled_payments() {
         $cfg = $r['config'] ? (array)json_decode($r['config'], true) : [];
         // 传入已查询的行, 免去 Plugin::payment 内逐插件再查一次
         $plugin = Plugin::payment($r['name'], $r);
-        $channels = $plugin ? $plugin->channels() : [];
+        // 付费应用未通过授权门控(或加载失败): 前台完全不展示
+        if (!$plugin) continue;
+        $channels = $plugin->channels();
         // 聚合插件勾选了多个渠道: 按渠道展开成多个带品牌图标的支付方式
         if (count($channels) > 1) {
             foreach ($channels as $ch) {
@@ -570,4 +576,23 @@ function anti_red_intercept($route = null)
     if (in_array($route, ['pay/notify', 'pay/check', 'captcha/image'], true)) return;
     require YF_ROOT . '/app/views/anti_red.php';
     exit;
+}
+
+/** 聚合支付渠道中文名 */
+function payment_channel_label($channel)
+{
+    $map = ['alipay' => '支付宝', 'wxpay' => '微信', 'qqpay' => 'QQ钱包'];
+    return $map[(string)$channel] ?? ucfirst((string)$channel);
+}
+
+/** 订单支付方式可读名称: 插件标题(+ · 渠道名); 插件已卸载时回退原代码 */
+function payment_display_name($payPlugin, $channel = '')
+{
+    $payPlugin = trim((string)$payPlugin);
+    if ($payPlugin === '') return '';
+    $meta = Plugin::meta('payment', $payPlugin);
+    $title = is_array($meta) && isset($meta['title']) && $meta['title'] !== '' ? $meta['title'] : $payPlugin;
+    $channel = trim((string)$channel);
+    if ($channel !== '') $title .= ' · ' . payment_channel_label($channel);
+    return $title;
 }

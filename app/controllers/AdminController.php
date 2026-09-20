@@ -877,7 +877,7 @@ class AdminController
         foreach ($rows as $o) {
             fputcsv($out, [
                 $o['sn'], $o['product_id'], $o['product_name'], $o['num'], $o['unit_price'], $o['total'],
-                $o['contact'], $o['contact_type'], $o['pay_plugin'],
+                $o['contact'], $o['contact_type'], payment_display_name($o['pay_plugin'], $o['channel'] ?? ''),
                 $stMap[(int)$o['status']] ?? (string)$o['status'],
                 (string)$o['cards_content'],
                 $o['member_name'] !== null && $o['member_name'] !== '' ? $o['member_name'] : ($o['user_id'] > 0 ? 'UID' . $o['user_id'] : '游客'),

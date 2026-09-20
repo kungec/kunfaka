@@ -123,7 +123,7 @@ th.o-chk,td.o-chk{width:34px;text-align:center}
                 </td>
                 <td class="o-prod"><b><?= e($o['product_name']) ?></b><small>ID <?= (int)$o['product_id'] ?></small></td>
                 <td class="o-num">× <?= (int)$o['num'] ?><small>¥<?= e(nf($o['total'])) ?></small></td>
-                <td class="dim"><?= e($o['pay_plugin'] !== '' ? $o['pay_plugin'] : '—') ?></td>
+                <td class="dim"><?= e(payment_display_name($o['pay_plugin'], $o['channel'] ?? '')) ?: '—' ?></td>
                 <td><span class="tag <?= $sid === 1 ? 'ok' : ($sid === 0 ? 'warn' : 'bad') ?>"><?= $stMap[$sid] ?? '未知' ?></span></td>
                 <td><?php if ($delivered): ?><span class="tag ok">已发货</span><?php elseif ($sid === 3): ?><span class="tag warn">待处理</span><?php elseif ($sid === 1): ?><span class="tag warn">未发货</span><?php else: ?><span class="tag">—</span><?php endif; ?></td>
                 <td class="actions">

@@ -54,7 +54,7 @@ class PayController
             }
             $plugin->channel = $channel;
         }
-        DB::update('orders', ['pay_plugin' => $code], 'id = ?', [$order['id']]);
+        DB::update('orders', ['pay_plugin' => $code] + ($channel !== '' ? ['channel' => $channel] : []), 'id = ?', [$order['id']]);
         $order['pay_plugin'] = $code;
 
         // 链上免挂支付: 分配唯一应付金额(插件各自实现)

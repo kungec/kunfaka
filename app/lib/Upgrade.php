@@ -167,6 +167,7 @@ class Upgrade
         $col('orders', 'user_id', "int unsigned NOT NULL DEFAULT 0 COMMENT '下单会员ID'", 'sn');
         try { $pdo->exec("ALTER TABLE `orders` ADD INDEX `idx_user` (`user_id`)"); } catch (Exception $ex) {}
         $col('orders', 'contact_type', "varchar(20) NOT NULL DEFAULT '' COMMENT '联系方式类型'", 'contact');
+        $col('orders', 'channel', "varchar(20) NOT NULL DEFAULT '' COMMENT '聚合支付渠道: alipay/wxpay/qqpay'", 'pay_plugin');
         $col('categories', 'status', "tinyint NOT NULL DEFAULT 1 COMMENT '1启用 0停用(前台隐藏)'");
         $col('cards', 'note', "varchar(200) NOT NULL DEFAULT '' COMMENT '备注信息'");
         $col('users', 'level_id', "int unsigned NOT NULL DEFAULT 0 COMMENT '会员等级(0=无等级)'");

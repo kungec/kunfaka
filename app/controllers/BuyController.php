@@ -109,6 +109,8 @@ class BuyController
             'total' => $total,
             'contact' => $contact,
             'contact_type' => $contactType,
+            'pay_plugin' => $pluginCode,
+            'channel' => trim((string)(isset($_POST['channel']) ? $_POST['channel'] : '')),
             'ip' => client_ip(),
             'created_at' => now(),
             'expired_at' => now() + order_timeout_minutes() * 60,
