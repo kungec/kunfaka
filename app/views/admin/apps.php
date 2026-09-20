@@ -39,7 +39,7 @@ td.m-ico{width:62px}
 .m-ico img,.m-ico .ph{width:44px;height:44px;border-radius:10px;object-fit:cover;display:inline-flex;align-items:center;justify-content:center;font-size:20px;color:#fff}
 .m-title b{display:block;font-size:13px;line-height:1.45}
 .m-title small{color:var(--muted);font-size:10.5px}
-.m-desc{font-size:12px;color:var(--text2);line-height:1.65;max-width:420px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.m-desc{font-size:12px;color:var(--text2);line-height:1.65;max-width:460px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
 .m-price .tag{margin-right:4px}
 td.m-act{white-space:nowrap}
 td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
@@ -96,6 +96,7 @@ td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
     <table class="tb" id="appTable">
         <thead>
         <tr>
+            <th style="width:62px"></th>
             <th>软件名称</th>
             <th>开发商</th>
             <th>类型</th>
@@ -124,7 +125,7 @@ td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
                     <span class="tag <?= $isTheme ? '' : 'blue' ?>"><?= $isTheme ? '网站模版' : '支付接口' ?></span>
                     <?php if ($app['local']): ?><span class="tag">内置</span><?php else: ?><span class="tag warn">市场</span><?php endif; ?>
                 </td>
-                <td><div class="m-desc"><?= e($app['desc']) ?></div></td>
+                <td><div class="m-desc" title="<?= e($app['desc']) ?>"><?= e($app['desc']) ?></div></td>
                 <td class="dim">v<?= e($app['version']) ?><?= isset($app['remote_version']) && $app['remote_version'] !== '' && $app['remote_version'] !== $app['version'] ? '<br><small style="color:var(--info)">可更新 ' . e($app['remote_version']) . '</small>' : '' ?></td>
                 <td class="m-price">
                     <?php if ($app['pro']): ?>
@@ -175,7 +176,7 @@ td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
                 </td>
             </tr>
         <?php endforeach; ?>
-        <?php if (!$list): ?><tr><td colspan="7"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="font-size:34px;opacity:.55;margin-bottom:6px">🧩</div>没有符合条件的应用</div></td></tr><?php endif; ?>
+        <?php if (!$list): ?><tr><td colspan="8"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="font-size:34px;opacity:.55;margin-bottom:6px">🧩</div>没有符合条件的应用</div></td></tr><?php endif; ?>
         </tbody>
     </table>
     <div style="font-size:12px;color:var(--muted);padding:10px 2px 0">共 <?= count($list) ?> 个应用</div>
