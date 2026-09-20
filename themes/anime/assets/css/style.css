@@ -271,6 +271,16 @@ img { max-width: 100%; }
     cursor: pointer; font-size: 15px; transition: .2s;
 }
 .pay-item:hover { border-color: var(--primary); transform: translateX(5px); box-shadow: var(--shadow); }
+
+/* 商品页内嵌紧凑版: 胶囊网格, 收银台choose页保持大卡样式 */
+.pay-list.pay-compact { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); flex-direction: unset; gap: 8px; }
+.pay-compact .pay-item { display: flex; flex-direction: row; align-items: center; width: auto; padding: 9px 12px; border-radius: 10px; border-width: 1px; font-size: 13px; }
+.pay-compact .pay-item input { display: none; }
+.pay-compact .pay-item:has(input:checked) { border-color: var(--primary); }
+.pay-compact .pay-item:hover { transform: none; box-shadow: none; }
+.pay-compact .pay-icon { margin: 0 8px 0 0; }
+.pay-compact .pay-icon svg, .pay-compact .pay-brand { width: 22px; height: 22px; }
+.pay-compact .pay-name { font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pay-icon { display: flex; align-items: center; margin-right: 13px; }
 .pay-icon svg, .pay-brand { display: block; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
 .pay-brand-row { display: inline-flex; align-items: center; gap: 6px; }

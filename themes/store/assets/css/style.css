@@ -728,6 +728,16 @@ input:focus, select:focus, textarea:focus {
 }
 
 .pay-item:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-1); }
+
+/* 商品页内嵌紧凑版: 胶囊网格, 收银台choose页保持大卡样式 */
+.pay-list.pay-compact { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin-top: 10px; }
+.pay-compact .pay-item { display: flex; flex-direction: row; align-items: center; padding: 9px 12px; gap: 8px; border-radius: 10px; border-width: 1px; }
+.pay-compact .pay-item input { display: none; }
+.pay-compact .pay-item:has(input:checked) { border-color: var(--accent); background: var(--card2, rgba(255,255,255,.03)); }
+.pay-compact .pay-item:hover { transform: none; box-shadow: none; }
+.pay-compact .pay-icon, .pay-compact .pay-icon svg { width: 22px; height: 22px; }
+.pay-compact .pay-icon { margin: 0; }
+.pay-compact .pay-name { font-weight: 600; font-size: 13px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pay-icon { display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; flex: none; }
 .pay-icon svg { width: 30px; height: 30px; }
 .pay-name { font-weight: 700; font-size: 14.5px; flex: 1; }

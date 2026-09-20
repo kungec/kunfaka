@@ -63,12 +63,12 @@
             <div class="form-row">
                 <label>支付方式</label>
                 <?php if ($payments): ?>
-                    <div class="pay-list">
+                    <div class="pay-list pay-compact">
                         <?php $pi = 0; foreach ($payments as $pm): ?>
-                            <label class="pay-item<?= $pi === 0 ? ' selected' : '' ?>" style="display:flex;align-items:center;gap:10px;cursor:pointer">
-                                <input type="radio" name="pay_choice" value="<?= e($pm['code']) ?>" data-channel="<?= e($pm['channel'] ?? '') ?>" <?= $pi === 0 ? 'checked' : '' ?> style="width:auto;margin:0">
+                            <label class="pay-item<?= $pi === 0 ? ' selected' : '' ?>">
+                                <input type="radio" name="pay_choice" value="<?= e($pm['code']) ?>" data-channel="<?= e($pm['channel'] ?? '') ?>" <?= $pi === 0 ? 'checked' : '' ?>>
                                 <span class="pay-icon"><?= $pm['icon'] ?></span>
-                                <span><?= e($pm['title']) ?></span>
+                                <span class="pay-name"><?= e($pm['title']) ?></span>
                             </label>
                         <?php $pi++; endforeach; ?>
                     </div>
