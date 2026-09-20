@@ -1,0 +1,11 @@
+{
+  "name": "epusdt",
+  "title": "EPUSDT·USDT自建网关",
+  "type": "payment",
+  "version": "1.0.0",
+  "author": "坤发卡官方",
+  "desc": "对接开源USDT支付网关 EPUSDT(epusdt.com, 自部署): 填写网关地址/商户PID/商户密钥即可。买家跳转网关收银台按实时汇率支付USDT, 链上确认后自动回调发货, 无需挂机、无需暴露钱包私钥。专业版专属。",
+  "price": 0,
+  "pro": true,
+  "class": "EpusdtPlugin"
+}
