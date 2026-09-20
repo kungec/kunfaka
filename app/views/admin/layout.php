@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0e1013">
 <title><?= e(isset($pageTitle) ? $pageTitle : '管理后台') ?> - 坤发卡</title>
-<link rel="stylesheet" href="<?= site_url('assets/css/admin.css') ?>?v=6.2.0">
+<link rel="stylesheet" href="<?= site_url('assets/css/admin.css') ?>?v=6.3.0">
 <script>
 (function () {
     var t = null;
