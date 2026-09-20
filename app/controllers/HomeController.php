@@ -7,12 +7,17 @@ class HomeController
     public function actionIndex()
     {
         $catId = isset($_GET['cat']) ? (int)$_GET['cat'] : 0;
+        $kw = trim((string)(isset($_GET['kw']) ? $_GET['kw'] : ''));
         $categories = cat_list();
         $where = 'status = 1';
         $params = [];
         if ($catId > 0) {
             $where .= ' AND category_id = ?';
             $params[] = $catId;
+        }
+        if ($kw !== '') {
+            $where .= ' AND name LIKE ?';
+            $params[] = '%' . mb_substr($kw, 0, 50) . '%';
         }
         $products = DB::fetchAll("SELECT * FROM products WHERE {$where} ORDER BY sort ASC, id DESC LIMIT 100", $params);
         // 分组等级可见性过滤(低于分组最低等级的会员/游客不可见)
@@ -31,9 +36,11 @@ class HomeController
             }
         }
         $catCounts = [];
+        foreach (DB::fetchAll("SELECT category_id, COUNT(*) AS n FROM products WHERE status = 1 GROUP BY category_id") as $r) {
+            $catCounts[(int)$r['category_id']] = (int)$r['n'];
+        }
         foreach ($products as &$p) {
             $p['cat_name'] = isset($catName[$p['category_id']]) ? $catName[$p['category_id']] : '商品';
-            $catCounts[$p['category_id']] = (isset($catCounts[$p['category_id']]) ? $catCounts[$p['category_id']] : 0) + 1;
             $stock[$p['id']] = $stockMap[(int)$p['id']] ?? 0;
         }
         unset($p);
@@ -45,6 +52,7 @@ class HomeController
             'products' => $products,
             'stock' => $stock,
             'catId' => $catId,
+            'kw' => $kw,
             'catCounts' => $catCounts,
             'pageTitle' => setting('site_name', '坤发卡'),
         ]);
