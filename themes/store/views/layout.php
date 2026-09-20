@@ -8,8 +8,8 @@
 <meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
 <title><?= e(isset($pageTitle) ? $pageTitle : setting('site_name', '坤发卡')) ?></title>
     <link rel="icon" href="<?= e(site_url('favicon.ico')) ?>" sizes="64x64">
-<link rel="stylesheet" href="<?= site_url('assets/css/base.css') ?>?v=1.0.0">
-<link rel="stylesheet" href="<?= $_theme_url ?>assets/css/style.css?v=1.3.0">
+<link rel="stylesheet" href="<?= site_url('assets/css/base.css') ?>?v=<?= YF_VERSION ?>">
+<link rel="stylesheet" href="<?= $_theme_url ?>assets/css/style.css?v=<?= YF_VERSION ?>">
 <script>
 (function () {
     var t = null;
