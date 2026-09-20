@@ -64,10 +64,11 @@
             <div class="form-row">
                 <label>当前主题</label>
                 <select name="theme">
-                    <?php foreach (theme_list() as $dir => $t): ?>
-                        <option value="<?= e($dir) ?>" <?= active_theme() === $dir ? 'selected' : '' ?>><?= e($t['title']) ?><?= !empty($t['pro']) ? ' (专业版)' : '' ?></option>
+                    <?php foreach (theme_list() as $dir => $t): $locked = !empty($t['pro']) && !License::isPro(); ?>
+                        <option value="<?= e($dir) ?>" <?= active_theme() === $dir ? 'selected' : '' ?> <?= $locked ? 'disabled' : '' ?>><?= e($t['title']) ?><?= !empty($t['pro']) ? ($locked ? ' (专业版·未开通)' : ' (专业版)') : '' ?></option>
                     <?php endforeach; ?>
                 </select>
+                <div class="desc">专业版主题需在「授权中心」激活专业版后启用; 主题文件也可在「应用商店」获取。</div>
             </div>
             <div class="form-row">
                 <label>前台会员(注册/登录)</label>

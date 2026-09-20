@@ -98,10 +98,16 @@ function au($route, $params = []) {
 
 /** 当前激活主题 */
 function active_theme() {
+    static $cached = null;
+    if ($cached !== null) return $cached;
     $t = trim((string)setting('theme', 'store'));
     // 目录名严格白名单, 防止settings被写入 ../ 等路径形式
     if (!preg_match('/^[a-z0-9_\-]{1,40}$/', $t) || !is_dir(YF_ROOT . '/themes/' . $t)) $t = 'store';
-    return $t;
+    // 专业版主题兜底: 未激活专业版时回退默认主题
+    if ($t !== 'store' && ($tmeta = Plugin::meta('theme', $t)) && !empty($tmeta['pro']) && !License::isPro()) {
+        $t = 'store';
+    }
+    return $cached = $t;
 }
 
 /** 读取系统配置(带缓存; setting_set 写入会同步穿透缓存) */

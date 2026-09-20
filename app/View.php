@@ -11,12 +11,15 @@ class View
     {
         $theme = active_theme();
         $dir = YF_ROOT . '/themes/' . $theme . '/views';
+        $skin = '';
         if (!is_file($dir . '/' . $tpl . '.php')) {
+            // 换肤型主题(无视图, 仅覆盖CSS): 视图回退anime, 资源仍指向所选主题
+            $skin = $theme;
             $theme = 'anime';
             $dir = YF_ROOT . '/themes/anime/views';
         }
         $data['_theme'] = $theme;
-        $data['_theme_url'] = site_url('themes/' . $theme . '/');
+        $data['_theme_url'] = site_url('themes/' . ($skin !== '' ? $skin : $theme) . '/');
         $content = self::capture($dir . '/' . $tpl . '.php', $data);
         $layout = $dir . '/layout.php';
         if (is_file($layout)) {

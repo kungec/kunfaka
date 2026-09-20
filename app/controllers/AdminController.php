@@ -1463,13 +1463,25 @@ class AdminController
             if (!$picked) json_out(['code' => 1, 'msg' => '请至少选择一种下单联系方式']);
             setting_set('contact_types', implode(',', $picked));
         }
-        $keys = ['site_name', 'site_url', 'theme', 'announcement', 'order_timeout',
+        $keys = ['site_name', 'site_url', 'announcement', 'order_timeout',
             'logo_type', 'logo_text', 'url_rewrite',
             'smtp_open', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_ssl', 'official_api',
             'verify_mode', 'captcha_open', 'turnstile_open', 'turnstile_site_key', 'turnstile_secret_key',
             'geetest_id', 'geetest_key', 'geetest_timeout', 'cdn_mode', 'member_open'];
         foreach ($keys as $k) {
             if (isset($_POST[$k])) setting_set($k, is_string($_POST[$k]) ? trim($_POST[$k]) : $_POST[$k]);
+        }
+        // 主题切换独立门控: 专业版主题需已激活专业版, 不得随设置表单免检写入
+        if (isset($_POST['theme'])) {
+            $t = trim((string)$_POST['theme']);
+            $tmeta = Plugin::meta('theme', $t);
+            if (!$tmeta) {
+                json_out(['code' => 1, 'msg' => '主题不存在']);
+            }
+            if (!empty($tmeta['pro']) && !License::isPro()) {
+                json_out(['code' => 2, 'msg' => '该主题为专业版专享, 请先开通99元专业版']);
+            }
+            setting_set('theme', $t);
         }
         // Logo 类型白名单 + 图片上传
         if (isset($_POST['logo_type']) && !in_array($_POST['logo_type'], ['default', 'text', 'image'], true)) {
