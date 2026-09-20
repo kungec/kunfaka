@@ -27,7 +27,7 @@ class Market
         curl_setopt($ch, CURLOPT_URL, $api . '/api/market');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_tls($ch);
         $res = curl_exec($ch);
         curl_close($ch);
         if ($res === false) return [];
@@ -105,7 +105,7 @@ class Market
             . '&key=' . urlencode($key) . '&domain=' . urlencode($domain));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 60);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_tls($ch);
         $res = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
@@ -155,7 +155,7 @@ class Market
             curl_setopt($ch, CURLOPT_URL, $api . '/api/notice');
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_tls($ch);
             $res = curl_exec($ch);
             curl_close($ch);
             $json = json_decode((string)$res, true);

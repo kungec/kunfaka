@@ -138,6 +138,19 @@ CREATE TABLE IF NOT EXISTS `logs` (
   KEY `idx_created` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 订单查询邮箱验证码(凭联系方式查单的二次验证)
+CREATE TABLE IF NOT EXISTS `contact_otps` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `contact` varchar(100) NOT NULL DEFAULT '',
+  `code` varchar(6) NOT NULL DEFAULT '',
+  `ip` varchar(45) NOT NULL DEFAULT '',
+  `tries` tinyint NOT NULL DEFAULT 0,
+  `created_at` int unsigned NOT NULL DEFAULT 0,
+  `expires_at` int unsigned NOT NULL DEFAULT 0,
+  KEY `idx_contact` (`contact`,`expires_at`),
+  KEY `idx_ip` (`ip`,`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 公告(后台可发布多条, 前台条栏+公告页展示)
 CREATE TABLE IF NOT EXISTS `notices` (
   `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -181,7 +194,6 @@ INSERT IGNORE INTO `settings` (`k`,`v`) VALUES
 ('theme','store'),
 ('announcement','本站已接入全自动发卡系统，支付成功后立即发货！'),
 ('order_timeout','15'),
-('contact_qq',''),
 ('smtp_open','0'),
 ('smtp_host',''),
 ('smtp_port','465'),

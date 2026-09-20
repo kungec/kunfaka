@@ -1,10 +1,10 @@
 <?php
 /**
- * 坤发卡 v1.0.0 → v1.1.0 升级脚本(浏览器访问一次即可)
- * 新增: 前台会员体系 / 注册IP限制 / 登录爆破锁定 / Cloudflare Turnstile支持
- * 幂等设计, 重复执行无副作用。执行后建议删除本文件。
+ * 坤发卡 历史版本升级脚本(仅限命令行执行: php tools/upgrade.php)
+ * 幂等设计, 重复执行无副作用。
  */
-if (!is_file(__DIR__ . '/../data/config.php')) exit('请先完成系统安装');
+if (PHP_SAPI !== 'cli') exit("为防止未授权访问, 本脚本仅支持命令行执行: php tools/upgrade.php\n");
+if (!is_file(__DIR__ . '/../data/config.php')) exit("请先完成系统安装\n");
 define('YF_ROOT', dirname(__DIR__));
 require __DIR__ . '/../data/config.php';
 
@@ -14,7 +14,7 @@ $pdo = new PDO(
     [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
 );
 
-echo "<h3>坤发卡 v1.1.0 升级</h3><pre>\n";
+echo "<h3>坤发卡 升级</h3><pre>\n";
 
 $ddl = [
     "CREATE TABLE IF NOT EXISTS `users` (
@@ -181,7 +181,8 @@ $settings = [
     'contact_types' => 'email,qq',
     'service_contacts' => '',
 ];
-$st = $pdo->prepare('REPLACE INTO settings (k, v) VALUES (?, ?)');
+// 配置种子: 仅在键不存在时插入(INSERT IGNORE), 绝不覆盖站长已配置的值
+$st = $pdo->prepare('INSERT IGNORE INTO settings (k, v) VALUES (?, ?)');
 foreach ($settings as $k => $v) {
     $st->execute([$k, $v]);
     echo "OK: settings[{$k}]\n";
@@ -194,7 +195,7 @@ echo "OK: settings[member_open]\n";
 $cur = '';
 foreach ($pdo->query("SELECT v FROM settings WHERE k = 'theme'") as $row) $cur = $row['v'];
 if ($cur === '' || $cur === 'anime') {
-    $st->execute(['theme', 'store']);
+    $pdo->exec("INSERT INTO settings (k, v) VALUES ('theme', 'store') ON DUPLICATE KEY UPDATE v = 'store'");
     echo "OK: 默认主题已切换为 云商城(store)\n";
 } else {
     echo "SKIP: 主题保持为 {$cur}\n";
@@ -228,25 +229,23 @@ if ($noticeCount === 0) {
     }
 }
 
-// 商店自助购买(v1.12): store_orders 表 + 收款配置(INSERT IGNORE, 不覆盖已配置密钥)
-$pdo->exec("CREATE TABLE IF NOT EXISTS `store_orders` (
+// 订单查询邮箱验证码表(凭联系方式查单的二次验证)
+$pdo->exec("CREATE TABLE IF NOT EXISTS `contact_otps` (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    `sn` varchar(32) NOT NULL,
-    `channel` varchar(10) NOT NULL DEFAULT 'usdt' COMMENT 'usdt / codepay',
-    `pay_type` varchar(10) NOT NULL DEFAULT '' COMMENT 'codepay子渠道 alipay/wxpay/qqpay',
-    `amount` decimal(14,6) NOT NULL DEFAULT 0.000000 COMMENT '应收金额(CNY或USDT)',
-    `status` tinyint NOT NULL DEFAULT 0 COMMENT '0待支付 1已支付 2已取消',
-    `txid` varchar(100) NOT NULL DEFAULT '' COMMENT '链上哈希或三方流水',
+    `contact` varchar(100) NOT NULL DEFAULT '',
+    `code` varchar(6) NOT NULL DEFAULT '',
+    `ip` varchar(45) NOT NULL DEFAULT '',
+    `tries` tinyint NOT NULL DEFAULT 0,
     `created_at` int unsigned NOT NULL DEFAULT 0,
-    `paid_at` int unsigned NOT NULL DEFAULT 0,
-    UNIQUE KEY `uk_sn` (`sn`),
-    KEY `idx_status` (`status`,`created_at`)
+    `expires_at` int unsigned NOT NULL DEFAULT 0,
+    KEY `idx_contact` (`contact`,`expires_at`),
+    KEY `idx_ip` (`ip`,`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-echo "OK: store_orders 表就绪\n";
-foreach (['storepay_usdt' => '', 'storepay_codepay_api' => '', 'storepay_codepay_pid' => '',
-          'storepay_codepay_key' => '', 'storepay_price' => '99', 'storepay_usdt_amount' => '15',
-          'cdn_mode' => 'off'] as $k => $v) {
-    $chk = $pdo->prepare('SELECT COUNT(*) FROM settings WHERE k = ?');
+echo "OK: contact_otps 表就绪\n";
+
+// CDN接入模式(INSERT IGNORE, 不覆盖已有配置)
+$chk = $pdo->prepare('SELECT COUNT(*) FROM settings WHERE k = ?');
+foreach (['cdn_mode' => 'off'] as $k => $v) {
     $chk->execute([$k]);
     if ((int)$chk->fetchColumn() === 0) {
         $st->execute([$k, $v]);
@@ -256,4 +255,4 @@ foreach (['storepay_usdt' => '', 'storepay_codepay_api' => '', 'storepay_codepay
     }
 }
 
-echo "\n升级完成! 建议: 后台-系统设置 中配置人机验证方式; 执行完成后删除本文件。\n";
+echo "\n升级完成! 建议: 后台-系统设置 中配置人机验证方式。\n";

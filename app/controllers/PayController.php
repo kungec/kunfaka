@@ -97,7 +97,8 @@ class PayController
     {
         $code = isset($_GET['plugin']) ? $_GET['plugin'] : '';
         $plugin = Plugin::payment($code);
-        if (!$plugin) {
+        if (!$plugin || !$plugin->enabled) {
+            // 已停用的插件回调入口一并失效, 防止绕过启用状态直打回调
             echo 'fail';
             return;
         }

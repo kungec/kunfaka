@@ -130,24 +130,32 @@ class AlipayClient
         return $resp['qr_code'];
     }
 
-    /** 查询交易状态(当面付主动查单) */
-    public function queryTrade($outTradeNo)
-    {
-        $params = $this->sysParams('alipay.trade.query', ['out_trade_no' => $outTradeNo]);
-        $res = $this->httpPost($this->gateway, $this->buildQuery($params));
-        $json = json_decode($res, true);
-        if (!$json || empty($json['alipay_trade_query_response'])) return null;
-        $resp = $json['alipay_trade_query_response'];
-        if (isset($resp['code']) && $resp['code'] == '10000' && isset($resp['trade_status']) && $resp['trade_status'] === 'TRADE_SUCCESS') {
-            return isset($resp['trade_no']) ? $resp['trade_no'] : '';
-        }
-        return null;
-    }
-
     protected function buildQuery($params)
     {
         $pairs = [];
         foreach ($params as $k => $v) $pairs[] = $k . '=' . urlencode($v);
         return implode('&', $pairs);
+    }
+
+    /** 服务端POST网关(表单编码; TLS证书校验见 curl_tls) */
+    protected function httpPost($url, $body)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_tls($ch);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+        $res = curl_exec($ch);
+        if ($res === false) {
+            $err = curl_error($ch);
+            curl_close($ch);
+            throw new Exception('HTTP请求失败: ' . $err);
+        }
+        curl_close($ch);
+        return $res;
     }
 }

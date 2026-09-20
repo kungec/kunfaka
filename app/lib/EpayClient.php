@@ -30,6 +30,9 @@ class EpayClient
     /** 验证异步通知签名(自动剔除系统路由参数, 只校验网关参数) */
     public static function verifyNotify($req, $key)
     {
+        $key = (string)$key;
+        // 密钥未配置时签名算法退化为公开MD5, 任何人都可伪造回调, 必须直接拒绝
+        if (trim($key) === '') return false;
         if (empty($req['sign']) || empty($req['out_trade_no'])) return false;
         $sign = $req['sign'];
         $params = $req;

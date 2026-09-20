@@ -161,7 +161,6 @@ document.getElementById('lvSave').addEventListener('click', function () {
     yfPost('<?= au('level_save') ?>', fd).then(function (d) { alert(d.msg); if (d.code === 0) location.reload(); });
 });
 /* 分组 */
-var groupLevels = <?= json_encode(array_map(function ($l) { return ['level' => (int)$l['level'], 'name' => $l['name']]; }, $levels)) ?>;
 var gpMask = bindModal('gpMask', 'addGroupBtn', ['gpClose', 'gpCancel'], function (data) {
     document.getElementById('gpTitle').textContent = data ? '修改分组' : '添加分组';
     document.getElementById('gp-id').value = data ? data.id : 0;

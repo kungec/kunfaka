@@ -49,7 +49,12 @@ require __DIR__ . '/View.php';
 DB::init();
 
 if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
+    // HTTPS环境下(直连或经代理)给会话Cookie加secure, 防降级明文泄露
+    $https = !empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off';
+    if (!$https && !empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        $https = strtolower(trim(explode(',', (string)$_SERVER['HTTP_X_FORWARDED_PROTO'])[0])) === 'https';
+    }
+    session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax', 'secure' => $https]);
     session_start();
 }
 

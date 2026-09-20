@@ -63,23 +63,6 @@ class WechatPayV3
         return $json['code_url'];
     }
 
-    /** 主动查单, 支付成功返回 trade_no */
-    public function queryTrade($outTradeNo)
-    {
-        $path = '/v3/pay/transactions/out-trade-no/' . $outTradeNo . '?mchid=' . $this->mchId;
-        $auth = $this->authHeader('GET', $path);
-        $res = $this->request($this->baseUrl . $path, null, [
-            'Accept: application/json',
-            'Authorization: ' . $auth,
-        ]);
-        $json = json_decode($res, true);
-        if (!$json) return null;
-        if (isset($json['trade_state']) && $json['trade_state'] === 'SUCCESS') {
-            return isset($json['transaction_id']) ? $json['transaction_id'] : 'wx_success';
-        }
-        return null;
-    }
-
     /** 下载平台证书(解密后), 结果缓存到settings */
     protected function platformCerts()
     {
@@ -157,8 +140,7 @@ class WechatPayV3
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_tls($ch);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         if ($body !== null) {
             curl_setopt($ch, CURLOPT_POST, true);

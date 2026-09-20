@@ -134,8 +134,8 @@ class Captcha
             ]),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 10,
-            CURLOPT_SSL_VERIFYPEER => false,
         ]);
+        curl_tls($ch);
         $res = curl_exec($ch);
         curl_close($ch);
         if ($res === false) return false;
@@ -170,8 +170,8 @@ class Captcha
             ]),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 10,
-            CURLOPT_SSL_VERIFYPEER => false,
         ]);
+        curl_tls($ch);
         $res = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);

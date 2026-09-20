@@ -904,6 +904,10 @@ class AdminController
     /** 安装本地内置应用 */
     public function actionAppInstall()
     {
+        // 安装应用=向 plugins/ 写入可执行代码, 仅超级管理员
+        if (!$this->isSuper()) {
+            json_out(['code' => 1, 'msg' => '仅超级管理员可安装应用']);
+        }
         $type = arr_get($_POST, 'type') === 'theme' ? 'theme' : 'payment';
         $name = trim(arr_get($_POST, 'name'));
         $meta = Plugin::meta($type, $name);
@@ -919,6 +923,10 @@ class AdminController
     /** 从官方市场下载远程应用(需登录会员账号; 付费应用需专业版) */
     public function actionAppDownload()
     {
+        // 下载安装=向 plugins/ 写入可执行代码, 仅超级管理员
+        if (!$this->isSuper()) {
+            json_out(['code' => 1, 'msg' => '仅超级管理员可下载安装应用']);
+        }
         $type = arr_get($_POST, 'type') === 'theme' ? 'theme' : 'payment';
         $name = trim(arr_get($_POST, 'name'));
         // 远程列表里查找该应用, 判断是否付费
@@ -1005,6 +1013,10 @@ class AdminController
     /** 切换主题 */
     public function actionThemeSet()
     {
+        // 主题决定全站视图渲染路径, 仅超级管理员可切换
+        if (!$this->isSuper()) {
+            json_out(['code' => 1, 'msg' => '仅超级管理员可切换主题']);
+        }
         $name = trim(arr_get($_POST, 'name'));
         $meta = Plugin::meta('theme', $name);
         if (!$meta) json_out(['code' => 1, 'msg' => '主题不存在']);
@@ -1043,7 +1055,7 @@ class AdminController
             curl_setopt($ch, CURLOPT_URL, $api . '/api/price');
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_tls($ch);
             $res = curl_exec($ch);
             curl_close($ch);
             $json = json_decode((string)$res, true);
@@ -1072,7 +1084,7 @@ class AdminController
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['email' => $email, 'return_url' => $returnUrl]));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 12);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_tls($ch);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         $res = curl_exec($ch);
         curl_close($ch);
@@ -1097,7 +1109,7 @@ class AdminController
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['sn' => $sn]));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_tls($ch);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         $res = curl_exec($ch);
         curl_close($ch);
@@ -1424,6 +1436,10 @@ class AdminController
 
     public function actionSettingsSave()
     {
+        // 系统设置(含SMTP发信/官方市场源)仅超级管理员可改: 改这些可劫持发卡邮件或插件下载来源
+        if (!$this->isSuper()) {
+            json_out(['code' => 1, 'msg' => '仅超级管理员可修改系统设置']);
+        }
         // 客服联系方式(JSON行编辑器)
         if (isset($_POST['service_contacts'])) {
             $arr = json_decode((string)$_POST['service_contacts'], true);

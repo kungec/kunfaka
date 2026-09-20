@@ -13,6 +13,17 @@ function now() {
     return time();
 }
 
+/** 出站HTTPS统一开启证书校验(防中间人); 个别支付网关证书异常时可在 data/config.php 定义 YF_HTTP_INSECURE=true 临时关闭 */
+function curl_tls($ch) {
+    if (defined('YF_HTTP_INSECURE') && YF_HTTP_INSECURE) {
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        return;
+    }
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+}
+
 /** 客户端IP(按接入模式识别真实IP; off=直连不信任任何头) */
 function client_ip() {
     $mode = setting('cdn_mode', 'off');
@@ -23,17 +34,19 @@ function client_ip() {
             if (filter_var($ip, FILTER_VALIDATE_IP)) return $ip;
         }
     } elseif ($mode === 'cdn') {
-        // 通用CDN/反代模式: 取 X-Forwarded-For 最左侧合法IP(最初客户端)
+        // 通用CDN/反代模式: 从右往左取第一个非内网/保留段IP。
+        // XFF左侧值由客户端可控(可伪造), 只有最靠近服务器的受信代理追加以右的部分才可信。
         if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            foreach (explode(',', (string)$_SERVER['HTTP_X_FORWARDED_FOR']) as $ip) {
-                $ip = trim($ip);
-                if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP)) return $ip;
+            $parts = array_reverse(array_map('trim', explode(',', (string)$_SERVER['HTTP_X_FORWARDED_FOR'])));
+            foreach ($parts as $ip) {
+                if ($ip === '' || !filter_var($ip, FILTER_VALIDATE_IP)) continue;
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) return $ip;
             }
         }
-        // 部分CDN用 X-Real-IP
+        // 部分CDN用 X-Real-IP (通常由受信反代覆盖设置)
         if (!empty($_SERVER['HTTP_X_REAL_IP'])) {
             $ip = trim((string)$_SERVER['HTTP_X_REAL_IP']);
-            if (filter_var($ip, FILTER_VALIDATE_IP)) return $ip;
+            if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP)) return $ip;
         }
     }
     return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
@@ -86,7 +99,8 @@ function au($route, $params = []) {
 /** 当前激活主题 */
 function active_theme() {
     $t = trim((string)setting('theme', 'store'));
-    if (!is_dir(YF_ROOT . '/themes/' . $t)) $t = 'store';
+    // 目录名严格白名单, 防止settings被写入 ../ 等路径形式
+    if (!preg_match('/^[a-z0-9_\-]{1,40}$/', $t) || !is_dir(YF_ROOT . '/themes/' . $t)) $t = 'store';
     return $t;
 }
 

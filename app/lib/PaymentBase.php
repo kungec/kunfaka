@@ -61,46 +61,4 @@ abstract class PaymentBase
     {
         return isset($this->config[$key]) && $this->config[$key] !== '' ? $this->config[$key] : $default;
     }
-
-    protected function httpGet($url, $headers = [])
-    {
-        return $this->http($url, null, $headers);
-    }
-
-    protected function httpPost($url, $data, $headers = [], $json = false)
-    {
-        if ($json) {
-            $body = json_encode($data, JSON_UNESCAPED_UNICODE);
-            $headers[] = 'Content-Type: application/json';
-        } else {
-            $body = is_array($data) ? http_build_query($data) : (string)$data;
-            if (!$headers) $headers[] = 'Content-Type: application/x-www-form-urlencoded';
-        }
-        return $this->http($url, $body, $headers);
-    }
-
-    protected function http($url, $body = null, $headers = [])
-    {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'YunFaKa/1.0');
-        if ($headers) curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        if ($body !== null) {
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-        }
-        $res = curl_exec($ch);
-        if ($res === false) {
-            $err = curl_error($ch);
-            curl_close($ch);
-            throw new Exception('HTTP请求失败: ' . $err);
-        }
-        curl_close($ch);
-        return $res;
-    }
 }

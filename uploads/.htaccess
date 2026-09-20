@@ -1,0 +1,10 @@
+# uploads/ 仅存放图片静态文件, 禁止执行任何脚本(纵深防御)
+<FilesMatch "\.(?i:php|phtml|php3|php4|php5|php7|phar)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

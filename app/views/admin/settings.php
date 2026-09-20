@@ -6,6 +6,12 @@
     </div>
 </div>
 
+<?php if ((current_admin()['role'] ?? 'normal') !== 'super'): ?>
+<div class="card" style="border-left:3px solid var(--warn)">
+    <p class="dim" style="font-size:12.5px">⚠ 你当前是普通管理员, 只能查看系统设置; 修改需超级管理员账号。</p>
+</div>
+<?php endif; ?>
+
 <div class="card" style="padding:0;overflow:visible">
     <div class="settings-tabs">
         <button class="settings-tab on" data-panel="sp-site">站点</button>

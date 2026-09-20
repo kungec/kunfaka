@@ -18,11 +18,6 @@ if (!class_exists('DB')) {
         ]);
     }
 
-    public static function pdo()
-    {
-        return self::$pdo;
-    }
-
     public static function query($sql, $params = [])
     {
         $st = self::$pdo->prepare($sql);

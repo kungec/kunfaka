@@ -7,7 +7,15 @@
  */
 class License
 {
-    const OFFLINE_SECRET = 'YunFaKa#99pro#2024#secret';
+    /**
+     * 离线激活密钥(可选): 在 data/config.php 中定义 YF_OFFLINE_SECRET 后,
+     * 才能使用离线授权码(格式 YF99-XXXXX-XXXXX-XXXXX, 末段=前两段的HMAC校验值)。
+     * 不定义时激活必须走官方主控在线校验(推荐, 授权码绑定域名)。密钥务必保密且随机。
+     */
+    public static function offlineSecret()
+    {
+        return defined('YF_OFFLINE_SECRET') ? (string)YF_OFFLINE_SECRET : '';
+    }
 
     /** 是否专业版 */
     public static function isPro()
@@ -52,10 +60,14 @@ class License
                 // 网络失败转离线校验
             }
         }
-        // 离线校验: 末段为前两段的HMAC校验值
+        // 离线校验: 末段为前两段的HMAC校验值(需站长在config中自定义YF_OFFLINE_SECRET才可用)
+        $secret = self::offlineSecret();
+        if ($secret === '') {
+            throw new Exception('在线激活失败且未配置离线密钥, 请检查网络后重试');
+        }
         $parts = explode('-', $key);
         $body = $parts[1] . $parts[2];
-        $sum = strtoupper(substr(hash_hmac('md5', $body, self::OFFLINE_SECRET), 0, 5));
+        $sum = strtoupper(substr(hash_hmac('md5', $body, $secret), 0, 5));
         if ($sum !== $parts[3]) {
             throw new Exception('授权码无效(校验失败)');
         }
@@ -72,7 +84,7 @@ class License
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 8);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_tls($ch);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         $res = curl_exec($ch);
         curl_close($ch);
