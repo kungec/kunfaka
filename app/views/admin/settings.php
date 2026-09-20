@@ -143,6 +143,72 @@
                 <label>公告与单页</label>
                 <div class="desc"><a href="<?= au('notices') ?>" style="color:var(--text)">→ 前往「公告单页」管理</a></div>
             </div>
+            <div class="form-row">
+                <label>微信 / QQ 防红</label>
+                <input type="hidden" name="anti_red_submitted" value="1">
+                <style>
+                    .ar-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+                    @media (max-width:760px){.ar-grid{grid-template-columns:1fr}}
+                    .ar-card{position:relative;display:flex;align-items:center;gap:13px;padding:15px 16px;border:1.5px solid var(--input-border);border-radius:15px;cursor:pointer;transition:border-color .18s,box-shadow .18s,transform .12s;background:var(--input-bg);user-select:none;overflow:hidden}
+                    .ar-card:hover{border-color:var(--muted);transform:translateY(-1px)}
+                    .ar-card:active{transform:translateY(0) scale(.99)}
+                    .ar-card input{position:absolute;opacity:0;pointer-events:none}
+                    .ar-ico{flex:none;width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;transition:.18s}
+                    .ar-ico svg{width:24px;height:24px}
+                    .ar-wx .ar-ico{background:linear-gradient(135deg,#07c160,#049143);box-shadow:0 6px 16px -6px rgba(7,193,96,.55)}
+                    .ar-qq .ar-ico{background:linear-gradient(135deg,#12b7f5,#0a8fd0);box-shadow:0 6px 16px -6px rgba(18,183,245,.55)}
+                    .ar-tx{flex:1;min-width:0}
+                    .ar-tx b{display:block;font-size:13px;color:var(--text)}
+                    .ar-tx small{display:block;font-size:11px;color:var(--muted);margin-top:3px;line-height:1.55}
+                    .ar-sw{flex:none;width:42px;height:24px;border-radius:99px;background:var(--input-border);position:relative;transition:background .2s}
+                    .ar-sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35);transition:left .2s cubic-bezier(.2,.7,.3,1.4)}
+                    .ar-card:has(input:checked) .ar-sw::after{left:21px}
+                    .ar-wx:has(input:checked) .ar-sw{background:#07c160}
+                    .ar-qq:has(input:checked) .ar-sw{background:#12b7f5}
+                    .ar-wx:has(input:checked){border-color:rgba(7,193,96,.55);box-shadow:0 0 0 3px rgba(7,193,96,.12)}
+                    .ar-qq:has(input:checked){border-color:rgba(18,183,245,.55);box-shadow:0 0 0 3px rgba(18,183,245,.12)}
+                    .ar-card:has(input:checked) .ar-tx small{color:var(--text2)}
+                    .ar-on{display:none;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:99px;vertical-align:1px;margin-left:6px}
+                    .ar-wx:has(input:checked) .ar-on.wx{display:inline-block;background:rgba(7,193,96,.16);color:#2ecc71}
+                    .ar-qq:has(input:checked) .ar-on.qq{display:inline-block;background:rgba(18,183,245,.16);color:#3ec6ff}
+                </style>
+                <div class="ar-grid">
+                    <label class="ar-card ar-wx">
+                        <input type="checkbox" name="wx_anti_red" value="1" <?= setting('wx_anti_red', '0') === '1' ? 'checked' : '' ?>>
+                        <span class="ar-ico">
+                            <svg viewBox="0 0 48 48" fill="none">
+                                <path d="M18 6C9.7 6 3 11.8 3 19c0 4.2 2.3 8 5.9 10.4L7.5 34l5.3-2.9c1.6.5 3.4.8 5.2.8h.9a12.6 12.6 0 0 1-.3-2.7c0-7 6.6-12.6 14.7-12.6h.8C32.9 10.6 26.1 6 18 6z" fill="#fff" opacity=".96"/>
+                                <circle cx="12.5" cy="16.5" r="1.9" fill="#07c160"/>
+                                <circle cx="23.5" cy="16.5" r="1.9" fill="#07c160"/>
+                                <path d="M45 30.6c0-5.9-5.9-10.6-13.1-10.6S18.8 24.7 18.8 30.6 24.7 41.2 31.9 41.2c1.6 0 3.1-.2 4.5-.6l4.6 2.5-1.2-3.9C43 37 45 34 45 30.6z" fill="#fff" opacity=".96"/>
+                                <circle cx="27.6" cy="29" r="1.6" fill="#07c160"/>
+                                <circle cx="36.2" cy="29" r="1.6" fill="#07c160"/>
+                            </svg>
+                        </span>
+                        <span class="ar-tx">
+                            <b>微信防红<span class="ar-on wx">已开启</span></b>
+                            <small>买家从微信内打开站点时, 先展示引导页提示「在浏览器中打开」, 避免域名被拦截与支付异常</small>
+                        </span>
+                        <span class="ar-sw"></span>
+                    </label>
+                    <label class="ar-card ar-qq">
+                        <input type="checkbox" name="qq_anti_red" value="1" <?= setting('qq_anti_red', '0') === '1' ? 'checked' : '' ?>>
+                        <span class="ar-ico">
+                            <svg viewBox="0 0 48 48" fill="none">
+                                <path d="M24 4c-7 0-12 5.4-12 12.4 0 1.5-.1 2.9-.5 4.3-1 3.4-3.5 6.6-3.5 9.9 0 1.9 1.2 3.4 3 3.4 1 0 2-.5 2.8-1.2 1 2.5 2.9 4.6 5.2 5.8-1.7.8-3 2-3 3.4 0 .8 2.6 2 8 2s8-1.2 8-2c0-1.4-1.3-2.6-3-3.4 2.3-1.2 4.2-3.3 5.2-5.8.8.7 1.8 1.2 2.8 1.2 1.8 0 3-1.5 3-3.4 0-3.3-2.5-6.5-3.5-9.9-.4-1.4-.5-2.8-.5-4.3C36 9.4 31 4 24 4z" fill="#fff" opacity=".96"/>
+                                <circle cx="19.5" cy="17" r="2" fill="#12b7f5"/>
+                                <circle cx="28.5" cy="17" r="2" fill="#12b7f5"/>
+                            </svg>
+                        </span>
+                        <span class="ar-tx">
+                            <b>QQ防红<span class="ar-on qq">已开启</span></b>
+                            <small>买家从 QQ 内打开站点时, 先展示引导页提示「用浏览器打开」, 防止域名被冻结与支付中断</small>
+                        </span>
+                        <span class="ar-sw"></span>
+                    </label>
+                </div>
+                <div class="desc">引导页含「复制链接」与「仍要继续访问」(24小时内不再拦截); 支付回调与后台登录不受影响。两开关独立生效。</div>
+            </div>
             <button class="btn" type="submit">保存站点设置</button>
         </form>
     </div>

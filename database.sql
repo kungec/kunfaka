@@ -213,6 +213,8 @@ INSERT IGNORE INTO `settings` (`k`,`v`) VALUES
 ('turnstile_secret_key',''),
 ('verify_mode','captcha'),
 ('order_ip_limit','30'),
+('wx_anti_red','0'),
+('qq_anti_red','0'),
 ('geetest_id',''),
 ('geetest_key',''),
 ('geetest_timeout','120'),

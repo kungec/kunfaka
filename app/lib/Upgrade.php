@@ -23,6 +23,8 @@ class Upgrade
         $seeds = [
             'captcha_open' => '1',
             'order_ip_limit' => '30',
+            'wx_anti_red' => '0',
+            'qq_anti_red' => '0',
             'turnstile_open' => '0',
             'turnstile_site_key' => '',
             'turnstile_secret_key' => '',

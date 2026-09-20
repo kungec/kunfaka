@@ -1526,6 +1526,11 @@ class AdminController
             if (!$picked) json_out(['code' => 1, 'msg' => '请至少选择一种下单联系方式']);
             setting_set('contact_types', implode(',', $picked));
         }
+        // 微信/QQ防红开关(复选框: 未随表单提交=关闭)
+        if (isset($_POST['anti_red_submitted'])) {
+            setting_set('wx_anti_red', isset($_POST['wx_anti_red']) ? '1' : '0');
+            setting_set('qq_anti_red', isset($_POST['qq_anti_red']) ? '1' : '0');
+        }
         $keys = ['site_name', 'site_url', 'announcement', 'order_timeout',
             'logo_type', 'logo_text', 'url_rewrite',
             'smtp_open', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_ssl', 'official_api',

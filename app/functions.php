@@ -549,3 +549,25 @@ function store_shot_url($type, $name, $meta = [])
     }
     return '';
 }
+
+/** 微信/QQ防红: 按UA与开关判断命中, 返回 'wx' | 'qq' | '' */
+function anti_red_hit()
+{
+    $ua = strtolower((string)($_SERVER['HTTP_USER_AGENT'] ?? ''));
+    if ($ua === '') return '';
+    if (setting('wx_anti_red') === '1' && strpos($ua, 'micromessenger') !== false) return 'wx';
+    if (setting('qq_anti_red') === '1' && preg_match('/qq\/[\d.]+/', $ua)) return 'qq';
+    return '';
+}
+
+/** 微信/QQ防红拦截: 命中且未放行时渲染引导页并终止(仅前台GET, 回调/轮询不拦); 在 Router 前台分支调用 */
+function anti_red_intercept($route = null)
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') return;
+    $hit = anti_red_hit();
+    if ($hit === '' || isset($_COOKIE['yf_ar_ok'])) return;
+    $route = $route !== null ? strtolower(trim((string)$route, '/')) : strtolower(trim((string)($_GET['s'] ?? '')));
+    if (in_array($route, ['pay/notify', 'pay/check', 'captcha/image'], true)) return;
+    require YF_ROOT . '/app/views/anti_red.php';
+    exit;
+}

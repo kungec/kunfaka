@@ -8,6 +8,7 @@ class Router
     {
         $route = trim((string)$route, '/');
         if ($route === '') $route = 'home/index';
+        if (!$adminPrefix) anti_red_intercept($route); // 微信/QQ防红: 命中时渲染引导页并终止(后台不受影响)
         $parts = explode('/', $route);
         $controller = preg_replace('/[^a-zA-Z0-9_]/', '', $parts[0]);
         $action = isset($parts[1]) ? preg_replace('/[^a-zA-Z0-9_]/', '', $parts[1]) : 'index';
