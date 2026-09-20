@@ -1,10 +1,10 @@
 {
-  "name": "tech",
-  "title": "赛博暗黑 · 科技主题",
-  "type": "theme",
-  "version": "1.0.0",
-  "author": "坤发卡官方",
-  "desc": "深色赛博朋克科技风, 霓虹光效渐变按钮, 专业版专享主题。",
-  "price": 19,
-  "pro": true
+    "name": "tech",
+    "title": "赛博暗黑 · 科技主题",
+    "type": "theme",
+    "version": "1.0.0",
+    "author": "坤发卡官方",
+    "desc": "深色赛博朋克科技风, 霓虹光效渐变按钮, 赛博暗黑换肤主题。",
+    "price": 0,
+    "pro": false
 }
