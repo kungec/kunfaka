@@ -390,23 +390,40 @@ function service_contact_link($type, $value) {
     }
 }
 
-/** 联系方式类型定义 */
+/** 联系方式类型定义(互斥单选类型 + 附加信息类型) */
 function contact_type_all() {
-    return ['telegram' => 'Telegram', 'email' => '邮箱', 'qq' => 'QQ', 'wechat' => '微信', 'phone' => '电话'];
+    return ['telegram' => 'Telegram', 'email' => '邮箱', 'qq' => 'QQ', 'wechat' => '微信', 'phone' => '电话', 'name' => '收件人姓名', 'address' => '邮寄地址'];
 }
 
-/** 后台启用的联系方式类型(数组) */
-function contact_types_enabled() {
-    $raw = trim((string)setting('contact_types', 'email,qq'));
-    if ($raw === '') $raw = 'email,qq';
+/** 互斥单选的联系方式类型(买家五选一) */
+function contact_type_single_keys() {
+    return ['telegram', 'email', 'qq', 'wechat', 'phone'];
+}
+
+/** 附加信息类型(下单时额外必填字段, 如收件人姓名/邮寄地址) */
+function contact_type_extra_keys() {
+    return ['name', 'address'];
+}
+
+/**
+ * 商品启用的下单联系方式类型(商品级配置, 不再读全局设置)
+ * 返回互斥单选数组; $withExtra=true 时额外返回 ['extra' => 附加类型数组, 'all' => 全部启用类型]
+ */
+function product_contact_types($product, $withExtra = false)
+{
     $all = contact_type_all();
-    $out = [];
+    $raw = trim((string)($product['contact_types'] ?? ''));
+    $types = [];
     foreach (explode(',', $raw) as $t) {
         $t = trim($t);
-        if ($t !== '' && isset($all[$t])) $out[] = $t;
+        if ($t !== '' && isset($all[$t])) $types[] = $t;
     }
-    if (!$out) $out = ['email', 'qq'];
-    return $out;
+    // 商品未选择任何联系方式: 默认邮箱
+    if (!$types) $types = ['email'];
+    $single = array_values(array_intersect(contact_type_single_keys(), $types));
+    if (!$single) $single = ['email'];
+    if (!$withExtra) return $single;
+    return [$single, ['extra' => array_values(array_intersect(contact_type_extra_keys(), $types)), 'all' => $types]];
 }
 
 /** 联系方式类型中文名 */
@@ -435,6 +452,14 @@ function contact_validate($type, $value) {
         case 'wechat':
             if (!preg_match('/^[A-Za-z0-9_-]{4,20}$/', $value)) return '微信号格式不正确(4-20位字母数字下划线)';
             break;
+        case 'name':
+            $l = mb_strlen($value);
+            if ($l < 2 || $l > 50) return '收件人姓名长度需为2-50字';
+            break;
+        case 'address':
+            $l = mb_strlen($value);
+            if ($l < 5 || $l > 200) return '邮寄地址长度需为5-200字';
+            break;
     }
     if (mb_strlen($value) > 100) return '联系方式过长';
     return '';
@@ -448,6 +473,8 @@ function contact_type_placeholder($type) {
         'qq' => 'QQ号',
         'wechat' => '微信号',
         'phone' => '手机号',
+        'name' => '收件人姓名',
+        'address' => '收货地址(省市区+详细地址)',
     ];
     return isset($map[$type]) ? $map[$type] : '请填写';
 }

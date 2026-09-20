@@ -50,6 +50,12 @@
             });
         })();
         </script>
+        <?php if (in_array('name', $contactExtra ?? [], true)): ?>
+        <div class="form-row"><label>收件人姓名</label><input type="text" name="ship_name" maxlength="50" placeholder="收件人姓名"></div>
+        <?php endif; ?>
+        <?php if (in_array('address', $contactExtra ?? [], true)): ?>
+        <div class="form-row"><label>邮寄地址</label><input type="text" name="ship_address" maxlength="200" placeholder="省 / 市 / 区 + 详细地址"></div>
+        <?php endif; ?>
         <?php if (Captcha::mode() !== 'off'): ?><div class="form-row buy-captcha"><?= Captcha::render('order') ?></div><?php endif; ?>
         <?php if ($payments): ?>
         <div class="form-row">

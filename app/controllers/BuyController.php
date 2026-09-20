@@ -17,7 +17,9 @@ class BuyController
             return;
         }
         $categories = cat_list();
-        $contactTypes = contact_types_enabled();
+        // 商品级下单联系方式: 该商品配置的类型(互斥单选 + 附加信息字段如姓名/地址)
+        [$contactTypes, $ctExtraInfo] = product_contact_types($product, true);
+        $contactExtra = $ctExtraInfo['extra'];
         $contactPrefill = '';
         $uid = current_user_id();
         if ($uid) {
@@ -34,6 +36,7 @@ class BuyController
             'stock' => product_stock($product['id']),
             'categories' => $categories,
             'contactTypes' => $contactTypes,
+            'contactExtra' => $contactExtra,
             'contactPrefill' => $contactPrefill,
             'payments' => enabled_payments(),
             'pageTitle' => $product['name'] . ' - ' . setting('site_name', '坤发卡'),
@@ -78,8 +81,8 @@ class BuyController
             return;
         }
 
-        // 联系方式类型与格式校验(未传类型时兼容旧表单: 含@识别为邮箱, 否则用第一个启用类型)
-        $enabled = contact_types_enabled();
+        // 联系方式类型与格式校验(商品级启用类型; 未传类型时兼容旧表单: 含@识别为邮箱, 否则用第一个启用类型)
+        [$enabled, $extraCt] = product_contact_types($product, true);
         if ($contactType === '') {
             $contactType = strpos($contact, '@') !== false ? 'email' : $enabled[0];
         }
@@ -91,6 +94,25 @@ class BuyController
         if ($err !== '') {
             View::theme('error', ['msg' => $err, 'pageTitle' => '错误']);
             return;
+        }
+        // 商品启用的附加信息字段: 收件人姓名 / 邮寄地址
+        $shipName = trim((string)(isset($_POST['ship_name']) ? $_POST['ship_name'] : ''));
+        $shipAddress = trim((string)(isset($_POST['ship_address']) ? $_POST['ship_address'] : ''));
+        if (in_array('name', $extraCt['extra'], true)) {
+            if ($shipName === '' || mb_strlen($shipName) < 2 || mb_strlen($shipName) > 50) {
+                View::theme('error', ['msg' => '请填写收件人姓名(2-50字)', 'pageTitle' => '错误']);
+                return;
+            }
+        } else {
+            $shipName = '';
+        }
+        if (in_array('address', $extraCt['extra'], true)) {
+            if ($shipAddress === '' || mb_strlen($shipAddress) < 5 || mb_strlen($shipAddress) > 200) {
+                View::theme('error', ['msg' => '请填写邮寄地址(5-200字)', 'pageTitle' => '错误']);
+                return;
+            }
+        } else {
+            $shipAddress = '';
         }
 
         if ($contact === '') {
@@ -111,6 +133,8 @@ class BuyController
             'contact_type' => $contactType,
             'pay_plugin' => $pluginCode,
             'channel' => trim((string)(isset($_POST['channel']) ? $_POST['channel'] : '')),
+            'ship_name' => $shipName,
+            'ship_address' => $shipAddress,
             'ip' => client_ip(),
             'created_at' => now(),
             'expired_at' => now() + order_timeout_minutes() * 60,

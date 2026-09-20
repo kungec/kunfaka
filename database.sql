@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS `products` (
   `status` tinyint NOT NULL DEFAULT 1 COMMENT '1上架 0下架',
   `sort` int NOT NULL DEFAULT 0,
   `sales` int unsigned NOT NULL DEFAULT 0,
+  `contact_types` varchar(200) NOT NULL DEFAULT '' COMMENT '商品级下单联系方式: 逗号分隔(空=默认email)',
   `group_id` int unsigned NOT NULL DEFAULT 0 COMMENT '商品分组(0=不分组)',
   `icon` varchar(255) NOT NULL DEFAULT '' COMMENT '商品图标(上传路径)',
   `created_at` int unsigned NOT NULL DEFAULT 0
@@ -82,6 +83,8 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `contact_type` varchar(20) NOT NULL DEFAULT '' COMMENT '联系方式类型: telegram/email/qq/wechat/phone',
   `pay_plugin` varchar(40) NOT NULL DEFAULT '',
   `channel` varchar(20) NOT NULL DEFAULT '' COMMENT '聚合支付渠道: alipay/wxpay/qqpay',
+  `ship_name` varchar(100) NOT NULL DEFAULT '' COMMENT '收件人姓名',
+  `ship_address` varchar(300) NOT NULL DEFAULT '' COMMENT '邮寄地址',
   `trade_no` varchar(64) NOT NULL DEFAULT '' COMMENT '第三方流水号',
   `txid` varchar(100) NOT NULL DEFAULT '' COMMENT '链上交易哈希',
   `status` tinyint NOT NULL DEFAULT 0 COMMENT '0待支付 1已完成 2已过期 3待处理',

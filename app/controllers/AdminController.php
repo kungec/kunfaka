@@ -390,6 +390,14 @@ class AdminController
     {
         $id = (int)arr_get($_POST, 'id');
         $old = $id > 0 ? DB::fetch('SELECT icon FROM products WHERE id = ?', [$id]) : null;
+        // 商品级下单联系方式: 多选chips; 一个都没选时默认邮箱
+        $allowedCt = contact_type_all();
+        $pickedCt = [];
+        foreach ((array)(isset($_POST['contact_types']) ? $_POST['contact_types'] : []) as $ct) {
+            $ct = trim((string)$ct);
+            if ($ct !== '' && isset($allowedCt[$ct])) $pickedCt[] = $ct;
+        }
+        if (!$pickedCt) $pickedCt = ['email'];
         $data = [
             'category_id' => (int)arr_get($_POST, 'category_id'),
             'group_id' => (int)arr_get($_POST, 'group_id'),
@@ -400,6 +408,7 @@ class AdminController
             'max_num' => max(1, (int)arr_get($_POST, 'max_num', 1)),
             'status' => (int)arr_get($_POST, 'status', 1),
             'sort' => (int)arr_get($_POST, 'sort'),
+            'contact_types' => implode(',', $pickedCt),
         ];
         if ($data['name'] === '') json_out(['code' => 1, 'msg' => '商品名称不能为空']);
         // 商品图标上传(jpg/png/webp/gif, ≤5MB); 同步生成宽480等比缩略图供列表页使用
@@ -1542,14 +1551,7 @@ class AdminController
             }
             setting_set('service_contacts', json_encode($clean, JSON_UNESCAPED_UNICODE));
         }
-        // 联系方式多选(仅站点设置表单携带)
-        if (isset($_POST['contact_types_submitted'])) {
-            $allowed = array_keys(contact_type_all());
-            $picked = isset($_POST['contact_types']) && is_array($_POST['contact_types']) ? $_POST['contact_types'] : [];
-            $picked = array_values(array_intersect($allowed, $picked));
-            if (!$picked) json_out(['code' => 1, 'msg' => '请至少选择一种下单联系方式']);
-            setting_set('contact_types', implode(',', $picked));
-        }
+        // 下单联系方式已迁移为商品级配置(products.contact_types), 全局设置仅保留只读说明
         // 微信/QQ防红开关(复选框: 未随表单提交=关闭)
         if (isset($_POST['anti_red_submitted'])) {
             setting_set('wx_anti_red', isset($_POST['wx_anti_red']) ? '1' : '0');

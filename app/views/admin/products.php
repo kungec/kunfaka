@@ -138,7 +138,7 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
                     </label>
                 </td>
                 <td class="actions">
-                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$p['id'], 'category_id' => (int)$p['category_id'], 'group_id' => (int)$p['group_id'], 'icon' => (string)$p['icon'], 'name' => $p['name'], 'price' => nf($p['price']), 'min_num' => (int)$p['min_num'], 'max_num' => (int)$p['max_num'], 'description' => (string)$p['description'], 'sort' => (int)$p['sort'], 'status' => $sid], JSON_UNESCAPED_UNICODE)) ?>'>✏ 编辑</button>
+                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$p['id'], 'category_id' => (int)$p['category_id'], 'group_id' => (int)$p['group_id'], 'icon' => (string)$p['icon'], 'name' => $p['name'], 'price' => nf($p['price']), 'min_num' => (int)$p['min_num'], 'max_num' => (int)$p['max_num'], 'description' => (string)$p['description'], 'sort' => (int)$p['sort'], 'status' => $sid, 'contact_types' => (string)($p['contact_types'] ?? '')], JSON_UNESCAPED_UNICODE)) ?>'>✏ 编辑</button>
                     <a class="btn sm gray" href="<?= au('cards', ['product_id' => $p['id']]) ?>">卡密</a>
                     <button class="btn sm red" data-del="<?= (int)$p['id'] ?>" data-confirm="确定移除商品 <?= e($p['name']) ?> ?<?= (int)$p['stock'] > 0 ? ' 该商品还有 ' . (int)$p['stock'] . ' 张未售卡密, 需先清空库存!' : '' ?>">移除</button>
                 </td>
@@ -190,6 +190,12 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
             <input type="number" id="f-price" step="0.01" min="0" value="0.00">
             <label>排序(越小越靠前)</label>
             <input type="number" id="f-sort" value="0">
+            <label>下单联系方式(本商品独立设置, 可多选; 全不选默认邮箱)</label>
+            <div class="ct-chips" id="f-ctypes">
+                <?php foreach (contact_type_all() as $ck => $cv): ?>
+                <label class="ct-chip" title="<?= $ck === 'name' || $ck === 'address' ? '附加信息字段: 勾选后买家下单时额外必填' : '' ?>"><input type="checkbox" name="p_contact_types[]" value="<?= e($ck) ?>"><i></i><?= e($cv) ?></label>
+                <?php endforeach; ?>
+            </div>
             <label style="display:flex;align-items:center;gap:8px;color:var(--text);font-size:13px;font-weight:600">
                 <span class="sw" style="display:inline-block"><input type="checkbox" id="f-status" checked><i></i></span> 立即上架(前台可见)
             </label>
@@ -272,6 +278,11 @@ function openDrawer(data) {
     document.getElementById('f-sort').value = data ? data.sort : 0;
     document.getElementById('f-status').checked = data ? data.status === 1 : true;
     document.getElementById('f-description').value = data ? data.description : '';
+    // 下单联系方式chips: 编辑回显商品已配置类型; 新增默认勾选邮箱
+    var ctypes = data && data.contact_types ? data.contact_types.split(',').filter(function (s) { return s; }) : ['email'];
+    document.querySelectorAll('#f-ctypes input[type=checkbox]').forEach(function (cb) {
+        cb.checked = ctypes.indexOf(cb.value) !== -1;
+    });
     document.getElementById('f-min_num').value = data ? data.min_num : 1;
     document.getElementById('f-max_num').value = data ? data.max_num : 5;
     document.getElementById('f-cards_import').value = '';
@@ -323,6 +334,7 @@ document.getElementById('drawerSave').addEventListener('click', function () {
     fd.append('sort', document.getElementById('f-sort').value || '0');
     fd.append('status', document.getElementById('f-status').checked ? '1' : '0');
     fd.append('description', document.getElementById('f-description').value);
+    document.querySelectorAll('#f-ctypes input[type=checkbox]:checked').forEach(function (cb) { fd.append('contact_types[]', cb.value); });
     fd.append('min_num', document.getElementById('f-min_num').value || '1');
     fd.append('max_num', document.getElementById('f-max_num').value || '1');
     var iconFile = document.getElementById('f-icon_file').files[0];
