@@ -34,20 +34,19 @@
                 </div>
             </div>
             <div class="form-row">
-                <label>联系方式类型</label>
-                <div class="contact-types">
-                    <?php $first = true; foreach ($contactTypes as $ct): ?>
-                        <label class="ct-item">
-                            <input type="radio" name="contact_type" value="<?= e($ct) ?>" data-ph="<?= e(contact_type_placeholder($ct)) ?>" <?= $first ? 'checked' : '' ?>>
-                            <?= e(contact_type_label($ct)) ?>
-                        </label>
-                    <?php $first = false; endforeach; ?>
+                <label>联系方式</label>
+                <div class="contact-line">
+                    <div class="contact-types">
+                        <?php $first = true; foreach ($contactTypes as $ct): ?>
+                            <label class="ct-item">
+                                <input type="radio" name="contact_type" value="<?= e($ct) ?>" data-ph="<?= e(contact_type_placeholder($ct)) ?>" <?= $first ? 'checked' : '' ?>>
+                                <?= e(contact_type_label($ct)) ?>
+                            </label>
+                        <?php $first = false; endforeach; ?>
+                    </div>
+                    <input type="text" name="contact" id="contactInput" value="<?= e($contactPrefill) ?>"
+                           placeholder="<?= e(contact_type_placeholder($contactTypes[0])) ?>" required>
                 </div>
-            </div>
-            <div class="form-row">
-                <label>联系方式账号(用于接收卡密与查询订单)</label>
-                <input type="text" name="contact" id="contactInput" value="<?= e($contactPrefill) ?>"
-                       placeholder="<?= e(contact_type_placeholder($contactTypes[0])) ?>" required>
             </div>
             <script>
             (function () {

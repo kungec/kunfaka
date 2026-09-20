@@ -639,6 +639,11 @@ input:focus, select:focus, textarea:focus {
 .p-price { font-size: 30px; font-weight: 800; color: var(--accent); letter-spacing: 0.3px; }
 .p-price small { font-size: 15px; font-weight: 700; margin-left: 3px; }
 
+/* 类型胶囊与账号输入框同行 */
+.contact-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.contact-line .contact-types { flex: none; }
+.contact-line input[name="contact"] { flex: 1 1 200px; min-width: 0; }
+
 .contact-types { display: flex; flex-wrap: wrap; gap: 9px; }
 
 .ct-item {

@@ -345,6 +345,11 @@ img { max-width: 100%; }
 .nav-user { font-size: 13px; color: var(--muted); }
 
 /* ---------- 联系方式类型选择 ---------- */
+/* 类型胶囊与账号输入框同行 */
+.contact-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.contact-line .contact-types { flex: none; }
+.contact-line input[name="contact"] { flex: 1 1 200px; min-width: 0; }
+
 .contact-types { display: flex; flex-wrap: wrap; gap: 8px; }
 .ct-item {
     display: inline-flex; align-items: center; gap: 5px;
