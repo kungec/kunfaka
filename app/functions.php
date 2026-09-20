@@ -371,14 +371,15 @@ function product_stock($productId) {
 
 /** 前台支付方式列表(含配置, 用于品牌图标匹配) */
 function enabled_payments() {
-    $rows = DB::fetchAll("SELECT a.name, a.config FROM apps a WHERE a.type = 'payment' AND a.enabled = 1");
+    $rows = DB::fetchAll("SELECT a.name, a.enabled, a.config FROM apps a WHERE a.type = 'payment' AND a.enabled = 1");
     $labels = ['alipay' => '支付宝', 'wxpay' => '微信', 'qqpay' => 'QQ钱包'];
     $list = [];
     foreach ($rows as $r) {
         $meta = Plugin::meta('payment', $r['name']);
         if (!$meta) continue;
         $cfg = $r['config'] ? (array)json_decode($r['config'], true) : [];
-        $plugin = Plugin::payment($r['name']);
+        // 传入已查询的行, 免去 Plugin::payment 内逐插件再查一次
+        $plugin = Plugin::payment($r['name'], $r);
         $channels = $plugin ? $plugin->channels() : [];
         // 聚合插件勾选了多个渠道: 按渠道展开成多个带品牌图标的支付方式
         if (count($channels) > 1) {

@@ -1,4 +1,5 @@
 <?php $activeMenu = 'license'; $pro = $license['is_pro']; ?>
+<div class="card" style="border-left:3px solid var(--info)"><p class="dim" style="font-size:12.5px">💬 官方售后QQ群: <b style="color:var(--text)">307386089</b> —— 授权购买、部署协助、插件咨询请加群。</p></div>
 <div class="lic-hero <?= $pro ? 'is-pro' : '' ?>">
     <div class="lic-hero-main">
         <div class="lic-badge"><?= $pro ? '👑 专业版授权' : '免费版' ?></div>

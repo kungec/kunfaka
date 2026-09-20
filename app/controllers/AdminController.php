@@ -137,10 +137,10 @@ class AdminController
             return (int)DB::value('SELECT COUNT(*) FROM users WHERE created_at >= ? AND created_at < ?', [$from, $to]);
         };
         $bizPeriods = [
-            'today' => ['label' => '今日', 'stat' => $paidStat($todayStart, PHP_INT_MAX), 'members' => $memberCount($todayStart, PHP_INT_MAX)],
-            'yesterday' => ['label' => '昨日', 'stat' => $paidStat($yStart, $todayStart), 'members' => $memberCount($yStart, $todayStart)],
+            'today' => ['label' => '今日', 'stat' => $stats['today'], 'members' => $memberCount($todayStart, PHP_INT_MAX)],
+            'yesterday' => ['label' => '昨日', 'stat' => $stats['yesterday'], 'members' => $memberCount($yStart, $todayStart)],
             'week' => ['label' => '本周', 'stat' => $paidStat($weekStart, PHP_INT_MAX), 'members' => $memberCount($weekStart, PHP_INT_MAX)],
-            'month' => ['label' => '本月', 'stat' => $paidStat($monthStart, PHP_INT_MAX), 'members' => $memberCount($monthStart, PHP_INT_MAX)],
+            'month' => ['label' => '本月', 'stat' => $stats['month'], 'members' => $memberCount($monthStart, PHP_INT_MAX)],
             'all' => ['label' => '全部', 'stat' => $paidStat(0, PHP_INT_MAX), 'members' => $memberCount(0)],
         ];
         array_walk($bizPeriods, function (&$p) {

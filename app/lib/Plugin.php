@@ -34,8 +34,8 @@ class Plugin
         return $json;
     }
 
-    /** 实例化支付插件 */
-    public static function payment($code)
+    /** 实例化支付插件($row 可传入已查询的 apps 行, 免去重复查询) */
+    public static function payment($code, ?array $row = null)
     {
         $meta = self::meta('payment', $code);
         if (!$meta || empty($meta['class'])) return null;
@@ -50,7 +50,9 @@ class Plugin
         $obj = new $class();
         $obj->code = $code;
         $obj->name = isset($meta['title']) ? $meta['title'] : $code;
-        $row = DB::fetch('SELECT enabled, config FROM apps WHERE name = ?', [$code]);
+        if ($row === null) {
+            $row = DB::fetch('SELECT enabled, config FROM apps WHERE name = ?', [$code]);
+        }
         $obj->enabled = $row && (int)$row['enabled'] === 1;
         $obj->config = $row && $row['config'] ? (array)json_decode($row['config'], true) : [];
         return $obj;

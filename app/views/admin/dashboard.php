@@ -77,12 +77,16 @@ $cmp = function ($nowV, $base) {
                 <p class="dim" style="margin:0">暂无官方公告。</p>
             <?php else: ?>
             <div class="n-list">
-                <?php foreach ($officialNotices as $i => $text): ?>
+                <?php foreach ($officialNotices as $n): ?>
                     <div class="n-item" style="cursor:default">
                         <span class="n-badge">官方</span>
                         <span class="n-main">
-                            <span class="n-title"><?= e($text) ?></span>
+                            <span class="n-title"><?= e(is_array($n) ? $n['title'] : $n) ?></span>
+                            <?php if (is_array($n) && trim((string)($n['content'] ?? '')) !== ''): ?>
+                                <span style="display:block;font-size:12px;color:var(--muted);white-space:pre-wrap;word-break:break-all"><?= e($n['content']) ?></span>
+                            <?php endif; ?>
                         </span>
+                        <?php if (is_array($n) && !empty($n['time'])): ?><span style="font-size:11px;color:var(--muted);flex:none"><?= e(date('m-d', (int)$n['time'])) ?></span><?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>

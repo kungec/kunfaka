@@ -12,7 +12,7 @@ class Market
     }
 
     /** 远程应用列表(10分钟缓存) */
-    public static function remoteList($force = false)
+    public static function remoteList()
     {
         $cache = setting('market_cache', '');
         if (!$force && $cache) {
@@ -140,12 +140,12 @@ class Market
         $zip->close();
     }
 
-    /** 官方公告(主控下发, 10分钟缓存) */
-    public static function officialNotices($force = false)
+    /** 官方公告(主控下发, 10分钟缓存); 返回 [['id','title','content','time'],..] */
+    public static function officialNotices()
     {
         $cache = setting('official_notice_cache', '');
         $j = json_decode((string)$cache, true);
-        if (!$force && is_array($j) && isset($j['at']) && (int)$j['at'] > now() - 600) {
+        if (is_array($j) && isset($j['at']) && (int)$j['at'] > now() - 600) {
             return is_array($j['items']) ? $j['items'] : [];
         }
         $items = [];
@@ -161,7 +161,17 @@ class Market
             $json = json_decode((string)$res, true);
             if (is_array($json) && ($json['code'] ?? 1) === 0 && isset($json['data']['items']) && is_array($json['data']['items'])) {
                 foreach ($json['data']['items'] as $it) {
-                    if (is_string($it) && $it !== '') $items[] = mb_substr($it, 0, 200);
+                    if (is_array($it) && isset($it['title']) && trim((string)$it['title']) !== '') {
+                        $items[] = [
+                            'id' => (int)($it['id'] ?? 0),
+                            'title' => mb_substr(trim((string)$it['title']), 0, 60),
+                            'content' => mb_substr(trim((string)($it['content'] ?? '')), 0, 500),
+                            'time' => (int)($it['time'] ?? 0),
+                        ];
+                    } elseif (is_string($it) && $it !== '') {
+                        // 兼容旧主控(纯文本条目)
+                        $items[] = ['id' => 0, 'title' => mb_substr($it, 0, 60), 'content' => '', 'time' => 0];
+                    }
                 }
             }
         }

@@ -126,7 +126,7 @@ class TronService
         return false;
     }
 
-    /** 轮询所有待支付的USDT订单, 返回支付成功笔数 */
+    /** 轮询所有待支付的USDT订单, 返回支付成功笔数; 全部订单共用同一收款地址, 一轮只调一次链上API */
     public static function sweep()
     {
         $meta = Plugin::meta('payment', 'usdt_trc20');
@@ -141,12 +141,25 @@ class TronService
             'SELECT * FROM orders WHERE status = 0 AND pay_plugin = ? AND expected_amount > 0 AND expired_at > ? ORDER BY created_at ASC LIMIT 30',
             ['usdt_trc20', now()]
         );
+        if (!$orders) return 0;
+        // 以最早订单时间为起点, 一次拉取该地址全部转入记录, 内存中按唯一金额匹配
+        $minTs = (int)$orders[0]['created_at'] - 120;
+        try {
+            $transfers = self::getTransfers($wallet, $minTs);
+        } catch (Exception $ex) {
+            return 0;
+        }
         $paid = 0;
         foreach ($orders as $order) {
-            try {
-                if (self::checkOrder($order, $wallet)) $paid++;
-            } catch (Exception $ex) {
-                // 单笔失败不影响其他
+            foreach ($transfers as $t) {
+                if (bccomp($t['amount'], $order['expected_amount'], 6) !== 0) continue;
+                if ($t['ts'] > 0 && $t['ts'] < $minTs) continue;
+                if (DB::value('SELECT id FROM orders WHERE txid = ? AND id != ?', [$t['txid'], $order['id']])) continue;
+                if (OrderService::deliver((int)$order['id'], '', $t['txid'])) {
+                    add_log('usdt', 'USDT到账: 订单 ' . $order['sn'] . ' 金额 ' . $t['amount'] . ' USDT, 哈希 ' . substr($t['txid'], 0, 24));
+                    $paid++;
+                }
+                break;
             }
         }
         return $paid;
