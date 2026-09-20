@@ -87,6 +87,14 @@
                 <div class="desc">开启后前台链接变为 /home/index 等路径形式。需服务器支持回退: Nginx 加 <span class="mono">location / { try_files $uri $uri/ /index.php$is_args$args; }</span>; Apache 用根目录 .htaccess 的 RewriteRule 回退 index.php。未配置回退时开启会导致前台打不开, 请先配好服务器再开启。</div>
             </div>
             <div class="form-row">
+                <label>自动更新</label>
+                <select name="auto_update">
+                    <option value="0" <?= setting('auto_update', '0') !== '1' ? 'selected' : '' ?>>关闭(默认, 发现新版本时手动确认升级)</option>
+                    <option value="1" <?= setting('auto_update', '0') === '1' ? 'selected' : '' ?>>开启(发现新版本自动完成升级, 无需人工确认)</option>
+                </select>
+                <div class="desc">开启后系统检测到官方新版本将自动下载更新包并完成升级(自动保留您的配置与上传文件)。建议计划任务(cron)保持开启以加速更新包预下载。</div>
+            </div>
+            <div class="form-row">
                 <label>下单联系方式</label>
                 <input type="hidden" name="contact_types_submitted" value="1">
                 <style>

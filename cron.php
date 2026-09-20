@@ -33,3 +33,15 @@ foreach (Plugin::scan('payment') as $pname => $pmeta) {
         echo "[{$pname}] error: " . $ex->getMessage() . "\n";
     }
 }
+
+// 3. 自动更新: 预取下载更新包(后台应用时零等待)
+if (setting('auto_update', '0') === '1') {
+    try {
+        $info = Updater::check();
+        if ($info && Updater::hasUpdate($info)) {
+            echo Updater::download($info) ? "[update] 包已预取 v{$info['version']}\n" : "[update] 包预取中\n";
+        }
+    } catch (Exception $ex) {
+        echo '[update] error: ' . $ex->getMessage() . "\n";
+    }
+}

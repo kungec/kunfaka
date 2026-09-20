@@ -16,7 +16,29 @@ class AdminController
                 redirect(au('login'));
             }
             if ($_SERVER['REQUEST_METHOD'] === 'POST') csrf_check();
+            // 自动更新调度: 开关开启时在后台请求中静默检测并应用新版本(仅超级管理员请求触发)
+            $adm = current_admin();
+            if ($adm && $adm['role'] === 'super' && setting('auto_update') === '1') {
+                try { Updater::autoStep(); } catch (Exception $ex) { /* 静默, 下次请求重试 */ }
+            }
         }
+    }
+
+    /** 立即执行更新(手动触发) */
+    public function actionUpdateRun()
+    {
+        if (!$this->isSuper()) json_out(["code" => 1, "msg" => "仅超级管理员可执行更新"]);
+        $info = Updater::check(true);
+        if (!$info || empty($info["version"])) json_out(["code" => 1, "msg" => "暂时无法获取版本信息, 请稍后重试"]);
+        if (!Updater::hasUpdate($info)) json_out(["code" => 1, "msg" => "当前已是最新版本 v" . YF_VERSION]);
+        if (!Updater::download($info)) json_out(["code" => 1, "msg" => "更新包下载失败, 请稍后重试"]);
+        try {
+            Updater::apply($info);
+        } catch (Exception $ex) {
+            json_out(["code" => 1, "msg" => "更新失败: " . $ex->getMessage()]);
+        }
+        add_log("system", "手动更新: 已升级至 v" . $info["version"]);
+        json_out(["code" => 0, "msg" => "已升级至 v" . $info["version"] . ", 页面即将刷新"]);
     }
 
     /** 当前管理员是否超级管理员 */
@@ -148,13 +170,20 @@ class AdminController
         });
         // 官方公告(主控下发, 10分钟缓存)
         $officialNotices = Market::officialNotices();
+        // 版本检测(发现新版本时顶部提示; 自动更新开关开启时已在before静默应用)
+        $updateInfo = null;
+        $updatedTo = setting("updated_version", "");
+        try { $updateInfo = Updater::check(); } catch (Exception $ex) {}
         // 站内公告 + 登录信息
         $notices = DB::fetchAll('SELECT id, title, created_at FROM notices WHERE status = 1 ORDER BY sort DESC, id DESC LIMIT 6');
         $logins = DB::fetchAll("SELECT ip, created_at FROM logs WHERE type = 'admin' AND message LIKE '%登录成功%' ORDER BY id DESC LIMIT 2");
+        $hasUpdate = $updateInfo && version_compare($updateInfo['version'], YF_VERSION, '>') && setting('updated_version', '') !== $updateInfo['version'];
         View::admin('dashboard', [
             'stats' => $stats, 'todo' => $todo, 'trend' => $trend, 'bizPeriods' => $bizPeriods,
             'notices' => $notices, 'curLogin' => $logins[0] ?? null, 'prevLogin' => $logins[1] ?? null,
             'officialNotices' => $officialNotices,
+            'updateInfo' => $hasUpdate ? $updateInfo : null,
+            'updatedTo' => setting('updated_version', ''),
         ]);
     }
 
@@ -1501,7 +1530,7 @@ class AdminController
             'logo_type', 'logo_text', 'url_rewrite',
             'smtp_open', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_ssl', 'official_api',
             'verify_mode', 'captcha_open', 'turnstile_open', 'turnstile_site_key', 'turnstile_secret_key',
-            'geetest_id', 'geetest_key', 'geetest_timeout', 'cdn_mode', 'member_open'];
+            'geetest_id', 'geetest_key', 'geetest_timeout', 'cdn_mode', 'member_open', 'auto_update'];
         foreach ($keys as $k) {
             if (isset($_POST[$k])) setting_set($k, is_string($_POST[$k]) ? trim($_POST[$k]) : $_POST[$k]);
         }

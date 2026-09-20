@@ -66,6 +66,12 @@ $cmp = function ($nowV, $base) {
 .biz-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:8px 2px 2px}
 .biz-metrics .bm .l{font-size:12px;color:var(--muted)}
 .biz-metrics .bm .v{font-size:22px;font-weight:800;margin-top:4px}
+.update-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: linear-gradient(90deg, rgba(99,102,241,.18), rgba(139,92,246,.12)); border: 1px solid rgba(129,140,248,.4); border-radius: 12px; padding: 12px 18px; margin-bottom: 14px; position: relative; z-index: 1; }
+.ub-ico { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex: none; }
+.ub-txt { flex: 1; min-width: 240px; font-size: 13px; color: var(--text2); }
+.ub-txt b { color: var(--text); }
+.ub-btn { height: 36px; padding: 0 18px; border: none; border-radius: 9px; background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+
 /* ===== 视觉特效层 ===== */
 .dash-grid{position:relative}
 .dg-glow{position:fixed;border-radius:50%;pointer-events:none;z-index:0}
@@ -92,7 +98,21 @@ $cmp = function ($nowV, $base) {
 .t-chart .bar{background:linear-gradient(180deg,#818cf8,#4f46e5);opacity:1;transform-origin:bottom;animation:barGrow .6s cubic-bezier(.2,.7,.3,1) backwards}
 .t-chart .bar:hover{background:linear-gradient(180deg,#a5b4fc,#6366f1);opacity:1}
 @keyframes barGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+/* ---- 更新提示横幅 ---- */
+.update-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:linear-gradient(90deg,rgba(99,102,241,.18),rgba(139,92,246,.12));border:1px solid rgba(129,140,248,.4);border-radius:12px;padding:12px 18px;margin-bottom:14px;position:relative;z-index:1}
+.ub-ico{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;flex:none}
+.ub-txt{flex:1;min-width:240px;font-size:13px;color:var(--text2)}
+.ub-txt b{color:var(--text)}
+.ub-btn{height:36px;padding:0 18px;border:none;border-radius:9px;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;font-size:13px;font-weight:700;cursor:pointer}
 </style>
+
+<?php if (!empty($updateInfo)): ?>
+<div class="update-banner">
+    <span class="ub-ico">⬆</span>
+    <span class="ub-txt"><b>发现新版本 v<?= e($updateInfo['version']) ?></b><?= setting('auto_update', '0') === '1' ? ' · 自动更新已开启, 系统将自动完成升级' : ' · ' . e(mb_substr($updateInfo['desc'] ?? '', 0, 70)) ?></span>
+    <?php if (setting('auto_update', '0') !== '1'): ?><form method="post" action="<?= au('update_run') ?>" data-ajax style="margin-left:auto"><?= csrf_field() ?><button class="ub-btn" type="submit">立即更新</button></form><?php endif; ?>
+</div>
+<?php endif; ?>
 
 <span class="dg-glow g1" aria-hidden="true"></span>
 <span class="dg-glow g2" aria-hidden="true"></span>

@@ -8,6 +8,12 @@ if (!class_exists('DB')) {
     /** @var PDO */
     private static $pdo;
 
+    /** 暴露底层PDO(自动更新器执行数据库升级用) */
+    public static function handle()
+    {
+        return self::$pdo;
+    }
+
     public static function init()
     {
         $dsn = 'mysql:host=' . YF_DB_HOST . ';port=' . YF_DB_PORT . ';dbname=' . YF_DB_NAME . ';charset=utf8mb4';
