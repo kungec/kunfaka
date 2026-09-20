@@ -49,6 +49,11 @@ class BtcPlugin extends PaymentBase
         return 'BTC';
     }
 
+    public function chainDecimals()
+    {
+        return 8;
+    }
+
     public function assignAmount(array $order)
     {
         if ((float)$order['expected_amount'] > 0) return $order['expected_amount'];
@@ -56,9 +61,10 @@ class BtcPlugin extends PaymentBase
         $premium = (float)$this->cfg('premium', '1');
         $base = (float)$order['total'] / $rate * (1 + $premium / 100);
         if ($base <= 0) throw new Exception('金额计算异常');
+        // base保留8位(1聪≈万分之几元), 尾数1~9999聪用于区分并发订单
         for ($i = 0; $i < 300; $i++) {
-            $tail = rand(1, 999) / 1000000;
-            $amount = number_format(round($base, 4) + $tail, 6, '.', '');
+            $tail = rand(1, 9999) / 100000000;
+            $amount = number_format($base + $tail, 8, '.', '');
             $exists = DB::value(
                 'SELECT id FROM orders WHERE status = 0 AND pay_plugin = ? AND expected_amount = ? AND id != ?',
                 [self::SLUG, $amount, $order['id']]

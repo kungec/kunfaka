@@ -46,6 +46,12 @@ abstract class PaymentBase
         return '';
     }
 
+    /** 应付金额展示与对账的小数位数(链上插件按各自精度覆盖) */
+    public function chainDecimals()
+    {
+        return 6;
+    }
+
     /** 检查单笔订单是否到账(到账则自动发货), 返回是否支付成功 */
     public function pollOrder(array $order)
     {

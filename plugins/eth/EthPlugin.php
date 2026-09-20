@@ -50,6 +50,11 @@ class EthPlugin extends PaymentBase
         return 'ETH';
     }
 
+    public function chainDecimals()
+    {
+        return 8;
+    }
+
     public function assignAmount(array $order)
     {
         if ((float)$order['expected_amount'] > 0) return $order['expected_amount'];
@@ -59,8 +64,8 @@ class EthPlugin extends PaymentBase
         $base = (float)$order['total'] / $rate * (1 + $premium / 100);
         if ($base <= 0) throw new Exception('金额计算异常');
         for ($i = 0; $i < 300; $i++) {
-            $tail = rand(1, 999) / 1000000;
-            $amount = number_format(round($base, 5) + $tail, 6, '.', '');
+            $tail = rand(1, 9999) / 100000000;
+            $amount = number_format(round($base, 6) + $tail, 8, '.', '');
             $exists = DB::value(
                 'SELECT id FROM orders WHERE status = 0 AND pay_plugin = ? AND expected_amount = ? AND id != ?',
                 [self::SLUG, $amount, $order['id']]
@@ -84,7 +89,7 @@ class EthPlugin extends PaymentBase
             . '&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey=' . urlencode($key);
         $json = $this->httpGetJson($url);
         if (!is_array($json) || empty($json['result']) || !is_array($json['result'])) return false;
-        $wantWei = str_replace('.', '', number_format((float)$order['expected_amount'], 6, '.', '')) . str_repeat('0', 12);
+        $wantWei = str_replace('.', '', number_format((float)$order['expected_amount'], 8, '.', '')) . str_repeat('0', 10);
         $minTs = (int)$order['created_at'] - 120;
         foreach ($json['result'] as $tx) {
             if (!isset($tx['hash'], $tx['value'], $tx['to'])) continue;

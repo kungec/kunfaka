@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `num` int unsigned NOT NULL DEFAULT 1,
   `unit_price` decimal(10,2) NOT NULL DEFAULT 0.00,
   `total` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `expected_amount` decimal(14,6) NOT NULL DEFAULT 0.000000 COMMENT 'USDT应收唯一金额',
+  `expected_amount` decimal(20,10) NOT NULL DEFAULT 0.0000000000 COMMENT '链上应收唯一金额',
   `contact` varchar(200) NOT NULL DEFAULT '' COMMENT '联系邮箱/QQ',
   `contact_type` varchar(20) NOT NULL DEFAULT '' COMMENT '联系方式类型: telegram/email/qq/wechat/phone',
   `pay_plugin` varchar(40) NOT NULL DEFAULT '',

@@ -243,6 +243,16 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS `contact_otps` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 echo "OK: contact_otps 表就绪\n";
 
+// orders.expected_amount 精度扩容(6→10位小数, 适配BTC等高精度链上金额)
+$stmt = $pdo->query("SELECT NUMERIC_PRECISION, NUMERIC_SCALE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'orders' AND COLUMN_NAME = 'expected_amount'");
+$col = $stmt->fetch(PDO::FETCH_ASSOC);
+if ($col && ((int)$col['NUMERIC_SCALE'] < 10)) {
+    $pdo->exec("ALTER TABLE `orders` MODIFY `expected_amount` decimal(20,10) NOT NULL DEFAULT 0.0000000000");
+    echo "OK: orders.expected_amount 精度已扩容至 decimal(20,10)\n";
+} else {
+    echo "SKIP: orders.expected_amount 精度已满足\n";
+}
+
 // CDN接入模式(INSERT IGNORE, 不覆盖已有配置)
 $chk = $pdo->prepare('SELECT COUNT(*) FROM settings WHERE k = ?');
 foreach (['cdn_mode' => 'off'] as $k => $v) {

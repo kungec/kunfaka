@@ -64,6 +64,7 @@ class PayController
             if ($assigned !== null && (float)$assigned > 0) {
                 $extra['expected_amount'] = $assigned;
                 $extra['unit'] = $plugin->chainUnit();
+                $extra['decimals'] = $plugin->chainDecimals();
                 $extra['wallet'] = isset($plugin->config['wallet_address']) ? $plugin->config['wallet_address'] : '';
             }
         } catch (Exception $ex) {

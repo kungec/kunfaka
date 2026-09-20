@@ -49,14 +49,51 @@ class TronService
         return $list;
     }
 
-    /** 为订单分配唯一USDT金额(整数部分不变, 尾数随机区分) */
-    public static function assignAmount($order)
+    /**
+     * USDT对人民币汇率: 插件配置 rate 固定值优先, 否则拉取实时汇率(CoinGecko, 5分钟缓存)
+     */
+    public static function rateCny($cfg = [])
+    {
+        $fixed = isset($cfg['rate']) ? trim((string)$cfg['rate']) : '';
+        if ($fixed !== '' && (float)$fixed > 0) return (float)$fixed;
+        $cached = setting('usdt_rate_cache', '');
+        if ($cached !== '') {
+            $a = json_decode($cached, true);
+            if (is_array($a) && isset($a['t'], $a['r']) && (int)$a['t'] > now() - 300 && (float)$a['r'] > 0) return (float)$a['r'];
+        }
+        $api = rtrim((isset($cfg['rate_api']) && $cfg['rate_api'] !== '') ? $cfg['rate_api'] : 'https://api.coingecko.com/api/v3', '/');
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $api . '/simple/price?ids=tether&vs_currencies=cny',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_CONNECTTIMEOUT => 8,
+        ]);
+        curl_tls($ch);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Accept: application/json']);
+        $res = curl_exec($ch);
+        curl_close($ch);
+        if ($res === false) throw new Exception('汇率服务请求失败');
+        $json = json_decode($res, true);
+        $r = is_array($json) && isset($json['tether']['cny']) ? (float)$json['tether']['cny'] : 0;
+        if ($r <= 0) throw new Exception('汇率服务暂不可用, 请稍后重试');
+        setting_set('usdt_rate_cache', json_encode(['t' => now(), 'r' => $r]));
+        return $r;
+    }
+
+    /**
+     * 为订单分配唯一USDT金额: 按汇率将人民币金额换算为USDT,
+     * 并附加极小的唯一尾数(1~9999 sat级, 最多约几分钱)用于区分并发订单
+     */
+    public static function assignAmount($order, $cfg = [])
     {
         if ((float)$order['expected_amount'] > 0) return $order['expected_amount'];
-        $total = (float)$order['total'];
+        $rate = self::rateCny($cfg);
+        $base = round((float)$order['total'] / $rate, 2);
+        if ($base <= 0) throw new Exception('金额计算异常');
         for ($i = 0; $i < 300; $i++) {
-            $tail = rand(1, 99) / 100 + rand(0, 9999) / 1000000;
-            $amount = bcadd(number_format($total, 2, '.', ''), number_format($tail, 6, '.', ''), 6);
+            $tail = rand(1, 9999) / 1000000;
+            $amount = number_format($base + $tail, 6, '.', '');
             $exists = DB::value(
                 'SELECT id FROM orders WHERE status = 0 AND pay_plugin = ? AND expected_amount = ? AND id != ?',
                 ['usdt_trc20', $amount, $order['id']]

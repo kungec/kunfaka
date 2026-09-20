@@ -12,6 +12,8 @@ class UsdtTrc20Plugin extends PaymentBase
     {
         return [
             ['key' => 'wallet_address', 'label' => 'TRC20钱包地址', 'type' => 'text', 'default' => '', 'desc' => '您的USDT(TRC20)收款地址, 以T开头, 例如 TXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
+            ['key' => 'rate', 'label' => '固定汇率(选填)', 'type' => 'text', 'default' => '', 'desc' => '1 USDT = 多少元人民币, 如 7.20; 留空则自动使用实时汇率(每5分钟更新)'],
+            ['key' => 'rate_api', 'label' => '汇率接口(选填)', 'type' => 'text', 'default' => '', 'desc' => '自动汇率默认 https://api.coingecko.com/api/v3; 被墙或需代理时可替换为兼容接口'],
         ];
     }
 
@@ -24,7 +26,7 @@ class UsdtTrc20Plugin extends PaymentBase
 
     public function assignAmount(array $order)
     {
-        return TronService::assignAmount($order);
+        return TronService::assignAmount($order, $this->config);
     }
 
     public function pollOrder(array $order)
