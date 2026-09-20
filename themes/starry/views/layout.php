@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#1b2350">
 <title><?= e(isset($pageTitle) ? $pageTitle : setting('site_name', '坤发卡')) ?></title>
 <link rel="icon" href="<?= e(site_url('favicon.ico')) ?>" sizes="64x64">
-<link rel="stylesheet" href="<?= $_theme_url ?>assets/css/style.css?v=1.0.0">
+<link rel="stylesheet" href="<?= $_theme_url ?>assets/css/style.css?v=1.1.0">
 </head>
 <body>
 <div class="sky" aria-hidden="true"><span class="star s1"></span><span class="star s2"></span><span class="star s3"></span><span class="star s4"></span><span class="star s5"></span><span class="star s6"></span><span class="sun"></span></div>
