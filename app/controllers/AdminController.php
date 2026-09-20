@@ -178,12 +178,21 @@ class AdminController
         $notices = DB::fetchAll('SELECT id, title, created_at FROM notices WHERE status = 1 ORDER BY sort DESC, id DESC LIMIT 6');
         $logins = DB::fetchAll("SELECT ip, created_at FROM logs WHERE type = 'admin' AND message LIKE '%登录成功%' ORDER BY id DESC LIMIT 2");
         $hasUpdate = $updateInfo && version_compare($updateInfo['version'], YF_VERSION, '>') && setting('updated_version', '') !== $updateInfo['version'];
+        $kpi = [
+            'today_amount' => $stats['today']['amount'],
+            'today_orders' => $stats['today']['orders'],
+            'month_amount' => $stats['month']['amount'],
+            'members' => (int)DB::value('SELECT COUNT(*) FROM users'),
+            'products' => (int)DB::value('SELECT COUNT(*) FROM products WHERE status = 1'),
+            'stock' => (int)DB::value('SELECT COUNT(*) FROM cards WHERE status = 0'),
+        ];
         View::admin('dashboard', [
             'stats' => $stats, 'todo' => $todo, 'trend' => $trend, 'bizPeriods' => $bizPeriods,
             'notices' => $notices, 'curLogin' => $logins[0] ?? null, 'prevLogin' => $logins[1] ?? null,
             'officialNotices' => $officialNotices,
             'updateInfo' => $hasUpdate ? $updateInfo : null,
             'updatedTo' => setting('updated_version', ''),
+            'kpi' => $kpi,
         ]);
     }
 

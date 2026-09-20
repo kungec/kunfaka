@@ -162,6 +162,22 @@ $cmp = function ($nowV, $base) {
 
     <!-- ====== 右栏: 统计 / 待处理 / 趋势 / 经营 ====== -->
     <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+        <?php $kIcons = [
+            ['今日销售', '¥' . nf($kpi['today_amount']), '💰', 'kg'],
+            ['今日订单', (int)$kpi['today_orders'], '🧾', 'kb'],
+            ['本月销售', '¥' . nf($kpi['month_amount']), '📈', 'kc'],
+            ['会员总数', (int)$kpi['members'], '👥', 'kv'],
+            ['在售商品', (int)$kpi['products'], '📦', 'kp'],
+            ['剩余库存', (int)$kpi['stock'], '🔑', 'ky'],
+        ]; ?>
+        <div class="kgrid">
+            <?php foreach ($kIcons as [$kl, $kv, $ki, $kc]): ?>
+            <div class="card kstat">
+                <div class="ks-main"><div class="ks-label"><?= e($kl) ?></div><div class="ks-val"><?= e((string)$kv) ?></div></div>
+                <div class="ks-ico <?= $kc ?>"><?= $ki ?></div>
+            </div>
+            <?php endforeach; ?>
+        </div>
         <div class="card">
             <div class="d-top">
                 <div class="cell">

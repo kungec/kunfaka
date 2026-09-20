@@ -1125,3 +1125,79 @@ a.announce:hover { transform: translateY(-1px); box-shadow: var(--shadow-1); }
 .buy-captcha .captcha-row { display: flex; gap: 10px; align-items: stretch; }
 .buy-captcha .captcha-img { flex: none; height: 44px; border-radius: var(--r-sm); border: 1px solid var(--border-strong); cursor: pointer; background: var(--card); }
 .buy-captcha .captcha-input { flex: 1 1 140px; min-width: 0; width: auto; }
+
+/* ==========================================================
+   异次元白卡风借鉴层(acg-faka设计语言, MIT)
+   柔和粉紫氛围 · 白色浮动大卡 · 蓝色主按钮 · 品牌粉点缀
+   ========================================================== */
+:root {
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-soft: rgba(59, 130, 246, .09);
+    --accent-ring: rgba(59, 130, 246, .26);
+    --brand-pink: #f472b6;
+    --brand-pink-soft: rgba(244, 114, 182, .12);
+}
+body {
+    background:
+        radial-gradient(760px 460px at 92% -6%, rgba(244, 114, 182, .12), transparent 62%),
+        radial-gradient(680px 420px at -8% 30%, rgba(129, 140, 248, .10), transparent 60%),
+        radial-gradient(560px 400px at 55% 108%, rgba(56, 189, 248, .07), transparent 60%),
+        #f6f7fb;
+    background-attachment: fixed;
+}
+html[data-theme="dark"] body {
+    background:
+        radial-gradient(760px 460px at 92% -6%, rgba(244, 114, 182, .10), transparent 62%),
+        radial-gradient(680px 420px at -8% 30%, rgba(129, 140, 248, .10), transparent 60%),
+        #12131a;
+    background-attachment: fixed;
+}
+/* 白色毛玻璃顶栏 + 粉色品牌点缀 */
+.site-header { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.brand-mark {
+    background: linear-gradient(135deg, var(--brand-pink), #a78bfa) !important;
+    box-shadow: 0 6px 16px -6px rgba(244, 114, 182, .55);
+}
+/* 卡片标题: 图标+粗体(acg特色), 大圆角柔和投影 */
+.card, .panel, .goods-card {
+    border-radius: 15px !important;
+    box-shadow: 0 12px 34px -16px rgba(31, 41, 92, .18) !important;
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+.goods-card:hover { transform: translateY(-4px); box-shadow: 0 20px 44px -18px rgba(31, 41, 92, .28) !important; border-color: var(--brand-pink-soft); }
+.sec-title, .card h3 { letter-spacing: .2px; }
+/* 主按钮: 蓝色实底(acg特色) */
+.btn-buy, .btn-primary, button[type="submit"].btn-buy {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    box-shadow: 0 10px 24px -10px rgba(37, 99, 235, .6) !important;
+}
+.btn-buy:hover { filter: brightness(1.06); }
+a.btn-blue, .btn-blue {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff; font-weight: 700; border: none;
+    border-radius: 999px; padding: 8px 18px; cursor: pointer;
+    box-shadow: 0 8px 20px -8px rgba(37, 99, 235, .55);
+    transition: transform .14s, filter .14s;
+}
+.btn-blue:hover { transform: translateY(-1px); filter: brightness(1.05); }
+/* 分类卡/公告条粉色点缀 */
+.cat-card:hover { border-color: var(--brand-pink-soft); }
+.announce { border-color: var(--brand-pink-soft); }
+/* hero 横幅: 粉紫柔和渐变(替代深色) */
+.hero {
+    background:
+        radial-gradient(80% 120% at 88% 0%, rgba(244, 114, 182, .35), transparent 55%),
+        radial-gradient(70% 110% at 0% 100%, rgba(129, 140, 248, .38), transparent 58%),
+        linear-gradient(120deg, #6366f1, #8b5cf6 55%, #d946ef);
+}
+html[data-theme="dark"] .hero {
+    background:
+        radial-gradient(80% 120% at 88% 0%, rgba(244, 114, 182, .22), transparent 55%),
+        radial-gradient(70% 110% at 0% 100%, rgba(129, 140, 248, .20), transparent 58%),
+        linear-gradient(120deg, #171a2e, #1d1b33 55%, #26182f);
+}
+/* 页脚 */
+.site-footer { border-top: 1px solid rgba(31, 41, 92, .08); }
+html[data-theme="dark"] .site-footer { border-top-color: rgba(255, 255, 255, .07); }

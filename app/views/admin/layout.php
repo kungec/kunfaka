@@ -1,4 +1,9 @@
-<?php /** 管理后台布局 v5「暗夜」(极简暗色 + 明暗切换) */ ?>
+<?php /** 管理后台布局 v5「暗夜」(极简暗色 + 明暗切换) */
+/* 侧栏选中态: 视图变量因capture作用域无法传入layout, 改由当前路由推断 */
+$__seg = explode('/', strtolower(trim((string)($_GET['s'] ?? 'dashboard'), '/')))[0];
+$__menuMap = ['order_detail' => 'orders', 'order_deliver' => 'orders', 'order_del' => 'orders', 'app_config' => 'apps', 'update_run' => 'dashboard', 'update_check' => 'dashboard'];
+$activeMenu = isset($__menuMap[$__seg]) ? $__menuMap[$__seg] : $__seg;
+?>
 <!DOCTYPE html>
 <html lang="zh-CN" data-theme="dark">
 <head>
