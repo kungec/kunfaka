@@ -87,12 +87,28 @@
             <div class="form-row">
                 <label>下单联系方式</label>
                 <input type="hidden" name="contact_types_submitted" value="1">
-                <div class="chk-group">
-                    <?php $ctEnabled = contact_types_enabled(); ?>
-                    <?php foreach (contact_type_all() as $ck => $cv): ?>
-                        <label class="chk"><input type="checkbox" name="contact_types[]" value="<?= e($ck) ?>" <?= in_array($ck, $ctEnabled, true) ? 'checked' : '' ?>> <?= e($cv) ?></label>
+                <style>
+                    .ct-grid{display:flex;flex-wrap:wrap;gap:8px}
+                    .ct-chip{position:relative;display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border:1px solid var(--input-border);border-radius:10px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--text2);transition:.12s;user-select:none}
+                    .ct-chip input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+                    .ct-ico{font-size:14px;line-height:1}
+                    .ct-chip:hover{border-color:var(--muted);color:var(--text)}
+                    .ct-chip:has(input:checked){border-color:var(--text);background:var(--input-bg);color:var(--text)}
+                    .ct-tick{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--text);color:var(--bg);font-size:10px;line-height:16px;text-align:center;display:none}
+                    .ct-chip:has(input:checked) .ct-tick{display:block}
+                </style>
+                <div class="ct-grid">
+                    <?php $ctEnabled = contact_types_enabled();
+                    $ctIcons = ['telegram' => '💬', 'email' => '📧', 'qq' => '🐧', 'wechat' => '💚', 'phone' => '📞'];
+                    foreach (contact_type_all() as $ck => $cv): ?>
+                        <label class="ct-chip">
+                            <input type="checkbox" name="contact_types[]" value="<?= e($ck) ?>" <?= in_array($ck, $ctEnabled, true) ? 'checked' : '' ?>>
+                            <span class="ct-ico"><?= $ctIcons[$ck] ?? '' ?></span><?= e($cv) ?>
+                            <span class="ct-tick">✓</span>
+                        </label>
                     <?php endforeach; ?>
                 </div>
+                <div class="desc">点击卡片启用/停用, 至少保留一项; 买家下单时以胶囊单选展示。</div>
             </div>
             <div class="form-row">
                 <label>前台客服</label>
