@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#ff7a45">
 <title><?= e(isset($pageTitle) ? $pageTitle : setting('site_name', '坤发卡')) ?></title>
 <link rel="icon" href="<?= e(site_url('favicon.ico')) ?>" sizes="64x64">
-<link rel="stylesheet" href="<?= $_theme_url ?>assets/css/style.css?v=1.0.0">
+<link rel="stylesheet" href="<?= $_theme_url ?>assets/css/style.css?v=1.1.0">
 </head>
 <body>
 <header class="topbar">
