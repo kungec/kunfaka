@@ -582,3 +582,56 @@ html[data-theme="light"] .um-panel a:hover { background: rgba(59,130,246,.07); }
     border-color: var(--info); background: var(--info-bg); color: var(--info);
     box-shadow: 0 0 0 3px rgba(96, 165, 250, .12);
 }
+
+/* ==========================================================
+   v8 全面整修(2.37.0)
+   ========================================================== */
+/* 原生控件跟随主题配色: 根治暗色模式下日期/时间等原生控件白底刺眼 */
+html[data-theme="dark"] { color-scheme: dark; }
+html[data-theme="light"] { color-scheme: light; }
+/* 日期时间输入统一观感(高度对齐其他输入, 暗色下日历图标反色) */
+input[type="date"], input[type="datetime-local"], input[type="time"] {
+    height: 40px; padding: 0 12px; border: 1.5px solid var(--input-border);
+    border-radius: 10px; background: var(--input-bg); color: var(--text);
+    font: inherit; font-size: 13px; outline: none; transition: border-color .16s;
+}
+input[type="date"]:focus, input[type="datetime-local"]:focus, input[type="time"]:focus {
+    border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft);
+}
+html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+html[data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+html[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(.75); cursor: pointer; }
+html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
+/* 筛选区通用: 标签+控件纵向对齐, 换行整齐 */
+.filter-grid { display: flex; gap: 12px 16px; flex-wrap: wrap; align-items: flex-end; }
+.filter-grid .fg { min-width: 0; }
+.filter-grid .fg > label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; font-weight: 600; }
+/* 工具条按钮统一: 去花哨底色, 主次分明 */
+.tool-row { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
+.tool-row .btn { box-shadow: none; }
+/* 表格行操作按钮更紧凑 */
+.tb td.actions .btn { margin: 2px 3px 2px 0; }
+/* 卡片内分页/计数文字 */
+.card .tb-count { font-size: 12px; color: var(--muted); padding: 10px 2px 0; }
+/* v8: 语义按钮降噪 — 危险/成功操作改描边, 视觉更干净 */
+html[data-theme="light"] .btn.red,
+html[data-theme="dark"] .btn.red {
+    background: transparent; color: var(--bad); border: 1px solid var(--bad);
+    box-shadow: none;
+}
+html[data-theme="light"] .btn.red:hover,
+html[data-theme="dark"] .btn.red:hover {
+    background: var(--bad-bg); transform: none; box-shadow: none; filter: none;
+}
+html[data-theme="light"] .btn.green,
+html[data-theme="dark"] .btn.green {
+    background: transparent; color: var(--ok); border: 1px solid var(--ok);
+    box-shadow: none;
+}
+html[data-theme="light"] .btn.green:hover,
+html[data-theme="dark"] .btn.green:hover {
+    background: var(--ok-bg); transform: none; box-shadow: none; filter: none;
+}
+/* 主操作保留渐变实心; 表格内小按钮不再有彩色阴影 */
+.tb .btn.sm { box-shadow: none; }
+/* 状态开关微调 */

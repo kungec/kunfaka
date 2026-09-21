@@ -224,6 +224,27 @@ class AdminController
             'status' => arr_get($_POST, 'status') === '0' ? 0 : 1,
         ];
         if ($data['name'] === '') json_out(['code' => 1, 'msg' => '分类名称不能为空']);
+        // 分类图片上传(jpg/png/webp/gif, ≤3MB); image_reset=1 清除图片
+        $old = $id > 0 ? DB::fetch('SELECT image FROM categories WHERE id = ?', [$id]) : null;
+        $oldImg = $old ? (string)$old['image'] : '';
+        $imgReset = arr_get($_POST, 'image_reset') === '1';
+        if (!empty($_FILES['image_file']['tmp_name']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+            $f = $_FILES['image_file'];
+            if ($f['size'] > 3 * 1024 * 1024) json_out(['code' => 1, 'msg' => '分类图片不能超过3MB']);
+            $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) json_out(['code' => 1, 'msg' => '仅支持 jpg/png/webp/gif 图片']);
+            $info = @getimagesize($f['tmp_name']);
+            if ($info === false) json_out(['code' => 1, 'msg' => '文件不是有效图片']);
+            $dir = YF_ROOT . '/uploads';
+            if (!is_dir($dir)) @mkdir($dir, 0755, true);
+            $fname = 'c_' . bin2hex(random_bytes(8)) . '.' . $ext;
+            if (!move_uploaded_file($f['tmp_name'], $dir . '/' . $fname)) json_out(['code' => 1, 'msg' => '图片保存失败, 请检查目录权限']);
+            if ($oldImg !== '' && strpos($oldImg, 'uploads/') === 0) @unlink(YF_ROOT . '/' . $oldImg);
+            $data['image'] = 'uploads/' . $fname;
+        } elseif ($imgReset) {
+            if ($oldImg !== '' && strpos($oldImg, 'uploads/') === 0) @unlink(YF_ROOT . '/' . $oldImg);
+            $data['image'] = '';
+        }
         if ($id > 0) {
             DB::update('categories', $data, 'id = ?', [$id]);
         } else {

@@ -14,18 +14,32 @@ $tabLink = function ($filter) use ($curName, $curAuthor, $type) {
 };
 ?>
 <style>
-.mkt-tabs{display:flex;gap:4px;border-bottom:1px solid var(--input-border);margin-bottom:14px}
-.mkt-tab{padding:11px 18px;font-size:13.5px;font-weight:700;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}
-.mkt-tab.on{color:var(--text);border-bottom-color:var(--text)}
-.mkt-hero{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--info);color:#fff;border-radius:var(--radius);padding:20px 26px;text-decoration:none;margin-bottom:14px;transition:.15s}
-.mkt-hero:hover{opacity:.92}
-.mkt-hero .h-l{display:flex;align-items:center;gap:14px}
-.mkt-hero .h-ico{font-size:22px}
-.mkt-hero .h-t{font-size:17px;font-weight:800;letter-spacing:.3px}
-.mkt-hero .h-s{font-size:12px;opacity:.85;margin-top:2px}
-.mkt-hero .h-btn{flex:none;background:#fff;color:var(--info);font-weight:700;font-size:13px;padding:10px 20px;border-radius:9px;white-space:nowrap}
-.mkt-hero.is-pro .h-btn{background:rgba(255,255,255,.18);color:#fff}
-.mkt-hero.is-pro{background:var(--ok)}
+.mkt-tabs{display:inline-flex;gap:4px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:11px;padding:4px;margin-bottom:16px}
+.mkt-tab{padding:8px 22px;font-size:13px;font-weight:700;color:var(--muted);text-decoration:none;border-radius:8px;transition:.15s}
+.mkt-tab:hover{color:var(--text)}
+.mkt-tab.on{color:#fff;background:linear-gradient(135deg,#6366f1,#8b5cf6);box-shadow:0 6px 16px -6px rgba(99,102,241,.6)}
+.mkt-hero{position:relative;display:flex;align-items:center;justify-content:space-between;gap:14px;color:#fff;border-radius:var(--radius);padding:20px 26px;text-decoration:none;margin-bottom:14px;transition:.18s;overflow:hidden;border:1px solid transparent}
+.mkt-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(420px 120px at 12% 0%,rgba(255,255,255,.16),transparent 60%);pointer-events:none}
+.mkt-hero:hover{transform:translateY(-1px)}
+.mkt-hero .h-l{display:flex;align-items:center;gap:14px;position:relative;z-index:1}
+.mkt-hero .h-ico{font-size:24px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.25))}
+.mkt-hero .h-t{font-size:16.5px;font-weight:800;letter-spacing:.3px}
+.mkt-hero .h-s{font-size:12px;opacity:.8;margin-top:3px}
+.mkt-hero .h-btn{position:relative;z-index:1;flex:none;font-weight:700;font-size:13px;padding:10px 20px;border-radius:10px;white-space:nowrap;transition:.15s}
+/* 未开通: 靛紫渐变+呼吸光效 */
+.mkt-hero{background:linear-gradient(120deg,#4f46e5,#7c3aed 60%,#9333ea);border-color:rgba(255,255,255,.18);box-shadow:0 16px 40px -14px rgba(99,102,241,.65)}
+.mkt-hero .h-btn{background:rgba(255,255,255,.92);color:#4f46e5}
+.mkt-hero .h-btn:hover{background:#fff}
+/* 已激活: 深空玻璃+金色徽章光晕(替代刺眼纯绿) */
+.mkt-hero.is-pro{background:linear-gradient(120deg,#1e293b,#312e81 55%,#4c1d95);border-color:rgba(250,204,21,.32);box-shadow:0 16px 40px -14px rgba(250,204,21,.28),inset 0 1px 0 rgba(255,255,255,.08)}
+.mkt-hero.is-pro::before{background:radial-gradient(420px 120px at 12% 0%,rgba(250,204,21,.14),transparent 60%)}
+.mkt-hero.is-pro .h-ico{filter:drop-shadow(0 0 12px rgba(250,204,21,.55))}
+.mkt-hero.is-pro .h-btn{background:linear-gradient(135deg,#facc15,#f59e0b);color:#422006;box-shadow:0 8px 22px -8px rgba(250,204,21,.6)}
+.mkt-hero.is-pro .h-btn:hover{filter:brightness(1.08)}
+html[data-theme="light"] .mkt-hero.is-pro{background:linear-gradient(120deg,#f8fafc,#eef2ff 55%,#faf5ff);border-color:rgba(99,102,241,.35);box-shadow:0 12px 32px -16px rgba(99,102,241,.4)}
+html[data-theme="light"] .mkt-hero.is-pro .h-t{color:#1e293b}
+html[data-theme="light"] .mkt-hero.is-pro .h-s{color:#64748b}
+html[data-theme="light"] .mkt-hero.is-pro .h-btn{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 8px 22px -8px rgba(99,102,241,.55)}
 .mkt-filters{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end}
 .mkt-filters .mf label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600}
 .mkt-filters input,.mkt-filters select{height:36px;padding:0 10px;font-size:12.5px}

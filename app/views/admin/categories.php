@@ -13,7 +13,18 @@ $frontBase = site_url('index.php');
 .c-tabs a:hover{border-color:var(--muted)}
 th.c-chk,td.c-chk{width:34px;text-align:center}
 .c-name{display:flex;align-items:center;gap:9px}
-.c-name .ico{width:32px;height:32px;border-radius:8px;background:var(--input-bg);border:1px solid var(--input-border);display:inline-flex;align-items:center;justify-content:center;font-size:16px;flex:none}
+.c-name .ico{width:32px;height:32px;border-radius:8px;background:var(--input-bg);border:1px solid var(--input-border);display:inline-flex;align-items:center;justify-content:center;font-size:16px;flex:none;overflow:hidden}
+.c-name .ico img{width:100%;height:100%;object-fit:cover;display:block}
+/* 弹窗图片上传 */
+.up-zone{position:relative;height:86px;border:1.5px dashed var(--input-border);border-radius:11px;display:flex;align-items:center;gap:12px;padding:0 14px;cursor:pointer;transition:.15s;background:var(--input-bg)}
+.up-zone:hover{border-color:var(--primary)}
+.up-zone .up-thumb{width:60px;height:60px;border-radius:9px;object-fit:cover;flex:none;border:1px solid var(--input-border);background:var(--input-bg)}
+.up-zone .up-ph{width:60px;height:60px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--muted);background:var(--line-soft)}
+.up-zone .up-txt{font-size:12px;color:var(--muted);line-height:1.6}
+.up-zone .up-txt b{display:block;color:var(--text2);font-size:12.5px}
+.up-input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.up-clear{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);cursor:pointer}
+.up-clear input{width:14px;height:14px;accent-color:var(--bad)}
 .c-copy{border:1px solid var(--input-border);background:transparent;color:var(--text2);border-radius:7px;padding:4px 10px;font-size:11.5px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
 .c-copy:hover{border-color:var(--muted);color:var(--text)}
 /* 开关 */
@@ -87,7 +98,7 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
                 <td class="c-chk"><input type="checkbox" class="row-chk" value="<?= (int)$c['id'] ?>" style="width:auto"></td>
                 <td>
                     <div class="c-name">
-                        <span class="ico"><?= e($c['icon'] ?: '🗂') ?></span>
+                        <span class="ico"><?php if (!empty($c['image'])): ?><img src="<?= e(site_url($c['image'])) ?>" alt=""><?php else: ?><?= e($c['icon'] ?: '🗂') ?><?php endif; ?></span>
                         <b><?= e($c['name']) ?></b>
                     </div>
                 </td>
@@ -101,7 +112,7 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
                     </label>
                 </td>
                 <td class="actions">
-                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$c['id'], 'name' => $c['name'], 'icon' => $c['icon'], 'sort' => (int)$c['sort'], 'status' => $sid], JSON_UNESCAPED_UNICODE)) ?>'>✏ 编辑</button>
+                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$c['id'], 'name' => $c['name'], 'icon' => $c['icon'], 'image' => (string)($c['image'] ?? ''), 'sort' => (int)$c['sort'], 'status' => $sid], JSON_UNESCAPED_UNICODE)) ?>'>✏ 编辑</button>
                     <button class="btn sm red" data-del="<?= (int)$c['id'] ?>" data-confirm="确定移除分类 <?= e($c['name']) ?> ?<?= (int)$c['products_count'] > 0 ? ' 该分类下有 ' . (int)$c['products_count'] . ' 个商品, 需先移除商品!' : '' ?>">移除</button>
                 </td>
             </tr>
@@ -120,6 +131,16 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
             <input type="hidden" id="f-id" value="0">
             <div><label>分类名称 *</label><input type="text" id="f-name" maxlength="50" placeholder="如 游戏充值 / 软件激活码"></div>
             <div><label>图标(可选, 输入一个表情或字符)</label><input type="text" id="f-icon" maxlength="4" placeholder="如 🎮"></div>
+            <div>
+                <label>分类图片(可选, 上传后优先于表情图标展示)</label>
+                <div class="up-zone" id="upZone">
+                    <img class="up-thumb" id="upPreview" src="" alt="" style="display:none">
+                    <span class="up-ph" id="upPh">🖼</span>
+                    <span class="up-txt"><b>点击上传图片</b>jpg / png / webp / gif, ≤3MB</span>
+                    <input type="file" class="up-input" id="f-image" accept=".jpg,.jpeg,.png,.webp,.gif">
+                </div>
+                <label class="up-clear" id="upClearWrap" style="display:none;margin-top:8px"><input type="checkbox" id="f-image_reset" value="1"> 清除当前图片(恢复表情图标)</label>
+            </div>
             <div><label>排序(越小越靠前)</label><input type="number" id="f-sort" value="0"></div>
             <div><label style="display:flex;align-items:center;gap:8px;margin:0;color:var(--text);font-size:13px;font-weight:600">
                 <span class="sw" style="margin:0;display:inline-block"><input type="checkbox" id="f-status" checked><i></i></span> 启用(前台显示)
@@ -173,6 +194,15 @@ function openModal(data) {
     document.getElementById('f-icon').value = data ? data.icon : '';
     document.getElementById('f-sort').value = data ? data.sort : 0;
     document.getElementById('f-status').checked = data ? data.status === 1 : true;
+    /* 图片状态 */
+    var img = data && data.image ? '<?= e(site_url('')) ?>' + data.image : '';
+    var prev = document.getElementById('upPreview'), ph = document.getElementById('upPh');
+    prev.style.display = img ? 'block' : 'none';
+    ph.style.display = img ? 'none' : 'flex';
+    if (img) prev.src = img;
+    document.getElementById('f-image').value = '';
+    document.getElementById('f-image_reset').checked = false;
+    document.getElementById('upClearWrap').style.display = (data && data.image) ? 'flex' : 'none';
     mask.classList.add('on');
     document.getElementById('f-name').focus();
 }
@@ -187,10 +217,25 @@ document.getElementById('modalSave').addEventListener('click', function () {
     fd.append('icon', document.getElementById('f-icon').value.trim());
     fd.append('sort', document.getElementById('f-sort').value || '0');
     fd.append('status', document.getElementById('f-status').checked ? '1' : '0');
+    var f = document.getElementById('f-image');
+    if (f.files && f.files[0]) fd.append('image_file', f.files[0]);
+    if (document.getElementById('f-image_reset').checked) fd.append('image_reset', '1');
     yfPost('<?= au('category_save') ?>', fd).then(function (d) {
         kAlert(d.msg);
         if (d.code === 0) location.reload();
     });
+});
+/* 图片选择即时预览 */
+document.getElementById('f-image').addEventListener('change', function () {
+    var prev = document.getElementById('upPreview'), ph = document.getElementById('upPh');
+    if (this.files && this.files[0]) {
+        prev.src = URL.createObjectURL(this.files[0]);
+        prev.style.display = 'block';
+        ph.style.display = 'none';
+    } else {
+        prev.style.display = 'none';
+        ph.style.display = 'flex';
+    }
 });
 /* 行内动作 */
 document.addEventListener('click', function (ev) {

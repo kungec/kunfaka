@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
   `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `name` varchar(100) NOT NULL,
   `icon` varchar(50) DEFAULT '',
+  `image` varchar(200) DEFAULT '' COMMENT '分类图片(上传路径)',
   `sort` int NOT NULL DEFAULT 0,
   `status` tinyint NOT NULL DEFAULT 1 COMMENT '1启用 0停用(前台隐藏)',
   `created_at` int unsigned NOT NULL DEFAULT 0

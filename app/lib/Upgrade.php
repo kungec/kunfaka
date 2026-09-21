@@ -173,6 +173,7 @@ class Upgrade
         $col('products', 'contact_types', "varchar(200) NOT NULL DEFAULT '' COMMENT '商品级下单联系方式: 逗号分隔(空=默认email)'");
         $col('orders', 'channel', "varchar(20) NOT NULL DEFAULT '' COMMENT '聚合支付渠道: alipay/wxpay/qqpay'", 'pay_plugin');
         $col('categories', 'status', "tinyint NOT NULL DEFAULT 1 COMMENT '1启用 0停用(前台隐藏)'");
+        $col('categories', 'image', "varchar(200) NOT NULL DEFAULT '' COMMENT '分类图片(上传路径)'");
         $col('cards', 'note', "varchar(200) NOT NULL DEFAULT '' COMMENT '备注信息'");
         $col('users', 'level_id', "int unsigned NOT NULL DEFAULT 0 COMMENT '会员等级(0=无等级)'");
         $col('products', 'group_id', "int unsigned NOT NULL DEFAULT 0 COMMENT '商品分组(0=不分组)'");
