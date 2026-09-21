@@ -27,13 +27,15 @@ $cmp = function ($nowV, $base) {
 .kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:14px}
 @media(max-width:1200px){.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.kpi-row{grid-template-columns:1fr}}
-.kpi{background:var(--card);border:1px solid var(--input-border);border-radius:14px;padding:16px 18px 14px;position:relative;overflow:hidden}
+.kpi{background:var(--card);background-image:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,0) 45%);border:1px solid var(--input-border);border-radius:16px;padding:18px 20px 16px;position:relative;overflow:hidden;transition:transform .16s,border-color .16s}
+html[data-theme="light"] .kpi{background-image:linear-gradient(160deg,#ffffff,#fafbfe)}
 .kpi::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#6366f1,#a855f7);opacity:.85}
 .kpi.k2::after{background:linear-gradient(180deg,#0ea5e9,#22d3ee)}
 .kpi.k3::after{background:linear-gradient(180deg,#f59e0b,#f97316)}
 .kpi.k4::after{background:linear-gradient(180deg,#10b981,#34d399)}
+.kpi:hover{transform:translateY(-2px);border-color:var(--muted)}
 .kpi .k-label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
-.kpi .k-val{font-size:26px;font-weight:800;letter-spacing:-.5px;margin:6px 0 4px}
+.kpi .k-val{font-size:28px;font-weight:800;letter-spacing:-.5px;margin:7px 0 5px}
 .kpi .k-sub{font-size:11.5px;color:var(--muted)}
 /* 主区双栏 */
 .dash-main{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(250px,1fr);gap:14px;align-items:start}
@@ -184,8 +186,7 @@ $cmp = function ($nowV, $base) {
                 <a href="<?= au('orders', ['status' => 2]) ?>"><span>已过期订单</span><span class="n"><?= (int)$todo['expired'] ?></span></a>
                 <a href="<?= au('products') ?>"><span>库存预警商品</span><span class="n" <?= $todo['low_stock'] > 0 ? 'style="color:var(--bad)"' : '' ?>><?= (int)$todo['low_stock'] ?></span></a>
             </div>
-        </div>
-        <div class="card">
+            <div class="pf-div" style="margin:12px 0"></div>
             <h3 style="margin:0 0 6px">站点概览</h3>
             <div class="todo-list">
                 <a href="<?= au('users') ?>"><span>会员总数</span><span class="n"><?= (int)$kpi['members'] ?></span></a>
@@ -194,20 +195,6 @@ $cmp = function ($nowV, $base) {
                 <a href="<?= au('settings') ?>"><span>系统设置</span><span class="arr">前往 ›</span></a>
             </div>
         </div>
-        <?php if ($officialNotices): $n = $officialNotices[0]; ?>
-        <div class="card">
-            <h3 style="margin:0 0 6px">📣 官方公告</h3>
-            <div style="font-size:12.5px;line-height:1.7;color:var(--text2)">
-                <?php if (is_array($n)): ?>
-                    <b style="color:var(--text)"><?= e($n['title']) ?></b>
-                    <?php if (trim((string)($n['content'] ?? '')) !== ''): ?><div style="margin-top:5px;color:var(--muted);font-size:12px"><?= e(mb_substr($n['content'], 0, 90)) ?><?= mb_strlen($n['content']) > 90 ? '…' : '' ?></div><?php endif; ?>
-                    <?php if (!empty($n['time'])): ?><div style="margin-top:5px;font-size:11px;color:var(--muted)"><?= e(date('m-d H:i', (int)$n['time'])) ?></div><?php endif; ?>
-                <?php else: ?>
-                    <?= e($n) ?>
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php endif; ?>
     </div>
 </div>
 
