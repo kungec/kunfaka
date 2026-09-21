@@ -31,7 +31,7 @@ class Captcha
         if ($mode === 'turnstile') {
             $siteKey = e(setting('turnstile_site_key'));
             return '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>'
-                . '<div class="cf-turnstile" data-sitekey="' . $siteKey . '" data-theme="auto"></div>';
+                . '<div class="cf-turnstile" data-sitekey="' . $siteKey . '" data-theme="auto" data-size="flexible" style="width:100%"></div>';
         }
         if ($mode === 'geetest') {
             return self::renderGeetest($scope);
@@ -55,7 +55,12 @@ class Captcha
             $js .= '<script src="https://static.geetest.com/v4/gt4.js"></script>';
             $gtjsLoaded = true;
         }
-        $js .= '<div class="geetest-box" data-scope="' . e($scope) . '"></div>
+        $js .= '<style>'
+            . '.geetest-box{width:100%}.geetest-box>div,.geetest-box .geetest_holder,.geetest-box .geetest_btn,'
+            . '.geetest-box [class*="geetest_holder"],.geetest-box [class*="geetest_btn"]{width:100%!important;box-sizing:border-box}'
+            . '.geetest-box iframe{width:100%!important;max-width:100%}'
+            . '</style>'
+            . '<div class="geetest-box" data-scope="' . e($scope) . '"></div>
 <script>
 (function () {
     document.querySelectorAll(\'.geetest-box[data-scope="' . e($scope) . '"]\').forEach(function (box) {
