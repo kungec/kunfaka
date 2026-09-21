@@ -9,6 +9,8 @@ if (defined('YF_ADMIN_ENTRY') && basename(isset($_SERVER['SCRIPT_NAME']) ? $_SER
     http_response_code(404);
     exit('404 Not Found');
 }
+// 后台页面禁止搜索引擎收录(响应头方式, 不暴露后台入口地址)
+header('X-Robots-Tag: noindex, nofollow');
 require __DIR__ . '/app/bootstrap.php';
 require YF_ROOT . '/app/lib/Router.php';
 $route = isset($_GET['s']) ? $_GET['s'] : 'dashboard';

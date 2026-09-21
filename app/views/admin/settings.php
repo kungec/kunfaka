@@ -87,6 +87,14 @@
                 <div class="desc">开启后前台链接变为 /home/index 等路径形式。需服务器支持回退: Nginx 加 <span class="mono">location / { try_files $uri $uri/ /index.php$is_args$args; }</span>; Apache 用根目录 .htaccess 的 RewriteRule 回退 index.php。未配置回退时开启会导致前台打不开, 请先配好服务器再开启。</div>
             </div>
             <div class="form-row">
+                <label>搜索引擎收录限制(robots.txt)</label>
+                <select name="robots_disallow">
+                    <option value="1" <?= setting('robots_disallow', '1') === '1' ? 'selected' : '' ?>>开启(默认, 禁止收录敏感路径)</option>
+                    <option value="0" <?= setting('robots_disallow', '1') !== '1' ? 'selected' : '' ?>>关闭(允许收录全站)</option>
+                </select>
+                <div class="desc">开启后 /robots.txt 告知搜索引擎不抓取 /data/、/cron.php、/install.php、/tools/ 等敏感路径; 后台登录页同时响应 noindex 头(不会暴露后台随机入口地址)。仅对遵守 robots 协议的搜索引擎生效。</div>
+            </div>
+            <div class="form-row">
                 <label>自动更新</label>
                 <select name="auto_update">
                     <option value="0" <?= setting('auto_update', '0') !== '1' ? 'selected' : '' ?>>关闭(默认, 发现新版本时手动确认升级)</option>
