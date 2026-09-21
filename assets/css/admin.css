@@ -514,3 +514,71 @@ html[data-theme="dark"] .btn.red {
 html[data-theme="light"] .tb tbody tr:hover { background: rgba(59, 130, 246, .045); }
 .kmodal { border-radius: 18px; background: var(--card); }
 .page-head h2 { letter-spacing: .2px; }
+
+/* ---- 顶栏用户下拉菜单(v7) ---- */
+.user-menu { position: relative; }
+.admin-user {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px 6px 7px; border-radius: 999px;
+    border: 1px solid var(--input-border); background: var(--input-bg);
+    color: var(--text); font-size: 12.5px; font-weight: 600; cursor: pointer;
+    transition: border-color .15s, background .15s;
+}
+.admin-user:hover { border-color: var(--muted); }
+.uu-ava {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; flex: none;
+    background: linear-gradient(135deg, #a8c7fa, #8ab4f8); color: #0e2242;
+}
+html[data-theme="light"] .uu-ava { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
+.uu-caret { font-size: 9px; color: var(--muted); transition: transform .18s; }
+.user-menu.open .uu-caret { transform: rotate(180deg); }
+.um-panel {
+    position: absolute; right: 0; top: calc(100% + 8px); z-index: 90;
+    min-width: 208px; padding: 8px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 13px;
+    box-shadow: 0 22px 50px -18px rgba(0,0,0,.55);
+    display: none;
+}
+.user-menu.open .um-panel { display: block; }
+.um-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 8px 10px 10px; border-bottom: 1px solid var(--input-border); margin-bottom: 6px;
+}
+.um-head b { font-size: 13px; }
+.um-head small { color: var(--muted); font-size: 11px; }
+.um-panel a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-radius: 8px;
+    color: var(--text2); font-size: 12.5px; text-decoration: none;
+    transition: background .12s, color .12s;
+}
+.um-panel a:hover { background: rgba(140,155,190,.1); color: var(--text); }
+html[data-theme="light"] .um-panel a:hover { background: rgba(59,130,246,.07); }
+.um-panel a.um-out { color: var(--bad); margin-top: 2px; }
+.um-panel a.um-out:hover { background: var(--bad-bg); color: var(--bad); }
+
+/* 移动端保留用户菜单入口(顶栏用户按钮不再隐藏, 缩为头像) */
+@media (max-width: 760px) {
+    .admin-user { display: inline-flex; padding: 5px; border-radius: 50%; }
+    .admin-user .uu-caret { display: none; }
+    .admin-user { font-size: 0; }
+    .um-panel { min-width: 190px; }
+}
+
+/* ---- 商品下单联系方式chips(多选) ---- */
+.ct-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ct-chips .ct-chip {
+    position: relative; display: inline-flex; align-items: center;
+    height: 34px; padding: 0 14px;
+    border: 1px solid var(--input-border); border-radius: 9px;
+    cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text2);
+    transition: .12s; user-select: none;
+}
+.ct-chips .ct-chip:hover { border-color: var(--muted); color: var(--text); }
+.ct-chips .ct-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.ct-chips .ct-chip:has(input:checked) {
+    border-color: var(--info); background: var(--info-bg); color: var(--info);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, .12);
+}

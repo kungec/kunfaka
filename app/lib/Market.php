@@ -15,7 +15,7 @@ class Market
     public static function remoteList()
     {
         $cache = setting('market_cache', '');
-        if (!$force && $cache) {
+        if ($cache) {
             $arr = json_decode($cache, true);
             if (is_array($arr) && isset($arr['expire_at']) && $arr['expire_at'] > now()) {
                 return is_array($arr['items']) ? $arr['items'] : [];

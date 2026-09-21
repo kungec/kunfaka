@@ -12,6 +12,56 @@ $activeMenu = isset($__menuMap[$__seg]) ? $__menuMap[$__seg] : $__seg;
 <meta name="theme-color" content="#0e1013">
 <title><?= e(isset($pageTitle) ? $pageTitle : '管理后台') ?> - 坤发卡</title>
 <link rel="stylesheet" href="<?= site_url('assets/css/admin.css') ?>?v=<?= YF_VERSION ?>">
+<style>
+/* 顶栏用户菜单(样式内联: 与HTML同步加载, 不受外部CSS缓存影响) */
+.user-menu { position: relative; }
+.admin-user {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 12px 5px 6px; border-radius: 999px;
+    border: 1px solid var(--input-border); background: var(--input-bg);
+    color: var(--text); font-size: 12.5px; font-weight: 600; cursor: pointer;
+    transition: border-color .15s, background .15s;
+}
+.admin-user:hover { border-color: var(--muted); }
+.uu-ava {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; flex: none;
+    background: linear-gradient(135deg, #a8c7fa, #8ab4f8); color: #0e2242;
+}
+html[data-theme="light"] .uu-ava { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
+.uu-caret { font-size: 9px; color: var(--muted); transition: transform .18s; }
+.user-menu.open .uu-caret { transform: rotate(180deg); }
+.um-panel {
+    position: absolute; right: 0; top: calc(100% + 8px); z-index: 90;
+    min-width: 210px; padding: 8px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 13px;
+    box-shadow: 0 22px 50px -18px rgba(0,0,0,.55);
+    display: none;
+}
+.user-menu.open .um-panel { display: block; }
+.um-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 8px 10px 10px; border-bottom: 1px solid var(--input-border); margin-bottom: 6px;
+}
+.um-head b { font-size: 13px; }
+.um-head small { color: var(--muted); font-size: 11px; }
+.um-panel a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-radius: 8px;
+    color: var(--text2); font-size: 12.5px; text-decoration: none;
+    transition: background .12s, color .12s;
+}
+.um-panel a:hover { background: rgba(140,155,190,.1); color: var(--text); }
+html[data-theme="light"] .um-panel a:hover { background: rgba(59,130,246,.07); }
+.um-panel a.um-out { color: var(--bad); margin-top: 2px; }
+.um-panel a.um-out:hover { background: var(--bad-bg); color: var(--bad); }
+@media (max-width: 760px) {
+    .admin-user { padding: 5px; border-radius: 50%; font-size: 0; }
+    .admin-user .uu-caret { display: none; }
+    .um-panel { min-width: 190px; }
+}
+</style>
 <script>
 (function () {
     var t = null;
