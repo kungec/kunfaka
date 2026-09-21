@@ -5,6 +5,9 @@
    颜色尽量走主题变量(--card/--line/--muted等), 未定义时回退中性值。
    ========================================================== */
 
+/* ---- 用户等级徽章(LV, anime/store顶栏) ---- */
+.tag.blue { background: var(--accent-soft, rgba(79, 70, 229, .12)); color: var(--accent, #4f46e5); }
+
 /* ---- 表单容器(购买/查询/登录等) ---- */
 .buy-form { margin-top: 14px; }
 .buy-form .form-row { margin-top: 14px; }
