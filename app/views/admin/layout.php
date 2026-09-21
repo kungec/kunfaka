@@ -78,19 +78,20 @@ html[data-theme="light"] .um-panel a:hover { background: rgba(59,130,246,.07); }
         <div class="side-logo">
             <svg class="lg-mark" viewBox="0 0 64 64" aria-hidden="true">
                 <defs>
+                    <linearGradient id="kfBg" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#232b52"/>
+                        <stop offset="1" stop-color="#0d1128"/>
+                    </linearGradient>
                     <linearGradient id="kfGold" x1="0" y1="0" x2="1" y2="1">
                         <stop offset="0" stop-color="#f0d67a"/>
-                        <stop offset=".45" stop-color="#d4af37"/>
+                        <stop offset=".5" stop-color="#d4af37"/>
                         <stop offset="1" stop-color="#a8842c"/>
                     </linearGradient>
                 </defs>
-                <circle cx="32" cy="32" r="29.5" fill="none" stroke="url(#kfGold)" stroke-width="2.2"/>
-                <circle cx="32" cy="32" r="24" fill="none" stroke="url(#kfGold)" stroke-width=".9" opacity=".6" stroke-dasharray="1.5 3.2"/>
-                <text x="32" y="34.5" text-anchor="middle" dominant-baseline="central" font-family="'Songti SC','STSong','SimSun','Noto Serif SC','Source Han Serif SC',serif" font-size="27" font-weight="900" fill="url(#kfGold)">坤</text>
-                <g fill="url(#kfGold)">
-                    <path d="M32 0l2.8 2.8L32 5.6 29.2 2.8z"/>
-                    <path d="M32 58.4l2.8 2.8L32 64l-2.8-2.8z" opacity=".85"/>
-                </g>
+                <rect x="2" y="2" width="60" height="60" rx="17" fill="url(#kfBg)" stroke="url(#kfGold)" stroke-width="1.5"/>
+                <rect x="7" y="7" width="50" height="50" rx="13" fill="none" stroke="url(#kfGold)" stroke-width=".7" opacity=".38"/>
+                <text x="32" y="35" text-anchor="middle" dominant-baseline="central" font-family="'Songti SC','STSong','SimSun','Noto Serif SC','Source Han Serif SC',serif" font-size="30" font-weight="900" fill="url(#kfGold)">坤</text>
+                <circle cx="51" cy="13" r="2.4" fill="url(#kfGold)"/>
             </svg>
             <div><b>坤发卡</b><small>KUNFAKA · ADMIN</small></div>
         </div>

@@ -131,23 +131,6 @@ html[data-theme="light"] .kpi{background-image:linear-gradient(160deg,#ffffff,#f
 </script>
 <?php endif; ?>
 
-<div class="welcome">
-    <?php $h = (int)date('G'); $greet = $h < 6 ? '夜深了' : ($h < 12 ? '上午好' : ($h < 18 ? '下午好' : '晚上好')); ?>
-    <span class="w-ava">坤</span>
-    <div class="w-hello">
-        <div class="w-hi"><?= $greet ?>，<?= e(isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : '管理员') ?><?php if (current_admin() && current_admin()['role'] === 'super'): ?><span class="tag pro">👑 超级管理员</span><?php endif; ?></div>
-        <div class="w-sub">欢迎回到坤发卡管理后台 · 祝今天出单顺利</div>
-    </div>
-    <div class="w-login">
-        <span>本次登录<b><?= e($curLogin ? date('m-d H:i', $curLogin['created_at']) : '—') ?> · <?= e($curLogin['ip'] ?? client_ip()) ?></b></span>
-        <span>上次登录<b><?= e($prevLogin ? date('m-d H:i', $prevLogin['created_at']) : '—') ?> · <?= e($prevLogin['ip'] ?? '—') ?></b></span>
-    </div>
-    <div class="w-acts">
-        <a class="btn sm gray" href="<?= au('profile') ?>">个人设置</a>
-        <a class="btn sm gray" href="<?= au('logs') ?>">操作日志</a>
-    </div>
-</div>
-
 <div class="kpi-row">
     <?php
     $kpis = [
