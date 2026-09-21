@@ -174,6 +174,11 @@ class Upgrade
         $col('orders', 'channel', "varchar(20) NOT NULL DEFAULT '' COMMENT '聚合支付渠道: alipay/wxpay/qqpay'", 'pay_plugin');
         $col('categories', 'status', "tinyint NOT NULL DEFAULT 1 COMMENT '1启用 0停用(前台隐藏)'");
         $col('categories', 'image', "varchar(200) NOT NULL DEFAULT '' COMMENT '分类图片(上传路径)'");
+        // 授权域名主域名归一: 历史数据里带www前缀的license_domain去掉www(与主控归一规则一致)
+        try {
+            $bad = DB::value("SELECT k FROM settings WHERE k = 'license_domain' AND v LIKE 'www.%'");
+            if ($bad) DB::exec("UPDATE settings SET v = SUBSTR(v, 5) WHERE k = 'license_domain' AND v LIKE 'www.%' AND length(v) > 5");
+        } catch (Exception $ex) {}
         $col('cards', 'note', "varchar(200) NOT NULL DEFAULT '' COMMENT '备注信息'");
         $col('users', 'level_id', "int unsigned NOT NULL DEFAULT 0 COMMENT '会员等级(0=无等级)'");
         $col('products', 'group_id', "int unsigned NOT NULL DEFAULT 0 COMMENT '商品分组(0=不分组)'");

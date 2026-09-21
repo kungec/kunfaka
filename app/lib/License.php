@@ -49,11 +49,15 @@ class License
         $api = setting('official_api');
         if ($api) {
             try {
-                $res = self::post($api . '/api/activate', ['key' => $key, 'domain' => isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '']);
+                // 主域名归一: 发送去www的根域名(www/@ 在主控视为同一站点)
+                $host = isset($_SERVER['HTTP_HOST']) ? preg_replace('/^www\./i', '', strtolower((string)$_SERVER['HTTP_HOST'])) : '';
+                $host = preg_replace('/:\d+$/', '', $host);
+                $res = self::post($api . '/api/activate', ['key' => $key, 'domain' => $host]);
                 if (is_array($res) && isset($res['code']) && $res['code'] === 0) {
                     setting_set('license_key', $key);
                     setting_set('license_type', 'pro');
                     setting_set('license_expires', (string)(int)$res['expires']);
+                    if ($host !== '') setting_set('license_domain', strtolower(preg_replace('/:\d+$/', '', preg_replace('/^www\./i', '', $host))));
                     return;
                 }
             } catch (Exception $ex) {
@@ -71,9 +75,11 @@ class License
         if ($sum !== $parts[3]) {
             throw new Exception('授权码无效(校验失败)');
         }
+        $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
         setting_set('license_key', $key);
         setting_set('license_type', 'pro');
         setting_set('license_expires', '0');
+        if ($host !== '') setting_set('license_domain', strtolower(preg_replace('/:\d+$/', '', preg_replace('/^www\./i', '', $host))));
     }
 
     protected static function post($url, $data)

@@ -23,10 +23,10 @@ class Protector
         return isset(self::$proManifest[$type]) && in_array($name, self::$proManifest[$type], true);
     }
 
-    /** 授权绑定域名(激活时写入的归一化域名) */
+    /** 授权绑定域名(激活时写入的归一化域名, 再去www一次兜底→根域名) */
     public static function bindDomain()
     {
-        return strtolower(trim((string)setting('license_domain', '')));
+        return preg_replace('/^www\./i', '', strtolower(trim((string)setting('license_domain', ''))));
     }
 
     /** 当前访问域名归一化(去端口; www与非www视为等价) */
