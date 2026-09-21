@@ -9,12 +9,15 @@ $cmp = function ($nowV, $base) {
 };
 ?>
 <style>
-/* 公告条 */
-.notice-strip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--input-bg);border:1px solid var(--input-border);border-radius:12px;padding:10px 16px;margin-bottom:14px;font-size:12.5px;color:var(--text2)}
+/* 公告条(轮播) */
+.notice-strip{display:flex;align-items:center;gap:12px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:12px;padding:10px 16px;margin-bottom:14px;font-size:12.5px;color:var(--text2)}
 .notice-strip .ns-badge{flex:none;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--ok-bg);color:var(--ok)}
-.notice-strip .ns-t{min-width:0;flex:1;line-height:1.6}
-.notice-strip .ns-t b{color:var(--text)}
-.notice-strip .ns-d{flex:none;color:var(--muted);font-size:11px}
+.notice-strip .ns-view{flex:1;min-width:0;position:relative;height:22px}
+.notice-strip .ns-item{position:absolute;inset:0;display:flex;align-items:center;gap:8px;min-width:0;opacity:0;transition:opacity .5s;pointer-events:none}
+.notice-strip .ns-item.on{opacity:1}
+.notice-strip .ns-item .t{font-weight:700;color:var(--text);flex:none}
+.notice-strip .ns-item .c{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.notice-strip .ns-count{flex:none;font-size:11px;color:var(--muted);font-weight:600}
 /* 欢迎条 */
 .welcome{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--input-bg);border:1px solid var(--input-border);border-radius:14px;padding:14px 20px;margin-bottom:14px}
 .welcome .w-ava{width:44px;height:44px;border-radius:13px;background:var(--text);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;flex:none}
@@ -94,12 +97,34 @@ html[data-theme="light"] .kpi{background-image:linear-gradient(160deg,#ffffff,#f
 <?php if ($officialNotices): ?>
 <div class="notice-strip">
     <span class="ns-badge">官方公告</span>
-    <?php foreach ($officialNotices as $i => $n): $isArr = is_array($n); ?>
-        <span class="ns-t" <?= $i > 0 ? 'style="display:none"' : '' ?>>
-            <?php if ($isArr): ?><b><?= e($n['title']) ?></b><?= trim((string)($n['content'] ?? '')) !== '' ? ' —— ' . e(mb_substr($n['content'], 0, 80)) : '' ?><?php else: ?><?= e($n) ?><?php endif; ?>
-        </span>
-    <?php endforeach; ?>
+    <div class="ns-view" id="nsView">
+        <?php foreach ($officialNotices as $i => $n): $isArr = is_array($n); ?>
+        <div class="ns-item<?= $i === 0 ? ' on' : '' ?>">
+            <?php if ($isArr): ?>
+                <span class="t"><?= e($n['title']) ?></span>
+                <?php if (trim((string)($n['content'] ?? '')) !== ''): ?><span class="c"><?= e($n['content']) ?></span><?php endif; ?>
+            <?php else: ?>
+                <span class="t"><?= e($n) ?></span>
+            <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <span class="ns-count" id="nsCount"></span>
 </div>
+<script>
+(function () {
+    var items = document.querySelectorAll('#nsView .ns-item');
+    var cnt = document.getElementById('nsCount');
+    if (!items.length) return;
+    var i = 0;
+    function show(n) {
+        items.forEach(function (el, k) { el.classList.toggle('on', k === n); });
+        if (cnt) cnt.textContent = items.length > 1 ? (n + 1) + ' / ' + items.length : '';
+    }
+    show(0);
+    if (items.length > 1) setInterval(function () { i = (i + 1) % items.length; show(i); }, 5000);
+})();
+</script>
 <?php endif; ?>
 
 <div class="welcome">
