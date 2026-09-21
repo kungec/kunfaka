@@ -44,7 +44,7 @@ class Captcha
             . '</div>';
     }
 
-    /** 极验v4 bind模式: 点击提交按钮 → 弹出验证 → 一键通过后自动提交表单 */
+    /** 极验v4 内联按钮模式: 页面直接渲染「点击按钮开始验证」, 一键通过后自动提交表单 */
     protected static function renderGeetest($scope)
     {
         static $gtjsLoaded = false;
@@ -63,23 +63,21 @@ class Captcha
         box.setAttribute("data-init", "1");
         var form = box.closest("form");
         if (!form) return;
-        var captchaObj = null;
-        function mkField(n, v) {
-            var i = document.createElement("input");
-            i.type = "hidden"; i.name = n; i.value = v; i.className = "geetest-field";
-            form.appendChild(i);
-        }
         initGeetest4({
             captchaId: "' . $id . '",
-            product: "bind",
+            product: "popup",
             language: "zho",
             timeout: ' . ($timeout * 1000) . '
         }, function (captcha) {
-            captchaObj = captcha;
             captcha.onSuccess(function () {
                 var r = captcha.getValidate();
                 if (!r) return;
                 form.querySelectorAll(".geetest-field").forEach(function (el) { el.remove(); });
+                function mkField(n, v) {
+                    var i = document.createElement("input");
+                    i.type = "hidden"; i.name = n; i.value = v; i.className = "geetest-field";
+                    form.appendChild(i);
+                }
                 mkField("captcha_lot_number", r.lot_number);
                 mkField("captcha_output", r.captcha_output);
                 mkField("captcha_pass_token", r.pass_token);
@@ -88,12 +86,7 @@ class Captcha
             }).onError(function () {
                 alert("验证组件加载失败, 请刷新页面重试");
             });
-        });
-        form.addEventListener("submit", function (e) {
-            if (form.querySelector(\'input[name="captcha_pass_token"]\')) return; // 已通过验证
-            e.preventDefault();
-            if (captchaObj) captchaObj.showCaptcha();
-            else alert("验证组件未就绪, 请稍候再试");
+            captcha.appendTo(box);
         });
     });
 })();
