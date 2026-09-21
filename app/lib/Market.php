@@ -97,7 +97,12 @@ class Market
         if (!$api) throw new Exception('未配置官方市场地址');
         // 标识二次白名单(防御纵深: 即使列表被污染也拒绝路径注入)
         if (!preg_match('/^[a-z0-9_\-]{1,40}$/i', (string)$name)) throw new Exception('应用标识非法');
-        $domain = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+        // 下载域名必须与本地解密域名一致(Protector::key 用 license_domain 派生密钥):
+        // 取授权绑定域名, 未记录时回退当前主机去www — 否则HTTP_HOST带www会导致密钥不匹配解密失败
+        $domain = Protector::bindDomain();
+        if ($domain === '') {
+            $domain = isset($_SERVER['HTTP_HOST']) ? preg_replace('/^www\./i', '', (string)$_SERVER['HTTP_HOST']) : '';
+        }
         $key = setting('license_key');
         if (!$key) throw new Exception('专业版应用需先在授权中心激活授权码');
         $ch = curl_init();

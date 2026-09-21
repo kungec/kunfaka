@@ -1097,7 +1097,9 @@ class AdminController
         $name = trim(arr_get($_POST, 'name'));
         $meta = Plugin::meta('payment', $name) ?: Plugin::meta('theme', $name);
         if (!$meta) json_out(['code' => 1, 'msg' => '应用不存在']);
-        $config = [];
+        // 合并保存: 保留既有键(fields未暴露的高级键如api_base/decimals) — 防止空表单提交清空配置
+        $config = app_config($name);
+        if (!is_array($config)) $config = [];
         foreach ($_POST as $k => $v) {
             if ($k === 'name' || $k === '_csrf') continue;
             $config[$k] = is_string($v) ? trim($v) : $v;
