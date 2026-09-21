@@ -6,7 +6,7 @@
 require __DIR__ . '/app/bootstrap.php';
 require YF_ROOT . '/app/lib/Router.php';
 $route = isset($_GET['s']) ? $_GET['s'] : trim((string)parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
-if ($route === '') $route = 'home/index';
+if ($route === '' || $route === 'index.php') $route = 'home/index';
 // 搜索引擎收录控制: /robots.txt 按后台开关生成(默认禁止抓取敏感路径; 不暴露后台随机入口名)
 if ($route === 'robots.txt') {
     header('Content-Type: text/plain; charset=UTF-8');

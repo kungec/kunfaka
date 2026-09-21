@@ -118,7 +118,7 @@ html[data-theme="light"] .um-panel a:hover { background: rgba(59,130,246,.07); }
             <a href="<?= au('settings') ?>" class="<?= (isset($activeMenu) && $activeMenu === 'settings') ? 'on' : '' ?>"><span class="ico">⚙️</span>系统设置</a>
         </nav>
         <div class="side-foot">
-            <a href="<?= site_url('index.php') ?>" target="_blank">🌐 前台</a>
+            <a href="<?= e(site_url()) ?>" target="_blank">🌐 前台</a>
             <a href="<?= au('logout') ?>">退出</a>
         </div>
     </aside>
