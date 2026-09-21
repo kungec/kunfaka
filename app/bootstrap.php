@@ -4,7 +4,7 @@
  */
 if (!defined('YF_ROOT')) define('YF_ROOT', dirname(__DIR__));
 define('YF_DATA', YF_ROOT . '/data');
-define('YF_VERSION', '2.37.6');
+define('YF_VERSION', '2.37.7');
 define('YF_START', microtime(true));
 
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_WARNING);

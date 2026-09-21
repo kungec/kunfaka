@@ -19,13 +19,17 @@ $cmp = function ($nowV, $base) {
 .notice-strip .ns-item .c{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .notice-strip .ns-count{flex:none;font-size:11px;color:var(--muted);font-weight:600}
 /* 欢迎条 */
-.welcome{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--input-bg);border:1px solid var(--input-border);border-radius:14px;padding:14px 20px;margin-bottom:14px}
-.welcome .w-ava{width:44px;height:44px;border-radius:13px;background:var(--text);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;flex:none}
-.welcome .w-id b{display:block;font-size:14.5px;font-weight:800}
-.welcome .w-id small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
-.welcome .w-login{display:flex;gap:22px;flex-wrap:wrap;margin-left:auto;font-size:11.5px;color:var(--muted)}
-.welcome .w-login b{display:block;color:var(--text2);font-size:12px;font-weight:600;margin-top:1px}
-.welcome .w-acts{display:flex;gap:8px;flex:none}
+.welcome{position:relative;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-radius:16px;padding:16px 22px;margin-bottom:14px;background:linear-gradient(120deg,var(--input-bg),transparent 140%);border:1px solid var(--input-border);overflow:hidden}
+.welcome::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#f0d67a,#d4af37 45%,#6366f1)}
+.welcome::after{content:"";position:absolute;width:300px;height:300px;border-radius:50%;right:-90px;top:-190px;background:radial-gradient(circle,rgba(212,175,55,.16),transparent 62%);pointer-events:none}
+.w-ava{width:48px;height:48px;border-radius:15px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:21px;flex:none;color:#a8842c;background:linear-gradient(135deg,rgba(240,214,122,.3),rgba(212,175,55,.14));border:1px solid rgba(212,175,55,.5);font-family:'Songti SC','STSong','SimSun',serif}
+html[data-theme="dark"] .w-ava{color:#f0d67a}
+.w-hello{min-width:180px}
+.w-hi{font-size:16.5px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.w-sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+.welcome .w-login{display:flex;gap:26px;flex-wrap:wrap;margin-left:auto;font-size:11px;color:var(--muted);position:relative;z-index:1}
+.welcome .w-login b{display:block;color:var(--text2);font-size:12px;font-weight:600;margin-top:2px}
+.welcome .w-acts{display:flex;gap:8px;flex:none;position:relative;z-index:1}
 /* KPI 卡 */
 .kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:14px}
 @media(max-width:1200px){.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -128,10 +132,11 @@ html[data-theme="light"] .kpi{background-image:linear-gradient(160deg,#ffffff,#f
 <?php endif; ?>
 
 <div class="welcome">
+    <?php $h = (int)date('G'); $greet = $h < 6 ? '夜深了' : ($h < 12 ? '上午好' : ($h < 18 ? '下午好' : '晚上好')); ?>
     <span class="w-ava">坤</span>
-    <div class="w-id">
-        <b><?= e(isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : '管理员') ?><?php if (current_admin() && current_admin()['role'] === 'super'): ?> <span class="tag pro" style="margin-left:4px">👑 超级管理员</span><?php endif; ?></b>
-        <small>欢迎回来, 今天也要元气满满地出单哦</small>
+    <div class="w-hello">
+        <div class="w-hi"><?= $greet ?>，<?= e(isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : '管理员') ?><?php if (current_admin() && current_admin()['role'] === 'super'): ?><span class="tag pro">👑 超级管理员</span><?php endif; ?></div>
+        <div class="w-sub">欢迎回到坤发卡管理后台 · 祝今天出单顺利</div>
     </div>
     <div class="w-login">
         <span>本次登录<b><?= e($curLogin ? date('m-d H:i', $curLogin['created_at']) : '—') ?> · <?= e($curLogin['ip'] ?? client_ip()) ?></b></span>

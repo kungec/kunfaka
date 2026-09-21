@@ -635,3 +635,6 @@ html[data-theme="dark"] .btn.green:hover {
 /* 主操作保留渐变实心; 表格内小按钮不再有彩色阴影 */
 .tb .btn.sm { box-shadow: none; }
 /* 状态开关微调 */
+/* v8.1: 侧栏品牌徽标(金色透明SVG, 亮暗通用) */
+.side-logo .lg-mark { width: 34px; height: 34px; flex: none; filter: drop-shadow(0 3px 10px rgba(212, 175, 55, .35)); }
+.side-logo .lg-t, .side-logo > div:last-child b { letter-spacing: 1.5px; }
