@@ -165,7 +165,6 @@ html[data-theme="light"] .side-nav a.on { color: #fff; background: linear-gradie
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
 .page-head h2 { font-size: 20px; font-weight: 700; letter-spacing: .2px; }
 .page-head .sub { color: var(--muted); font-size: 12.5px; margin-top: 1px; }
-.page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* ---- 卡片 ---- */
 .card {
@@ -258,9 +257,6 @@ a.btn { text-decoration: none; }
 .tag.pro { background: var(--text); color: var(--bg); border-color: transparent; }
 
 /* ---- 商店 ---- */
-.store-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
-.store-tab { padding: 7px 18px; border-radius: var(--radius-sm); background: var(--card); border: 1px solid var(--border); cursor: pointer; font-size: 13px; transition: .12s; color: var(--text2); }
-.store-tab.on { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
 .store-banner {
     background: var(--card); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 14px 18px; margin-bottom: 14px;
@@ -489,23 +485,6 @@ html[data-theme="dark"] .btn.red {
 }
 
 /* 数据概览: 彩色渐变图标统计块(acg特色) */
-.kgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-@media (max-width: 1180px) { .kgrid { grid-template-columns: repeat(2, 1fr); } }
-.kstat { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; }
-.ks-label { font-size: 12px; color: var(--muted); font-weight: 600; }
-.ks-val { font-size: 21px; font-weight: 800; margin-top: 3px; letter-spacing: .2px; }
-.ks-ico {
-    flex: none; width: 46px; height: 46px; border-radius: 13px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 21px; color: #fff;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.32), 0 8px 18px -8px rgba(0,0,0,.55);
-}
-.ks-ico.kg { background: linear-gradient(135deg, #34d399, #059669); }
-.ks-ico.kb { background: linear-gradient(135deg, #60a5fa, #2563eb); }
-.ks-ico.kc { background: linear-gradient(135deg, #22d3ee, #0891b2); }
-.ks-ico.kv { background: linear-gradient(135deg, #c084fc, #9333ea); }
-.ks-ico.kp { background: linear-gradient(135deg, #fbbf24, #d97706); }
-.ks-ico.ky { background: linear-gradient(135deg, #f87171, #dc2626); }
 
 /* 表格与弹窗微调 */
 .tb th { color: var(--muted); font-weight: 600; }
