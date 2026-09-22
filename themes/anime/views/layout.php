@@ -64,7 +64,7 @@
     <button class="cs-btn" id="csBtn" aria-label="联系客服">💬</button>
 </div>
 <?php endif; ?>
-<script src="<?= site_url('assets/js/qrcode.min.js') ?>"></script>
-<script src="<?= site_url('assets/js/app.js') ?>"></script>
+<script defer src="<?= site_url('assets/js/qrcode.min.js') ?>"></script>
+<script defer src="<?= site_url('assets/js/app.js') ?>"></script>
 </body>
 </html>
