@@ -24,7 +24,13 @@
     <?php foreach ($categories as $i => $c): $ci = $i % 8; ?>
         <a class="cat-card cc-<?= $ci ?><?= $catId === (int)$c['id'] ? ' active' : '' ?>" href="<?= u('home/index', ['cat' => $c['id']]) ?>">
             <span class="cat-ico">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4L12.6 21.4a2 2 0 0 1-2.8 0l-6.2-6.2A2 2 0 0 1 3 13.8V5a2 2 0 0 1 2-2h8.8a2 2 0 0 1 1.4.6l6.2 6.2a2 2 0 0 1 0 2.8z" transform="scale(0.92) translate(1,1)"/><circle cx="7.8" cy="7.8" r="1.4" fill="currentColor" stroke="none"/></svg>
+                <?php if (!empty($c['image'])): ?>
+                    <img src="<?= e(site_url($c['image'])) ?>" alt="" loading="lazy">
+                <?php elseif (!empty($c['icon'])): ?>
+                    <span style="font-size:17px;line-height:1"><?= e($c['icon']) ?></span>
+                <?php else: ?>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4L12.6 21.4a2 2 0 0 1-2.8 0l-6.2-6.2A2 2 0 0 1 3 13.8V5a2 2 0 0 1 2-2h8.8a2 2 0 0 1 1.4.6l6.2 6.2a2 2 0 0 1 0 2.8z" transform="scale(0.92) translate(1,1)"/><circle cx="7.8" cy="7.8" r="1.4" fill="currentColor" stroke="none"/></svg>
+                <?php endif; ?>
             </span>
             <span>
                 <span class="cat-name"><?= e($c['name']) ?></span><br>
