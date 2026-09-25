@@ -15,16 +15,24 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
 .c-name{display:flex;align-items:center;gap:9px}
 .c-name .ico{width:32px;height:32px;border-radius:8px;background:var(--input-bg);border:1px solid var(--input-border);display:inline-flex;align-items:center;justify-content:center;font-size:16px;flex:none;overflow:hidden}
 .c-name .ico img{width:100%;height:100%;object-fit:cover;display:block}
-/* 弹窗图片上传 */
-.up-zone{position:relative;height:86px;border:1.5px dashed var(--input-border);border-radius:11px;display:flex;align-items:center;gap:12px;padding:0 14px;cursor:pointer;transition:.15s;background:var(--input-bg)}
-.up-zone:hover{border-color:var(--primary)}
-.up-zone .up-thumb{width:60px;height:60px;border-radius:9px;object-fit:cover;flex:none;border:1px solid var(--input-border);background:var(--input-bg)}
-.up-zone .up-ph{width:60px;height:60px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--muted);background:var(--line-soft)}
-.up-zone .up-txt{font-size:12px;color:var(--muted);line-height:1.6}
-.up-zone .up-txt b{display:block;color:var(--text2);font-size:12.5px}
+/* 弹窗图片上传区(label原生转发+JS兜底+防全局label规则干扰) */
+.c-modal .m-body label.up-zone{
+    display:flex;flex-direction:row;align-items:center;gap:14px;
+    min-height:92px;margin:0;padding:14px 16px;
+    border:1.5px dashed var(--input-border);border-radius:12px;
+    background:var(--input-bg);cursor:pointer;transition:.15s;
+    font-size:13px;font-weight:400;
+}
+.c-modal .m-body label.up-zone:hover{border-color:var(--primary);background:var(--input-bg)}
+.c-modal .m-body label.up-zone.drag{border-color:var(--primary);background:var(--line-soft)}
+.up-zone .up-thumb{width:60px;height:60px;border-radius:10px;object-fit:cover;flex:none;display:block;border:1px solid var(--input-border);background:var(--input-bg)}
+.up-zone .up-ph{width:60px;height:60px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--muted);background:var(--line-soft)}
+.up-zone .up-txt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.up-zone .up-txt b{color:var(--text2);font-size:12.5px}
+.up-zone .up-txt small{color:var(--muted);font-size:11px}
 .up-input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:5}
 .up-zone.drag{border-color:var(--primary);background:var(--line-soft)}
-.up-clear{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);cursor:pointer}
+.up-clear{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);cursor:pointer;margin-top:8px}
 .up-clear input{width:14px;height:14px;accent-color:var(--bad)}
 .c-copy{border:1px solid var(--input-border);background:transparent;color:var(--text2);border-radius:7px;padding:4px 10px;font-size:11.5px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
 .c-copy:hover{border-color:var(--muted);color:var(--text)}
@@ -137,7 +145,7 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
                 <label class="up-zone" id="upZone" for="f-image">
                     <img class="up-thumb" id="upPreview" src="" alt="" style="display:none">
                     <span class="up-ph" id="upPh">🖼</span>
-                    <span class="up-txt"><b>点击上传图片</b>jpg / png / webp / gif, ≤3MB</span>
+                    <span class="up-txt"><b>点击上传图片</b><small>jpg / png / webp / gif · ≤3MB</small></span>
                     <input type="file" class="up-input" id="f-image" accept=".jpg,.jpeg,.png,.webp,.gif">
                 </label>
                 <label class="up-clear" id="upClearWrap" style="display:none;margin-top:8px"><input type="checkbox" id="f-image_reset" value="1"> 清除当前图片(恢复表情图标)</label>
