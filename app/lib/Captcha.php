@@ -87,6 +87,15 @@ class Captcha
                 mkField("captcha_output", r.captcha_output);
                 mkField("captcha_pass_token", r.pass_token);
                 mkField("captcha_gen_time", r.gen_time);
+                // 前置校验必填项: 缺失时不自动提交(验证字段保留, 用户补填后可再次提交)
+                var bad = null;
+                form.querySelectorAll("[required]").forEach(function (el) {
+                    if (!bad && (el.value === undefined || String(el.value).trim() === "")) bad = el;
+                });
+                if (bad) {
+                    try { if (bad.reportValidity) bad.reportValidity(); else bad.focus(); } catch (e) {}
+                    return;
+                }
                 form.submit();
             }).onError(function () {
                 alert("验证组件加载失败, 请刷新页面重试");
@@ -141,18 +150,24 @@ class Captcha
         return is_array($json) && !empty($json['success']);
     }
 
-    /** 极验v4 服务端二次校验(含验证结果有效期控制) */
+    /** 极验v4 服务端二次校验(含验证结果有效期控制); 失败原因记录日志便于排查 */
     protected static function geetestCheck($req)
     {
         $lotNumber = trim(arr_get($req, 'captcha_lot_number'));
         $captchaOutput = trim(arr_get($req, 'captcha_output'));
         $passToken = trim(arr_get($req, 'captcha_pass_token'));
         $genTime = (int)arr_get($req, 'captcha_gen_time');
-        if ($lotNumber === '' || $captchaOutput === '' || $passToken === '' || $genTime <= 0) return false;
+        if ($lotNumber === '' || $captchaOutput === '' || $passToken === '' || $genTime <= 0) {
+            self::logFail('params missing: lot=' . substr($lotNumber, 0, 8) . ' out=' . strlen($captchaOutput) . ' pass=' . strlen($passToken) . ' gen=' . $genTime);
+            return false;
+        }
 
         // 验证结果有效期: 超过后台配置的秒数视为超时拒绝
         $timeout = max(10, (int)setting('geetest_timeout', '120'));
-        if (now() - $genTime > $timeout) return false;
+        if (now() - $genTime > $timeout) {
+            self::logFail('expired: gen=' . $genTime . ' now=' . now() . ' diff=' . (now() - $genTime) . 's > ' . $timeout);
+            return false;
+        }
 
         $signToken = hash_hmac('sha256', $lotNumber, setting('geetest_key'));
         $ch = curl_init();
@@ -172,12 +187,28 @@ class Captcha
         curl_tls($ch);
         $res = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
         curl_close($ch);
-        if ($res === false || $httpCode !== 200) return false;
+        if ($res === false || $httpCode !== 200) {
+            self::logFail('validate http=' . $httpCode . ' curl=' . $curlErr . ' res=' . substr((string)$res, 0, 200));
+            return false;
+        }
         $json = json_decode($res, true);
-        if (!is_array($json)) return false;
+        if (!is_array($json)) {
+            self::logFail('validate non-json: ' . substr((string)$res, 0, 200));
+            return false;
+        }
         // 极验参数级异常(status=error)与校验不通过(result=fail)均视为未通过
+        if (!isset($json['result']) || $json['result'] !== 'success') {
+            self::logFail('geetest result=' . $json['result'] . ' reason=' . (string)($json['reason'] ?? '') . ' code=' . (string)($json['code'] ?? ''));
+        }
         return isset($json['result']) && $json['result'] === 'success';
+    }
+
+    /** 极验校验失败日志(仅失败时记录, 便于定位密钥/域名白名单问题) */
+    protected static function logFail($msg)
+    {
+        @file_put_contents(YF_DATA . '/geetest_fail.log', date('Y-m-d H:i:s') . ' ' . $msg . "\n", FILE_APPEND);
     }
 
     /** 输出图形验证码PNG(GD), 并写入session */

@@ -17,6 +17,10 @@ class OrderService
         if (!$order) return false;
         if ((int)$order['status'] !== 0) return false; // 已处理
 
+        // 原子认领: 仅当仍为待支付时置为已支付, 防止回调/轮询/cron 并发触发重复发卡
+        $claimed = DB::exec('UPDATE orders SET status = 1, paid_at = ? WHERE id = ? AND status = 0', [now(), $orderId]);
+        if (!$claimed) return false;
+
         $num = (int)$order['num'];
         DB::exec('UPDATE cards SET status = 1, order_id = ?, sold_at = ? WHERE product_id = ? AND status = 0 ORDER BY id ASC LIMIT ' . $num,
             [$orderId, now(), $order['product_id']]);
