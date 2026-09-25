@@ -23,6 +23,7 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
 .up-zone .up-txt{font-size:12px;color:var(--muted);line-height:1.6}
 .up-zone .up-txt b{display:block;color:var(--text2);font-size:12.5px}
 .up-input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.up-zone.drag{border-color:var(--primary);background:var(--line-soft)}
 .up-clear{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);cursor:pointer}
 .up-clear input{width:14px;height:14px;accent-color:var(--bad)}
 .c-copy{border:1px solid var(--input-border);background:transparent;color:var(--text2);border-radius:7px;padding:4px 10px;font-size:11.5px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
@@ -225,8 +226,24 @@ document.getElementById('modalSave').addEventListener('click', function () {
         if (d.code === 0) location.reload();
     });
 });
-/* 图片选择即时预览 */
-document.getElementById('f-image').addEventListener('change', function () {
+/* 图片选择即时预览 + 拖拽上传 */
+var upZone = document.getElementById('upZone');
+var fImage = document.getElementById('f-image');
+['dragover', 'dragenter'].forEach(function (ev) {
+    upZone.addEventListener(ev, function (e) { e.preventDefault(); upZone.classList.add('drag'); });
+});
+upZone.addEventListener('dragleave', function () { upZone.classList.remove('drag'); });
+upZone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    upZone.classList.remove('drag');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        var dt = new DataTransfer();
+        dt.items.add(e.dataTransfer.files[0]);
+        fImage.files = dt.files;
+        fImage.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+});
+fImage.addEventListener('change', function () {
     var prev = document.getElementById('upPreview'), ph = document.getElementById('upPh');
     if (this.files && this.files[0]) {
         prev.src = URL.createObjectURL(this.files[0]);
