@@ -65,7 +65,6 @@
                 <div class="goods-body">
                     <span class="goods-cat"><?= e($p['cat_name'] ?? '商品') ?></span>
                     <div class="goods-name"><a href="<?= u('buy/index', ['product_id' => $p['id']]) ?>"><?= e($p['name']) ?></a></div>
-                    <div class="goods-desc"><?= e(mb_substr(trim(strip_tags($p['description'])), 0, 42)) ?: '快速发货 · 支付即到' ?></div>
                     <div class="goods-foot">
                         <div style="display:flex;flex-direction:column;gap:2px">
                             <span class="goods-price"><small>¥</small><?= e(nf($p['price'])) ?></span>
