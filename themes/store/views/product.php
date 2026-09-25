@@ -3,7 +3,7 @@
     <div class="product-visual">
         <div class="pv-stage gv-0">
             <?php if (!empty($product['icon'])): ?>
-                <img src="<?= e(site_url(product_image_url($product['icon']))) ?>" alt="<?= e($product['name']) ?>" style="width:auto;max-width:100%;height:auto;display:block;margin:0 auto;border-radius:inherit">
+                <img src="<?= e(site_url(product_image_url($product['icon']))) ?>" alt="<?= e($product['name']) ?>" style="width:auto;max-width:100%;max-height:100%;height:auto;object-fit:contain;display:block;margin:0 auto;border-radius:inherit">
             <?php else: ?>
                 <span>🎁</span>
             <?php endif; ?>
