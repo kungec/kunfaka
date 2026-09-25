@@ -22,7 +22,7 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
 .up-zone .up-ph{width:60px;height:60px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--muted);background:var(--line-soft)}
 .up-zone .up-txt{font-size:12px;color:var(--muted);line-height:1.6}
 .up-zone .up-txt b{display:block;color:var(--text2);font-size:12.5px}
-.up-input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.up-input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:5}
 .up-zone.drag{border-color:var(--primary);background:var(--line-soft)}
 .up-clear{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);cursor:pointer}
 .up-clear input{width:14px;height:14px;accent-color:var(--bad)}
@@ -134,12 +134,12 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
             <div><label>图标(可选, 输入一个表情或字符)</label><input type="text" id="f-icon" maxlength="4" placeholder="如 🎮"></div>
             <div>
                 <label>分类图片(可选, 上传后优先于表情图标展示)</label>
-                <div class="up-zone" id="upZone">
+                <label class="up-zone" id="upZone" for="f-image">
                     <img class="up-thumb" id="upPreview" src="" alt="" style="display:none">
                     <span class="up-ph" id="upPh">🖼</span>
                     <span class="up-txt"><b>点击上传图片</b>jpg / png / webp / gif, ≤3MB</span>
                     <input type="file" class="up-input" id="f-image" accept=".jpg,.jpeg,.png,.webp,.gif">
-                </div>
+                </label>
                 <label class="up-clear" id="upClearWrap" style="display:none;margin-top:8px"><input type="checkbox" id="f-image_reset" value="1"> 清除当前图片(恢复表情图标)</label>
             </div>
             <div><label>排序(越小越靠前)</label><input type="number" id="f-sort" value="0"></div>
@@ -242,6 +242,12 @@ upZone.addEventListener('drop', function (e) {
         fImage.files = dt.files;
         fImage.dispatchEvent(new Event('change', { bubbles: true }));
     }
+});
+/* 整个上传区可点击(label原生转发+JS兜底) */
+upZone.addEventListener('click', function (e) {
+    if (e.target === fImage) return;
+    e.preventDefault();
+    fImage.click();
 });
 fImage.addEventListener('change', function () {
     var prev = document.getElementById('upPreview'), ph = document.getElementById('upPh');
