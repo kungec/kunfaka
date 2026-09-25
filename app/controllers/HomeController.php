@@ -46,7 +46,8 @@ class HomeController
         }
         foreach ($products as &$p) {
             $p['cat_name'] = isset($catName[$p['category_id']]) ? $catName[$p['category_id']] : '商品';
-            $p['_sales'] = $salesMap[(int)$p['id']] ?? 0;
+            // 前台已售 = 真实销量 + 虚拟已售基数
+            $p['_sales'] = ($salesMap[(int)$p['id']] ?? 0) + max(0, (int)($p['sales_base'] ?? 0));
             $stock[$p['id']] = $stockMap[(int)$p['id']] ?? 0;
         }
         unset($p);

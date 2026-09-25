@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS `products` (
   `sort` int NOT NULL DEFAULT 0,
   `sales` int unsigned NOT NULL DEFAULT 0,
   `contact_types` varchar(200) NOT NULL DEFAULT '' COMMENT '商品级下单联系方式: 逗号分隔(空=默认email)',
+  `sales_base` int NOT NULL DEFAULT 0 COMMENT '虚拟已售基数(前台已售=真实+此数)',
   `group_id` int unsigned NOT NULL DEFAULT 0 COMMENT '商品分组(0=不分组)',
   `icon` varchar(255) NOT NULL DEFAULT '' COMMENT '商品图标(上传路径)',
   `created_at` int unsigned NOT NULL DEFAULT 0

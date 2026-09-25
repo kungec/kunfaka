@@ -428,6 +428,7 @@ class AdminController
             'max_num' => max(1, (int)arr_get($_POST, 'max_num', 1)),
             'status' => (int)arr_get($_POST, 'status', 1),
             'sort' => (int)arr_get($_POST, 'sort'),
+            'sales_base' => max(0, (int)arr_get($_POST, 'sales_base', 0)),
             'contact_types' => implode(',', $pickedCt),
         ];
         if ($data['name'] === '') json_out(['code' => 1, 'msg' => '商品名称不能为空']);

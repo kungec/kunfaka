@@ -183,6 +183,7 @@ class Upgrade
         $col('users', 'level_id', "int unsigned NOT NULL DEFAULT 0 COMMENT '会员等级(0=无等级)'");
         $col('products', 'group_id', "int unsigned NOT NULL DEFAULT 0 COMMENT '商品分组(0=不分组)'");
         $col('products', 'icon', "varchar(255) NOT NULL DEFAULT '' COMMENT '商品图标(上传路径)'");
+        $col('products', 'sales_base', "int NOT NULL DEFAULT 0 COMMENT '虚拟已售基数(前台已售=真实+此数)'");
 
         // admin_users 扩展列
         foreach ([

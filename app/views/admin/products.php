@@ -188,6 +188,8 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
             <input type="text" id="f-name" maxlength="100" placeholder="如 游戏充值月卡">
             <label>零售价(元) *</label>
             <input type="number" id="f-price" step="0.01" min="0" value="0.00">
+            <label>虚拟已售基数(可选, 前台已售 = 真实销量 + 此数)</label>
+            <input type="number" id="f-sales-base" min="0" value="0">
             <label>排序(越小越靠前)</label>
             <input type="number" id="f-sort" value="0">
             <label>下单联系方式(本商品独立设置, 可多选; 全不选默认邮箱)</label>
@@ -275,6 +277,7 @@ function openDrawer(data) {
     }
     document.getElementById('f-name').value = data ? data.name : '';
     document.getElementById('f-price').value = data ? data.price : '0.00';
+    document.getElementById('f-sales-base').value = data ? (data.sales_base || 0) : 0;
     document.getElementById('f-sort').value = data ? data.sort : 0;
     document.getElementById('f-status').checked = data ? data.status === 1 : true;
     document.getElementById('f-description').value = data ? data.description : '';
@@ -331,6 +334,7 @@ document.getElementById('drawerSave').addEventListener('click', function () {
     fd.append('group_id', document.getElementById('f-group_id').value);
     fd.append('name', document.getElementById('f-name').value.trim());
     fd.append('price', document.getElementById('f-price').value);
+    fd.append('sales_base', document.getElementById('f-sales-base').value || '0');
     fd.append('sort', document.getElementById('f-sort').value || '0');
     fd.append('status', document.getElementById('f-status').checked ? '1' : '0');
     fd.append('description', document.getElementById('f-description').value);
