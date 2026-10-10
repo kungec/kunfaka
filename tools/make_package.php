@@ -29,17 +29,14 @@ foreach ($mustRemove as $f) {
 // 2. 交付文件完整性
 $required = [
     'index.php', 'admin.php', 'cron.php', 'install.php', 'database.sql', 'README.md', '.htaccess',
+    'web.config', 'data/web.config', 'uploads/web.config', 'uploads/.htaccess', 'README-WINDOWS.md',
     'app/bootstrap.php', 'app/functions.php', 'app/DB.php', 'app/View.php',
     'assets/css/admin.css', 'assets/js/app.js', 'assets/js/admin.js', 'assets/js/qrcode.min.js',
     'data/.htaccess', 'data/readme.txt', 'tools/upgrade.php', 'tools/make_license.php',
-    'license-server/index.php', 'license-server/admin.php', 'license-server/common.php',
-    'license-server/.htaccess', 'license-server/packages/.htaccess',
     'plugins/codepay/codepay.json', 'plugins/epay/epay.json', 'plugins/alipay_f2f/alipay_f2f.json',
     'plugins/alipay_page/alipay_page.json', 'plugins/wechat_native/wechat_native.json',
-    'plugins/usdt_trc20/usdt_trc20.json',
     'plugins/codepay/shot.svg', 'plugins/epay/shot.svg', 'plugins/alipay_f2f/shot.svg',
-    'plugins/alipay_page/shot.svg', 'plugins/wechat_native/shot.svg', 'plugins/usdt_trc20/shot.svg',
-    'plugins/visa_master/visa_master.json', 'plugins/visa_master/VisaMasterPlugin.php', 'plugins/visa_master/shot.svg',
+    'plugins/alipay_page/shot.svg', 'plugins/wechat_native/shot.svg',
     'themes/anime/anime.json',
     'themes/anime/shot.svg',
     'themes/store/store.json', 'themes/store/assets/css/style.css',
@@ -102,7 +99,7 @@ echo "[OK] 已生成: $outZip ($count 个文件, " . round(filesize($outZip) / 1
 $check = new ZipArchive();
 $check->open($outZip);
 $dirty = [];
-$allowedInData = ['data/.htaccess', 'data/readme.txt'];
+$allowedInData = ['data/.htaccess', 'data/readme.txt', 'data/web.config'];
 for ($i = 0; $i < $check->numFiles; $i++) {
     $n = $check->getNameIndex($i);
     $std = str_replace('\\', '/', $n);
