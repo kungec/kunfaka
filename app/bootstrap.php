@@ -2,10 +2,14 @@
 /**
  * 坤发卡 - 引导文件
  */
+// 防重复加载: 被多个入口require时(如install.php)直接返回, 避免常量重定义/函数重复声明
+if (defined('YF_BOOTSTRAP_LOADED')) return;
+define('YF_BOOTSTRAP_LOADED', 1);
+
 if (!defined('YF_ROOT')) define('YF_ROOT', dirname(__DIR__));
-define('YF_DATA', YF_ROOT . '/data');
-define('YF_VERSION', '2.40.0');
-define('YF_START', microtime(true));
+if (!defined('YF_DATA')) define('YF_DATA', YF_ROOT . '/data');
+if (!defined('YF_VERSION')) define('YF_VERSION', '2.40.0');
+if (!defined('YF_START')) define('YF_START', microtime(true));
 
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_WARNING);
 ini_set('display_errors', '0');
@@ -42,12 +46,17 @@ if (!is_file(YF_DATA . '/config.php')) {
     exit;
 }
 
-require YF_DATA . '/config.php';
-require __DIR__ . '/functions.php';
-require __DIR__ . '/DB.php';
-require __DIR__ . '/View.php';
+require_once YF_DATA . '/config.php';
+require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/DB.php';
+require_once __DIR__ . '/View.php';
 
-DB::init();
+// 安装向导模式下DB连不上不打断流程(向导自己会用try/catch检测并引导重装)
+if (defined('YF_INSTALLER')) {
+    try { DB::init(); } catch (Throwable $t) {}
+} else {
+    DB::init();
+}
 
 if (session_status() === PHP_SESSION_NONE) {
     // HTTPS环境下(直连或经代理)给会话Cookie加secure, 防降级明文泄露

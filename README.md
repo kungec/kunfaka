@@ -84,6 +84,11 @@ docker compose up -d --build
 
 访问 `http://IP:8080/install.php` 完成安装。数据库: 地址 `db` / 库名 `kunfaka` / 用户 `kunfaka` / 密码 `kunfaka123`。自带 cron 服务与数据卷, 升级镜像不丢配置。
 
+### Windows Server + IIS
+
+支持 Windows Server 2016/2019/2022 + IIS + PHP 7.4~8.3 + MySQL 5.6/5.7/8.0。
+仓库已内置 `web.config`(伪静态)、`data/web.config`(目录保护)、`uploads/web.config`(禁脚本执行), 详细步骤见 **[README-WINDOWS.md](README-WINDOWS.md)**。
+
 ### 开卖五步曲
 
 ```

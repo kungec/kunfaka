@@ -2,6 +2,10 @@
 /**
  * 坤发卡 - 全局公共函数
  */
+// 防重复加载: PHP会在编译期提前绑定无条件的顶层函数, 文件头部的return守护来不及生效,
+// 因此把整个文件体包进条件块 —— 函数变为条件声明, 被include两次也不会重复声明
+if (!defined('YF_FUNCTIONS_LOADED')) {
+define('YF_FUNCTIONS_LOADED', 1);
 
 /** HTML转义输出 */
 function e($s) {
@@ -622,4 +626,6 @@ function payment_display_name($payPlugin, $channel = '')
     $channel = trim((string)$channel);
     if ($channel !== '') $title .= ' · ' . payment_channel_label($channel);
     return $title;
+}
+
 }

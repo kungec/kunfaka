@@ -9,7 +9,9 @@
  */
 define('YF_INSTALLER', true);
 require __DIR__ . '/app/bootstrap.php';
-require __DIR__ . '/app/functions.php';
+// require_once: config.php已存在时bootstrap已加载过functions.php, 再用普通require会触发
+// "Cannot redeclare e()"致命错误(bootstrap此时不会提前return, 而是继续加载functions/DB/View)
+require_once __DIR__ . '/app/functions.php';
 
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
@@ -21,7 +23,7 @@ $installed = is_file($lockFile);
 $blocked = false;
 if (is_file(YF_DATA . '/config.php')) {
     try {
-        require YF_DATA . '/config.php';
+        require_once YF_DATA . '/config.php'; // bootstrap可能已加载过, 避免常量重复定义
         $chk = new PDO('mysql:host=' . YF_DB_HOST . ';port=' . YF_DB_PORT . ';dbname=' . YF_DB_NAME . ';charset=utf8mb4', YF_DB_USER, YF_DB_PASS, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
         $c = (int)$chk->query('SELECT COUNT(*) FROM admin_users')->fetchColumn();
         if ($c > 0) $blocked = true;
