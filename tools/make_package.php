@@ -56,7 +56,7 @@ if ($missing) {
 }
 echo "[OK] 交付文件完整性 (" . count($required) . "项关键文件)\n";
 
-// 3. 全量语法检查(若可用)
+// 3. 全量语法检查(若可用; exec被disable_functions禁用时跳过, 可在本机自行 php -l 校验)
 $php = defined('PHP_BINARY') ? PHP_BINARY : 'php';
 $fail = 0;
 $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS));
@@ -64,16 +64,20 @@ $allPhp = [];
 foreach ($files as $f) {
     if ($f->isFile() && substr($f->getFilename(), -4) === '.php') $allPhp[] = $f->getPathname();
 }
-foreach ($allPhp as $f) {
-    exec(escapeshellarg($php) . ' -l ' . escapeshellarg($f) . ' 2>&1', $out, $code);
-    if ($code !== 0) { $fail++; echo "[语法错误] $f\n" . implode("\n", $out) . "\n"; }
-    $out = [];
+if (function_exists('exec')) {
+    foreach ($allPhp as $f) {
+        exec(escapeshellarg($php) . ' -l ' . escapeshellarg($f) . ' 2>&1', $out, $code);
+        if ($code !== 0) { $fail++; echo "[语法错误] $f\n" . implode("\n", $out) . "\n"; }
+        $out = [];
+    }
+    if ($fail > 0) {
+        echo "[失败] $fail 个文件存在语法错误, 已中止打包\n";
+        exit(1);
+    }
+    echo "[OK] PHP语法检查 " . count($allPhp) . " 个文件\n";
+} else {
+    echo "[跳过] exec()被disable_functions禁用, 语法检查不可用\n";
 }
-if ($fail > 0) {
-    echo "[失败] $fail 个文件存在语法错误, 已中止打包\n";
-    exit(1);
-}
-echo "[OK] PHP语法检查 " . count($allPhp) . " 个文件\n";
 
 // 4. 生成zip(根级结构)
 if (is_file($outZip)) unlink($outZip);
