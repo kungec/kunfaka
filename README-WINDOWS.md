@@ -32,11 +32,12 @@
    extension=php_curl.dll
    extension=php_openssl.dll
    extension=php_mbstring.dll
-   extension=php_zip.dll
-   extension=php_bcmath.dll
-   extension=php_gd.dll
+   extension=php_gd2.dll
    extension=php_fileinfo.dll
    ```
+   > **不要写** `extension=php_zip.dll` 与 `extension=php_bcmath.dll`——PHP 7.4 的 zip 与 bcmath
+   > 已**内置**（`php -m` 直接可见），额外放第三方 DLL 反而启动报错。
+   > GD 在 7.4 的文件名是 **php_gd2.dll**（8.x 才叫 php_gd.dll），勿混用 PHP 8 的扩展文件。
 3. 把 `C:\php74` 加入系统 PATH（可选，方便命令行执行 php）。
 4. 验证：`C:\php74\php.exe -v`、`C:\php74\php.exe -m`（确认上面扩展都在）。
 
@@ -97,11 +98,13 @@ schtasks /create /tn "kunfaka_cron" /tr "\"C:\php74\php.exe\" \"C:\inetpub\wwwro
 | 现象 | 处理 |
 |---|---|
 | 访问报 500 / 404.3 | PHP 未注册进 IIS 或未装 CGI 功能，见第二步 |
+| **HTTP 500.19 提示"重复集合项"(0x800700b7)** | 子级 web.config 与服务器级默认文档重复所致——新版包已移除该块；旧包手动删除 web.config 中整个 `<defaultDocument>...</defaultDocument>` 块即可 |
 | 伪静态不生效(内页404) | 未安装 URL Rewrite 模块 |
 | 安装向导提示 data 不可写 | 未授予目录"修改"权限，见第四步第3点 |
 | `Cannot redeclare e()` 致命错误 | 本修复已解决；若用旧版代码，删除 `data\config.php` 与 `data\install.lock` 后重新安装 |
-| 应用商店在线安装失败 | 确认 `php_zip.dll` 已启用 |
-| 验证码图片不显示 | 确认 `php_gd.dll` 已启用 |
+| 启动报 PHP Startup 扩展加载错误 | ini 里写了与 PHP 版本不匹配的扩展 DLL——7.4 删掉 php_zip/php_bcmath 行（内置），GD 用 php_gd2.dll |
+| 应用商店在线安装失败 | 确认 `php -m` 列表中含 zip（7.4 内置；缺失多为 PHP 版本/线程安全不匹配） |
+| 验证码图片不显示 | 确认 `php -m` 列表中含 gd（7.4 启用 php_gd2.dll） |
 | 发信失败 | 确认 `php_openssl.dll` 已启用（SMTP SSL/TLS） |
 
 ---
