@@ -121,6 +121,7 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
                 <td class="dim"><?= e(date('Y-m-d H:i', $u['created_at'])) ?></td>
                 <td><span class="tag <?= $sid === 1 ? 'ok' : 'bad' ?>"><?= $sid === 1 ? '正常' : '已封禁' ?></span></td>
                 <td class="actions">
+                    <button class="btn sm" data-edit="<?= (int)$u['id'] ?>" data-username="<?= e($u['username']) ?>" data-email="<?= e($u['email']) ?>">编辑</button>
                     <button class="btn sm gray" data-toggle="<?= (int)$u['id'] ?>" data-confirm="<?= $sid === 1 ? '确定禁用该会员? 其账号将无法登录' : '确定启用该会员?' ?>"><?= $sid === 1 ? '禁用' : '启用' ?></button>
                     <button class="btn sm red" data-del="<?= (int)$u['id'] ?>" data-confirm="确定移除会员 <?= e($u['username']) ?> ? 账号不可恢复(历史订单保留)">删除</button>
                 </td>
@@ -157,6 +158,26 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
     </div>
 </div>
 
+<!-- 编辑会员弹窗 -->
+<div class="lvl-mask" id="editMask">
+    <div class="lvl-modal">
+        <div class="m-head"><span>✏️ 编辑会员 <span class="dim" id="editUid"></span></span><button class="x" id="editClose" type="button">✕</button></div>
+        <div class="m-body">
+            <input type="hidden" id="editId">
+            <label>用户名</label>
+            <input type="text" id="editUsername" style="width:100%;height:40px;padding:0 12px;font-size:13px;margin-bottom:11px">
+            <label>邮箱</label>
+            <input type="email" id="editEmail" style="width:100%;height:40px;padding:0 12px;font-size:13px;margin-bottom:11px">
+            <label>重置密码(不改请留空)</label>
+            <input type="text" id="editPassword" style="width:100%;height:40px;padding:0 12px;font-size:13px" placeholder="至少6位, 留空表示不修改">
+        </div>
+        <div class="m-foot">
+            <button class="btn" id="editSave" style="min-width:110px">💾 保存</button>
+            <button class="btn gray" id="editCancel">✕ 取消</button>
+        </div>
+    </div>
+</div>
+
 <script>
 var chkAll = document.getElementById('chkAll');
 function rowChks() { return Array.prototype.slice.call(document.querySelectorAll('.row-chk')); }
@@ -179,8 +200,9 @@ function yfPost(url, fd) {
     return fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(function (r) { return r.json(); });
 }
-/* 修改会员等级弹窗 */
+/* 编辑会员弹窗 */
 var lvlMask = document.getElementById('lvlMask');
+var editMask = document.getElementById('editMask');
 function checkedIds() { return rowChks().filter(function (c) { return c.checked; }).map(function (c) { return c.value; }); }
 document.getElementById('lvlBtn').addEventListener('click', function () {
     var ids = checkedIds();
@@ -198,9 +220,30 @@ document.getElementById('lvlSave').addEventListener('click', function () {
     fd.append('level_id', document.getElementById('lvl-select').value);
     yfPost('<?= au('users_batch') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
 });
+/* 编辑会员保存 */
+document.getElementById('editClose').addEventListener('click', function () { editMask.classList.remove('on'); });
+document.getElementById('editCancel').addEventListener('click', function () { editMask.classList.remove('on'); });
+editMask.addEventListener('click', function (ev) { if (ev.target === editMask) editMask.classList.remove('on'); });
+document.getElementById('editSave').addEventListener('click', function () {
+    var fd = new FormData();
+    fd.append('id', document.getElementById('editId').value);
+    fd.append('username', document.getElementById('editUsername').value.trim());
+    fd.append('email', document.getElementById('editEmail').value.trim());
+    fd.append('password', document.getElementById('editPassword').value);
+    yfPost('<?= au('user_edit') ?>', fd).then(function (d) { kAlert(d.msg); if (d.code === 0) location.reload(); });
+});
 document.addEventListener('click', function (ev) {
-    var t = ev.target.closest ? ev.target.closest('[data-toggle],[data-del],[data-op]') : null;
+    var t = ev.target.closest ? ev.target.closest('[data-edit],[data-toggle],[data-del],[data-op]') : null;
     if (!t) return;
+    if (t.hasAttribute('data-edit')) {
+        document.getElementById('editId').value = t.getAttribute('data-edit');
+        document.getElementById('editUid').textContent = '#' + t.getAttribute('data-edit');
+        document.getElementById('editUsername').value = t.getAttribute('data-username') || '';
+        document.getElementById('editEmail').value = t.getAttribute('data-email') || '';
+        document.getElementById('editPassword').value = '';
+        editMask.classList.add('on');
+        return;
+    }
     var fd = new FormData();
     if (t.hasAttribute('data-op')) {
         var ids = rowChks().filter(function (c) { return c.checked; }).map(function (c) { return c.value; });

@@ -1414,6 +1414,36 @@ class AdminController
         json_out(['code' => 0, 'msg' => '已删除(历史订单保留)']);
     }
 
+    /** 编辑会员: 用户名/邮箱/重置密码(字段可单项修改) */
+    public function actionUserEdit()
+    {
+        $id = (int)arr_get($_POST, 'id');
+        $user = DB::fetch('SELECT * FROM users WHERE id = ?', [$id]);
+        if (!$user) json_out(['code' => 1, 'msg' => '会员不存在']);
+        $username = trim(arr_get($_POST, 'username'));
+        $email = trim(arr_get($_POST, 'email'));
+        $password = (string)arr_get($_POST, 'password');
+        $upd = [];
+        if ($username !== '' && $username !== $user['username']) {
+            if (!preg_match('/^[\w\x{4e00}-\x{9fa5}]{3,20}$/u', $username)) json_out(['code' => 1, 'msg' => '用户名需3-20位(字母/数字/下划线/中文)']);
+            if (DB::value('SELECT id FROM users WHERE username = ? AND id != ?', [$username, $id])) json_out(['code' => 1, 'msg' => '用户名已被占用']);
+            $upd['username'] = $username;
+        }
+        if ($email !== $user['email']) {
+            if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) json_out(['code' => 1, 'msg' => '邮箱格式不正确']);
+            if ($email !== '' && DB::value('SELECT id FROM users WHERE email = ? AND id != ?', [$email, $id])) json_out(['code' => 1, 'msg' => '邮箱已被其他账号使用']);
+            $upd['email'] = $email;
+        }
+        if ($password !== '') {
+            if (strlen($password) < 6) json_out(['code' => 1, 'msg' => '密码至少6位']);
+            $upd['password'] = password_hash($password, PASSWORD_DEFAULT);
+        }
+        if (!$upd) json_out(['code' => 1, 'msg' => '没有需要修改的内容']);
+        DB::update('users', $upd, 'id = ?', [$id]);
+        add_log('admin', '编辑会员 #' . $id . ' ' . ($upd['username'] ?? $user['username']) . (isset($upd['password']) ? '(重置密码)' : ''));
+        json_out(['code' => 0, 'msg' => '已保存']);
+    }
+
     // ---------- 系统日志与数据清理 ----------
 
     public function actionLogs()

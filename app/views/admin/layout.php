@@ -148,7 +148,7 @@ html[data-theme="light"] .um-panel a:hover { background: rgba(59,130,246,.07); }
                 </div>
             </div>
         </header>
-        <div class="admin-content"><?= $content ?></div>
+        <div class="admin-content yf-enter"><?= $content ?></div>
     </div>
 </div>
 <script>
@@ -188,5 +188,6 @@ if (typeof kConfirm !== 'function') {
     });
 })();
 </script>
+<?= PageFx::render('#6366f1', '#a855f7') ?>
 </body>
 </html>

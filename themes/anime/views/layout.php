@@ -26,6 +26,7 @@
             <?php if (singlepage_open()): ?><a href="<?= u('notice/page') ?>"><?= e(setting('singlepage_title', '关于我们')) ?></a><?php endif; ?>
             <?php if (current_user_id()): ?>
                 <a href="<?= u('user/orders') ?>">我的订单</a>
+                <a href="<?= u('user/profile') ?>">个人设置</a>
                 <span class="nav-user">👋 <?= e(isset($_SESSION['front_user_name']) ? $_SESSION['front_user_name'] : '') ?><?php $vLv = viewer_level(); if ($vLv > 0): ?> <span class="tag blue">LV<?= $vLv ?></span><?php endif; ?></span>
                 <a href="<?= u('user/logout') ?>">退出</a>
             <?php elseif (member_open()): ?>
@@ -37,7 +38,7 @@
 <?php $latestNotice = latest_notice(); if ($latestNotice): ?>
 <div class="wrap"><?php if ($latestNotice['id'] > 0): ?><a class="announce" href="<?= u('notice/detail', ['id' => $latestNotice['id']]) ?>">📢 <?= e($latestNotice['title']) ?> <span class="announce-more">详情 ›</span></a><?php else: ?><div class="announce">📢 <?= e($latestNotice['title']) ?></div><?php endif; ?></div>
 <?php endif; ?>
-<main class="wrap main"><?= $content ?></main>
+<main class="wrap main yf-enter"><?= $content ?></main>
 <footer class="site-footer">
     <div class="wrap">
         <p><?= e(setting('site_name', '坤发卡')) ?> · 全自动发卡系统 <span class="powered">Powered by 坤发卡</span></p>
@@ -66,5 +67,6 @@
 <?php endif; ?>
 <script defer src="<?= site_url('assets/js/qrcode.min.js') ?>"></script>
 <script defer src="<?= site_url('assets/js/app.js') ?>"></script>
+<?= PageFx::render('#ff7eb3', '#6db3f2') ?>
 </body>
 </html>

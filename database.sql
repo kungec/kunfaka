@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `password` varchar(255) NOT NULL,
   `email` varchar(100) NOT NULL DEFAULT '',
   `status` tinyint NOT NULL DEFAULT 1 COMMENT '1正常 0禁用',
+  `level_id` int unsigned NOT NULL DEFAULT 0 COMMENT '会员等级(0=无等级)',
   `created_at` int unsigned NOT NULL DEFAULT 0,
   `reg_ip` varchar(45) NOT NULL DEFAULT '',
   UNIQUE KEY `uk_username` (`username`)

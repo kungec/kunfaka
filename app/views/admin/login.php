@@ -105,5 +105,6 @@ body { margin: 0; }
 .lg-foot { text-align: center; color: rgba(255, 255, 255, .38); font-size: 11px; margin: 16px 0 0; letter-spacing: 1.5px; }
 @media (max-width: 480px) { .lg-card { padding: 28px 22px 20px; } }
 </style>
+<?= PageFx::render('#6366f1', '#a855f7') ?>
 </body>
 </html>

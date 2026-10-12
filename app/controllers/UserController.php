@@ -102,6 +102,45 @@ class UserController
         redirect(u('home/index'));
     }
 
+    /** 个人设置: 修改邮箱/密码(均需当前密码确认) */
+    public function actionProfile()
+    {
+        if (!member_open()) {
+            View::theme('error', ['msg' => '本站未开启会员功能, 可在「订单查询」页凭联系方式查单', 'pageTitle' => '功能未开启']);
+            return;
+        }
+        $uid = current_user_id();
+        if (!$uid) redirect(u('user/login'));
+        $user = DB::fetch('SELECT * FROM users WHERE id = ?', [$uid]);
+        if (!$user) { unset($_SESSION['front_user_id'], $_SESSION['front_user_name']); redirect(u('user/login')); }
+        $error = '';
+        $ok = '';
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            csrf_check();
+            $curPass = (string)arr_get($_POST, 'password');
+            $email = trim(arr_get($_POST, 'email'));
+            $newPass = (string)arr_get($_POST, 'new_password');
+            $newPass2 = (string)arr_get($_POST, 'new_password2');
+            do {
+                if (!password_verify($curPass, $user['password'])) { $error = '当前密码不正确'; break; }
+                if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) { $error = '邮箱格式不正确'; break; }
+                if ($email !== '' && DB::value('SELECT id FROM users WHERE email = ? AND id != ?', [$email, $uid])) { $error = '该邮箱已被其他账号使用'; break; }
+                $upd = ['email' => $email];
+                if ($newPass !== '') {
+                    if (strlen($newPass) < 6) { $error = '新密码至少6位'; break; }
+                    if ($newPass !== $newPass2) { $error = '两次输入的新密码不一致'; break; }
+                    $upd['password'] = password_hash($newPass, PASSWORD_DEFAULT);
+                }
+                DB::update('users', $upd, 'id = ?', [$uid]);
+                add_log('user', '会员修改资料: ' . $user['username'] . (isset($upd['password']) ? '(含改密)' : ''));
+                if (isset($upd['password'])) session_regenerate_id(true);
+                $ok = '设置已保存';
+                $user = DB::fetch('SELECT * FROM users WHERE id = ?', [$uid]);
+            } while (false);
+        }
+        View::theme('profile', ['user' => $user, 'error' => $error, 'ok' => $ok, 'pageTitle' => '个人设置']);
+    }
+
     /** 我的订单 */
     public function actionOrders()
     {

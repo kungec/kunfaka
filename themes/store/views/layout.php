@@ -33,6 +33,7 @@
             <?php if (singlepage_open()): ?><a href="<?= u('notice/page') ?>"><?= e(setting('singlepage_title', '关于我们')) ?></a><?php endif; ?>
             <?php if (current_user_id()): ?>
                 <a href="<?= u('user/orders') ?>">我的订单</a>
+                <a href="<?= u('user/profile') ?>">个人设置</a>
                 <span class="nav-user">👋 <?= e(isset($_SESSION['front_user_name']) ? $_SESSION['front_user_name'] : '') ?><?php $vLv = viewer_level(); if ($vLv > 0): ?> <span class="tag blue">LV<?= $vLv ?></span><?php endif; ?></span>
                 <a href="<?= u('user/logout') ?>">退出</a>
             <?php elseif (member_open()): ?>
@@ -55,7 +56,7 @@
 <div class="wrap"><a class="announce" href="<?= $latestNotice['id'] > 0 ? u('notice/detail', ['id' => $latestNotice['id']]) : u('notice/index') ?>">📢 <?= e($latestNotice['title']) ?><span class="announce-more">详情 ›</span></a></div>
 <?php endif; ?>
 
-<main class="wrap main"><?= $content ?></main>
+<main class="wrap main yf-enter"><?= $content ?></main>
 
 <footer class="site-footer">
     <div class="wrap">
@@ -130,5 +131,6 @@
     });
 })();
 </script>
+<?= PageFx::render('#4f46e5', '#818cf8') ?>
 </body>
 </html>
