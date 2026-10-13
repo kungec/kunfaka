@@ -83,17 +83,13 @@ class Plugin
         return $obj;
     }
 
-    /** 首个已启用的营销插件(当前营销策略为单插件生效) */
+    /** 首个已启用的营销插件(当前营销策略为单插件生效; 不做静态缓存——常驻worker下apps启用状态变更需即时生效) */
     public static function marketingActive()
     {
-        static $cached = false;
-        static $inst = null;
-        if ($cached) return $inst;
-        $cached = true;
-        $row = DB::fetch("SELECT name FROM apps WHERE type = 'marketing' AND enabled = 1 ORDER BY name ASC LIMIT 1");
-        if (!$row) return $inst = null;
+        $row = DB::fetch("SELECT name, enabled FROM apps WHERE type = 'marketing' AND enabled = 1 ORDER BY name ASC LIMIT 1");
+        if (!$row) return null;
         $obj = self::marketing($row['name'], $row);
-        return $inst = ($obj && $obj->enabled ? $obj : null);
+        return ($obj && $obj->enabled) ? $obj : null;
     }
 
     /** 安装插件/主题(写入apps表); 插件类实现install()时一并调用(建表等初始化) */
