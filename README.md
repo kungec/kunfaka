@@ -4,20 +4,31 @@
 
 **支付成功, 卡密秒到 —— 7×24 无人值守的全自动发卡平台**
 
-无需挂机 · 无需客服 · 无需编程, 宝塔面板 3 分钟部署
+无需挂机 · 无需客服 · 无需编程, 宝塔 3 分钟部署, Windows/IIS 同样开箱即用
 
 ![PHP](https://img.shields.io/badge/PHP-7.4%20~%208.3-777bb4)
 ![MySQL](https://img.shields.io/badge/MySQL-5.6%2B-4479a1)
 ![Docker](https://img.shields.io/badge/Docker-✓-2496ED)
+![Windows](https://img.shields.io/badge/IIS-✓-0078d4)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 **程序本体完全免费开源 · 核心功能永不加付费墙 · 收费仅限商店付费插件与主题**
 
-[⚡ 快速开始](#-快速开始) · [💳 支付插件](#-支付插件) · [🛡️ 安全防护](#️-安全防护) · [🎨 主题](#-主题) · [❓ 常见问题](#-常见问题) · [💬 交流群](#-交流群)
+[⚡ 快速开始](#-快速开始) · [💳 支付插件](#-支付插件) · [🛡️ 安全防护](#️-安全内建) · [🎨 主题](#-主题) · [❓ 常见问题](#-常见问题) · [💬 交流群](#-交流群)
 
 </div>
 
 ---
+
+## 界面预览
+
+| 商城前台(默认主题, 亮/暗双模式) | 商品购买页 |
+|---|---|
+| ![商城前台](docs/screenshots/home.png) | ![购买页](docs/screenshots/product.png) |
+
+| 管理后台(暗色 · 销售趋势/经营数据) | 移动端自适应 |
+|---|---|
+| ![管理后台](docs/screenshots/admin.png) | ![移动端](docs/screenshots/mobile.png) |
 
 ## 这是什么
 
@@ -30,7 +41,7 @@
 ### 🚀 全自动发货引擎
 - 支付成功**秒级发货**: 卡密即时展示 + 邮件自动送达
 - 64 位高熵随机订单号, 无法枚举; 支付金额一致性双重校验, 杜绝篡改
-- 未支付订单自动关闭、库存自动回补、销量自动统计
+- 未支付订单自动关闭、库存自动回补、销量自动统计(支持虚拟已售基数)
 - 高危操作全留痕: 登录/发货/到账/商店/清理, 操作日志可查
 
 ### 💳 10+ 支付方式任选
@@ -46,23 +57,28 @@
 
 ### 👥 会员与营销
 - 前台会员注册/登录, 会员等级 + 商品分组可见性(等级专属商品)
+- 会员**个人设置**: 自助修改邮箱与密码(当前密码确认); 后台会员管理支持编辑资料、重置密码、批量启停
 - 商品级下单联系方式: Telegram / 邮箱 / QQ / 微信 / 电话, 实物类支持收件人姓名 + 邮寄地址
 - 公告系统、自定义单页、商品搜索、销量展示、悬浮客服按钮
+
+### 🖥️ 界面体验
+- 全站页面切换**顶部进度条 + 内容淡入**特效, 渐变色随主题自动匹配
+- 亮色/暗色双模式(前台与后台独立切换), 桌面/平板/手机全响应式
+- 后台可视化仪表盘: 销售趋势图表、经营数据、待处理清单、库存预警
 
 ### 🛡️ 安全内建
 - 人机验证三选一: **极验 v4**(页面内联按钮) / **Cloudflare Turnstile** / 图形验证码, 覆盖注册、登录、后台、下单
 - 同 IP 注册限制、下单频次限制、登录爆破锁定
 - 全站 CSRF 令牌、随机后台入口、uploads 禁执行、Zip Slip 防护
-- 渗透测试 32 项断言 + e2e 自动化 380 项断言持续回归
+- 渗透测试 + e2e 自动化 **393 项断言**持续回归
 
 ### 🔄 运维省心
 - 后台在线自动更新: 检测新版本 → 一键升级或全自动升级, 配置与附件不丢失
-- 亮色/暗色后台主题, 桌面/手机全适配
 - robots.txt 收录控制、管理员分级权限、操作日志审计
 
 ## 🚀 快速开始
 
-### 宝塔面板(推荐)
+### 宝塔面板(Linux 推荐)
 
 1. **建站**: 宝塔 → 网站 → 添加站点(PHP 7.4+), 创建 MySQL 数据库
 2. **上传**: 发行包解压到站点根目录, 访问域名进入安装向导
@@ -86,8 +102,8 @@ docker compose up -d --build
 
 ### Windows Server + IIS
 
-支持 Windows Server 2016/2019/2022 + IIS + PHP 7.4~8.3 + MySQL 5.6/5.7/8.0。
-仓库已内置 `web.config`(伪静态)、`data/web.config`(目录保护)、`uploads/web.config`(禁脚本执行), 详细步骤见 **[README-WINDOWS.md](README-WINDOWS.md)**。
+支持 Windows Server 2016/2019/2022 + IIS 10 + PHP 7.4~8.3 + MySQL 5.6/5.7/8.0。
+仓库已内置 `web.config`(伪静态 + 敏感目录防护)、`data/web.config`(目录拒绝访问)、`uploads/web.config`(禁脚本执行), 手把手部署步骤见 **[README-WINDOWS.md](README-WINDOWS.md)**。
 
 ### 开卖五步曲
 
@@ -157,6 +173,11 @@ TRC20 地址(T 开头) + 转账金额与页面完全一致 + 每分钟 cron 已�
 </details>
 
 <details>
+<summary><b>Windows/IIS 部署报 500.19 或扩展加载错误</b></summary>
+见 <a href="README-WINDOWS.md">README-WINDOWS.md</a> 常见问题表: PHP 7.4 的 zip/bcmath 为内置扩展无需 ini 行, GD 扩展名为 <code>php_gd2.dll</code>。
+</details>
+
+<details>
 <summary><b>能自己开发插件/主题吗</b></summary>
 能。插件放 <code>plugins/</code>, 主题复制 <code>themes/store</code> 改样式, 商店机制自动识别。
 </details>
@@ -180,6 +201,7 @@ kunfaka (解压到站点根目录, 文件直接位于根级)
 ├── cron.php             # 计划任务(订单过期 + 链上轮询)
 ├── install.php          # 安装向导(装完可删)
 ├── database.sql         # 数据库结构
+├── web.config           # IIS 伪静态与防护(Windows 部署)
 ├── app/                 # 核心框架 / 控制器 / 库类
 ├── plugins/             # 支付插件(可扩展)
 ├── themes/              # 主题(可扩展)
