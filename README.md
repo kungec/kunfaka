@@ -1,6 +1,6 @@
 <div align="center">
 
-# 坤发卡 · 全自动发卡系统
+<img src="docs/logo.png" alt="坤发卡" width="460">
 
 **支付成功, 卡密秒到 —— 7×24 无人值守的全自动发卡平台**
 
