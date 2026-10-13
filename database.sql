@@ -42,6 +42,35 @@ CREATE TABLE IF NOT EXISTS `products` (
   `created_at` int unsigned NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 优惠券(营销插件coupons使用)
+CREATE TABLE IF NOT EXISTS `coupons` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `code` varchar(50) NOT NULL COMMENT '优惠码',
+  `title` varchar(100) NOT NULL DEFAULT '' COMMENT '名称备注',
+  `type` varchar(10) NOT NULL DEFAULT 'fixed' COMMENT 'fixed固定金额 percent百分比',
+  `value` decimal(10,2) NOT NULL DEFAULT 0 COMMENT '抵扣金额或折扣百分比',
+  `min_order` decimal(10,2) NOT NULL DEFAULT 0 COMMENT '最低消费(0=不限)',
+  `max_uses` int unsigned NOT NULL DEFAULT 0 COMMENT '总限用次数(0=不限)',
+  `per_user` int unsigned NOT NULL DEFAULT 1 COMMENT '每联系方式限用次数',
+  `pids` varchar(500) NOT NULL DEFAULT '' COMMENT '限定商品ID逗号分隔(空=全部商品)',
+  `starts` int unsigned NOT NULL DEFAULT 0 COMMENT '生效时间戳(0=立即)',
+  `ends` int unsigned NOT NULL DEFAULT 0 COMMENT '失效时间戳(0=永久)',
+  `used` int unsigned NOT NULL DEFAULT 0 COMMENT '已使用次数',
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '1启用 0停用',
+  `created_at` int unsigned NOT NULL DEFAULT 0,
+  UNIQUE KEY `uk_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `coupon_used` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `coupon_id` int unsigned NOT NULL,
+  `order_sn` varchar(64) NOT NULL DEFAULT '',
+  `contact` varchar(100) NOT NULL DEFAULT '',
+  `amount` decimal(10,2) NOT NULL DEFAULT 0 COMMENT '抵扣金额',
+  `created_at` int unsigned NOT NULL DEFAULT 0,
+  KEY `idx_coupon` (`coupon_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 会员等级(LV数值用于商品分组可见性校验)
 CREATE TABLE IF NOT EXISTS `member_levels` (
   `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,

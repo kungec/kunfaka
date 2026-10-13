@@ -82,6 +82,32 @@ class Upgrade
     private static function mysqlSchema(PDO $pdo, $log)
     {
         $ddl = [
+            "CREATE TABLE IF NOT EXISTS `coupons` (
+                `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                `code` varchar(50) NOT NULL,
+                `title` varchar(100) NOT NULL DEFAULT '',
+                `type` varchar(10) NOT NULL DEFAULT 'fixed',
+                `value` decimal(10,2) NOT NULL DEFAULT 0,
+                `min_order` decimal(10,2) NOT NULL DEFAULT 0,
+                `max_uses` int unsigned NOT NULL DEFAULT 0,
+                `per_user` int unsigned NOT NULL DEFAULT 1,
+                `pids` varchar(500) NOT NULL DEFAULT '',
+                `starts` int unsigned NOT NULL DEFAULT 0,
+                `ends` int unsigned NOT NULL DEFAULT 0,
+                `used` int unsigned NOT NULL DEFAULT 0,
+                `status` tinyint NOT NULL DEFAULT 1,
+                `created_at` int unsigned NOT NULL DEFAULT 0,
+                UNIQUE KEY `uk_code` (`code`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            "CREATE TABLE IF NOT EXISTS `coupon_used` (
+                `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                `coupon_id` int unsigned NOT NULL,
+                `order_sn` varchar(64) NOT NULL DEFAULT '',
+                `contact` varchar(100) NOT NULL DEFAULT '',
+                `amount` decimal(10,2) NOT NULL DEFAULT 0,
+                `created_at` int unsigned NOT NULL DEFAULT 0,
+                KEY `idx_coupon` (`coupon_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
             "CREATE TABLE IF NOT EXISTS `users` (
                 `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `username` varchar(32) NOT NULL,
@@ -185,6 +211,8 @@ class Upgrade
         $col('products', 'icon', "varchar(255) NOT NULL DEFAULT '' COMMENT '商品图标(上传路径)'");
         $col('products', 'sales_base', "int NOT NULL DEFAULT 0 COMMENT '虚拟已售基数(前台已售=真实+此数)'");
         $col('products', 'delivery_type', "varchar(10) NOT NULL DEFAULT 'auto' COMMENT '发货方式: auto自动发卡 manual人工处理'");
+        $col('orders', 'discount', "decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT '优惠券抵扣金额'");
+        $col('orders', 'coupon_code', "varchar(50) NOT NULL DEFAULT '' COMMENT '使用的优惠券码'");
 
         // admin_users 扩展列
         foreach ([

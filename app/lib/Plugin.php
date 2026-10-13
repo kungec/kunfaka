@@ -39,6 +39,8 @@ class Plugin
     {
         $meta = self::meta('payment', $code);
         if (!$meta || empty($meta['class'])) return null;
+        // 付费应用运行时门控: 密文文件强制校验专业版授权+域名绑定, 失败视同不存在(明文源码为开发模式豁免)
+        if (Protector::isProApp('payment', $code) && !Protector::gate('payment', $code)) return null;
         // class名严格白名单, 防止拼接出目录穿越include
         $class = preg_replace('/[^A-Za-z0-9_]/', '', (string)$meta['class']);
         if ($class === '' || $class !== $meta['class']) return null;
@@ -58,7 +60,43 @@ class Plugin
         return $obj;
     }
 
-    /** 安装插件/主题(写入apps表) */
+    /** 实例化营销插件(coupons等): 与payment同机制, 类型独立不继承PaymentBase */
+    public static function marketing($code, ?array $row = null)
+    {
+        $meta = self::meta('marketing', $code);
+        if (!$meta || empty($meta['class'])) return null;
+        if (Protector::isProApp('marketing', $code) && !Protector::gate('marketing', $code)) return null;
+        $class = preg_replace('/[^A-Za-z0-9_]/', '', (string)$meta['class']);
+        if ($class === '' || $class !== $meta['class']) return null;
+        $file = YF_ROOT . '/plugins/' . $code . '/' . $class . '.php';
+        if (!is_file($file)) return null;
+        require_once $file;
+        if (!class_exists($class)) return null;
+        $obj = new $class();
+        $obj->code = $code;
+        $obj->name = isset($meta['title']) ? $meta['title'] : $code;
+        if ($row === null) {
+            $row = DB::fetch('SELECT enabled, config FROM apps WHERE name = ?', [$code]);
+        }
+        $obj->enabled = $row && (int)$row['enabled'] === 1;
+        $obj->config = $row && $row['config'] ? (array)json_decode($row['config'], true) : [];
+        return $obj;
+    }
+
+    /** 首个已启用的营销插件(当前营销策略为单插件生效) */
+    public static function marketingActive()
+    {
+        static $cached = false;
+        static $inst = null;
+        if ($cached) return $inst;
+        $cached = true;
+        $row = DB::fetch("SELECT name FROM apps WHERE type = 'marketing' AND enabled = 1 ORDER BY name ASC LIMIT 1");
+        if (!$row) return $inst = null;
+        $obj = self::marketing($row['name'], $row);
+        return $inst = ($obj && $obj->enabled ? $obj : null);
+    }
+
+    /** 安装插件/主题(写入apps表); 插件类实现install()时一并调用(建表等初始化) */
     public static function install($type, $name)
     {
         $meta = self::meta($type, $name);
@@ -72,6 +110,11 @@ class Plugin
             'config' => '{}',
             'installed_at' => now(),
         ]);
+        // 营销插件安装时执行其初始化(建表等)
+        if ($type === 'marketing') {
+            $obj = self::marketing($name);
+            if ($obj && method_exists($obj, 'install')) $obj->install();
+        }
         return true;
     }
 }

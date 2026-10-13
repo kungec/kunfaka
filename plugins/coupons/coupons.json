@@ -1,0 +1,11 @@
+{
+  "name": "coupons",
+  "title": "优惠券",
+  "type": "marketing",
+  "version": "1.0.0",
+  "author": "坤发卡官方",
+  "desc": "优惠券营销插件: 创建折扣码/满减码, 买家下单时输入立减。支持固定金额与百分比折扣、限定商品、最低消费、总限用与每联系方式限用、有效期, 后台一键创建与管理, 支付成功自动核销。",
+  "price": 39,
+  "pro": true,
+  "class": "CouponsPlugin"
+}

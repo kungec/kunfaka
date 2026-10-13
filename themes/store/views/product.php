@@ -73,6 +73,7 @@
             <div class="form-row"><label>邮寄地址</label><input type="text" name="ship_address" maxlength="200" placeholder="省 / 市 / 区 + 详细地址" required></div>
             <?php endif; ?>
             <?php if (Captcha::mode() !== 'off'): ?><div class="form-row buy-captcha"><?= Captcha::render('order') ?></div><?php endif; ?>
+            <?= isset($couponHtml) ? $couponHtml : '' ?>
             <div class="form-row">
                 <label>支付方式</label>
                 <?php if ($payments): ?>

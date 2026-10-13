@@ -83,6 +83,11 @@ class OrderService
             );
         }
         self::stockAlertCheck($order['product_id']);
+        // 优惠券核销(营销插件)
+        if (!empty($order['coupon_code'])) {
+            $mkt = Plugin::marketingActive();
+            if ($mkt && method_exists($mkt, 'onPaid')) $mkt->onPaid($order);
+        }
         return true;
     }
 

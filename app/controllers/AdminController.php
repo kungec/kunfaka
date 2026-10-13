@@ -1000,6 +1000,29 @@ class AdminController
         json_out(['code' => 0, 'msg' => '人工发货成功' . ($isEmail ? ', 已邮件通知买家' : '')]);
     }
 
+    /** 营销插件管理页(应用商店→优惠券→管理) */
+    public function actionPluginAdmin()
+    {
+        $name = preg_replace('/[^a-z0-9_]/', '', strtolower(trim((string)arr_get($_GET, 'name'))));
+        $obj = $name !== '' ? Plugin::marketing($name) : null;
+        if (!$obj) {
+            redirect(au('apps', ['type' => 'marketing']));
+            return;
+        }
+        $msg = '';
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && method_exists($obj, 'handleAdminPost')) {
+            $msg = (string)$obj->handleAdminPost();
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                json_out(['code' => 0, 'msg' => $msg]);
+            }
+        }
+        View::admin('plugin_admin', [
+            'title' => $obj->name,
+            'html' => method_exists($obj, 'renderAdmin') ? $obj->renderAdmin($msg) : '',
+            'name' => $name,
+        ]);
+    }
+
     public function actionOrderDel()
     {
         $id = (int)arr_get($_POST, 'id');
@@ -1014,7 +1037,8 @@ class AdminController
 
     public function actionApps()
     {
-        $type = arr_get($_GET, 'type', 'payment') === 'theme' ? 'theme' : 'payment';
+        $reqType = (string)arr_get($_GET, 'type', 'payment');
+        $type = in_array($reqType, ['payment', 'theme', 'marketing'], true) ? $reqType : 'payment';
         $all = Market::all($type);
         // 作者下拉
         $authors = [];
@@ -1054,7 +1078,7 @@ class AdminController
         if (!$this->isSuper()) {
             json_out(['code' => 1, 'msg' => '仅超级管理员可安装应用']);
         }
-        $type = arr_get($_POST, 'type') === 'theme' ? 'theme' : 'payment';
+        $type = in_array((string)arr_get($_POST, 'type'), ['payment', 'theme', 'marketing'], true) ? (string)arr_get($_POST, 'type') : 'payment';
         $name = trim(arr_get($_POST, 'name'));
         $meta = Plugin::meta($type, $name);
         if (!$meta) json_out(['code' => 1, 'msg' => '应用不存在']);

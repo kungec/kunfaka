@@ -60,8 +60,9 @@ td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
 </style>
 
 <div class="mkt-tabs">
-    <a class="mkt-tab<?= !$isTheme ? ' on' : '' ?>" href="<?= au('apps', ['type' => 'payment']) ?>">🧩 插件市场</a>
+    <a class="mkt-tab<?= !$isTheme && $type !== 'marketing' ? ' on' : '' ?>" href="<?= au('apps', ['type' => 'payment']) ?>">🧩 插件市场</a>
     <a class="mkt-tab<?= $isTheme ? ' on' : '' ?>" href="<?= au('apps', ['type' => 'theme']) ?>">🎨 主题市场</a>
+    <a class="mkt-tab<?= $type === 'marketing' ? ' on' : '' ?>" href="<?= au('apps', ['type' => 'marketing']) ?>">📣 营销插件</a>
 </div>
 
 <?php if (!License::isPro()): ?>
@@ -153,6 +154,9 @@ td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
                 </td>
                 <td class="m-act">
                     <?php $proLocked = $app['pro'] && !License::isPro(); ?>
+                    <?php if ($app['local'] && $app['installed'] && ($app['type'] ?? '') === 'marketing'): ?>
+                        <a class="btn sm" href="<?= au('plugin_admin', ['name' => $app['name']]) ?>">管理</a>
+                    <?php endif; ?>
                     <?php if ($app['local']): ?>
                         <?php if (!$isTheme && $app['installed']): ?>
                             <?php if ($app['enabled']): ?>

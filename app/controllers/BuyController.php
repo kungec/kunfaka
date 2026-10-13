@@ -31,6 +31,11 @@ class BuyController
                 }
             }
         }
+        $couponHtml = '';
+        $mkt = Plugin::marketingActive();
+        if ($mkt && method_exists($mkt, 'renderInput')) {
+            $couponHtml = $mkt->renderInput(['product' => $product, 'num' => 1, 'total' => (float)$product['price']]);
+        }
         View::theme('product', [
             'product' => $product,
             'stock' => product_stock($product['id']),
@@ -39,6 +44,7 @@ class BuyController
             'contactExtra' => $contactExtra,
             'contactPrefill' => $contactPrefill,
             'payments' => enabled_payments(),
+            'couponHtml' => $couponHtml,
             'pageTitle' => $product['name'] . ' - ' . setting('site_name', '坤发卡'),
         ]);
     }
@@ -123,6 +129,23 @@ class BuyController
             return;
         }
         $total = round((float)$product['price'] * $num, 2);
+        // 优惠券(营销插件): 码有效则折减应付金额; 填了无效码则提示而非静默按原价扣款
+        $discount = 0.00;
+        $couponCode = '';
+        $mkt = Plugin::marketingActive();
+        if ($mkt && method_exists($mkt, 'applyCoupon')) {
+            $cr = $mkt->applyCoupon(trim((string)arr_get($_POST, 'coupon', '')), [
+                'product_id' => $product['id'], 'num' => $num, 'total' => $total, 'contact' => $contact, 'user_id' => current_user_id(),
+            ]);
+            if (!empty($cr['ok'])) {
+                $discount = (float)$cr['discount'];
+                $couponCode = (string)$cr['code'];
+                $total = max(0.01, round($total - $discount, 2));
+            } elseif (($cr['msg'] ?? '') !== '') {
+                View::theme('error', ['msg' => $cr['msg'], 'pageTitle' => '优惠码不可用']);
+                return;
+            }
+        }
         $sn = order_sn();
         DB::insert('orders', [
             'sn' => $sn,
@@ -132,6 +155,8 @@ class BuyController
             'num' => $num,
             'unit_price' => $product['price'],
             'total' => $total,
+            'discount' => $discount,
+            'coupon_code' => $couponCode,
             'contact' => $contact,
             'contact_type' => $contactType,
             'pay_plugin' => $pluginCode,
