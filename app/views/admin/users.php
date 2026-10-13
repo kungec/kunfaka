@@ -46,7 +46,7 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
 
 <div class="page-head">
     <div>
-        <h2>👥 会员管理</h2>
+        <h2><?= ico('users') ?> 会员管理</h2>
         <div class="sub">前台注册会员的查询 · 批量启用/禁用 · 移除</div>
     </div>
 </div>
@@ -61,10 +61,10 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
 <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
         <div style="display:flex;gap:9px;flex-wrap:wrap">
-            <button class="btn sm" id="lvlBtn" disabled>🏅 修改会员等级</button>
+            <button class="btn sm" id="lvlBtn" disabled><?= ico('award') ?> 修改会员等级</button>
             <button class="btn sm" id="enableBtn" disabled data-op="enable" data-confirm="确定启用选中的会员?">✓ 启用选中</button>
-            <button class="btn sm gray" id="disableBtn" disabled data-op="disable" data-confirm="确定禁用选中的会员? 禁用后其账号将无法登录">🚫 禁用选中</button>
-            <button class="btn sm red" id="delBtn" disabled data-op="delete" data-confirm="⚠ 确定移除选中的会员? 账号不可恢复(历史订单保留)">🗑 移除选中用户</button>
+            <button class="btn sm gray" id="disableBtn" disabled data-op="disable" data-confirm="确定禁用选中的会员? 禁用后其账号将无法登录"><?= ico('ban') ?> 禁用选中</button>
+            <button class="btn sm red" id="delBtn" disabled data-op="delete" data-confirm="确定移除选中的会员? 账号不可恢复(历史订单保留)"><?= ico('trash') ?> 移除选中用户</button>
         </div>
         <span class="dim" style="font-size:11.5px">Tips: 勾选会员后可批量启用 / 禁用 / 移除</span>
     </div>
@@ -83,7 +83,7 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
                     <?php foreach ($levels as $lv): ?><option value="<?= (int)$lv['id'] ?>" <?= $curLevel === (string)$lv['id'] ? 'selected' : '' ?>>LV<?= (int)$lv['level'] ?> <?= e($lv['name']) ?></option><?php endforeach; ?>
                 </select>
             </div>
-            <div class="uf"><label>&nbsp;</label><button class="btn" type="submit" style="width:100%">🔍 查询</button></div>
+            <div class="uf"><label>&nbsp;</label><button class="btn" type="submit" style="width:100%"><?= ico('search') ?> 查询</button></div>
         </div>
     </form>
 
@@ -127,7 +127,7 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
                 </td>
             </tr>
         <?php endforeach; ?>
-        <?php if (!$list): ?><tr><td colspan="9"><div class="u-empty"><div class="ico">🗂</div>暂无数据</div></td></tr><?php endif; ?>
+        <?php if (!$list): ?><tr><td colspan="9"><div class="u-empty"><div class="ico"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9aa1b5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>暂无数据</div></td></tr><?php endif; ?>
         </tbody>
     </table>
     <div class="u-total">共 <?= (int)$total ?> 条</div>
@@ -143,7 +143,7 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
 <!-- 修改会员等级弹窗 -->
 <div class="lvl-mask" id="lvlMask">
     <div class="lvl-modal">
-        <div class="m-head"><span>🏅 修改会员等级</span><button class="x" id="lvlClose" type="button">✕</button></div>
+        <div class="m-head"><span><?= ico('award') ?> 修改会员等级</span><button class="x" id="lvlClose" type="button">✕</button></div>
         <div class="m-body">
             <label>将选中的 <b id="lvlCount">0</b> 位会员设为:</label>
             <select id="lvl-select">
@@ -152,7 +152,7 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
             </select>
         </div>
         <div class="m-foot">
-            <button class="btn" id="lvlSave" style="min-width:110px">💾 确定</button>
+            <button class="btn" id="lvlSave" style="min-width:110px"><?= ico('save') ?> 确定</button>
             <button class="btn gray" id="lvlCancel">✕ 取消</button>
         </div>
     </div>
@@ -172,7 +172,7 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
             <input type="text" id="editPassword" style="width:100%;height:40px;padding:0 12px;font-size:13px" placeholder="至少6位, 留空表示不修改">
         </div>
         <div class="m-foot">
-            <button class="btn" id="editSave" style="min-width:110px">💾 保存</button>
+            <button class="btn" id="editSave" style="min-width:110px"><?= ico('save') ?> 保存</button>
             <button class="btn gray" id="editCancel">✕ 取消</button>
         </div>
     </div>

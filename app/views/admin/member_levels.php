@@ -28,7 +28,7 @@ table.tb td,table.tb th{border-bottom:1px dashed var(--input-border)}
 
 <div class="page-head">
     <div>
-        <h2>🏅 会员等级</h2>
+        <h2><?= ico('award') ?> 会员等级</h2>
         <div class="sub">会员等级与商品分组: 按等级控制商品的可见与购买</div>
     </div>
 </div>
@@ -37,8 +37,8 @@ table.tb td,table.tb th{border-bottom:1px dashed var(--input-border)}
     <!-- 会员等级 -->
     <div class="card">
         <div class="ml-head">
-            <h3>🏅 会员等级</h3>
-            <button class="btn sm" id="addLevelBtn">➕ 新增等级</button>
+            <h3><?= ico('award') ?> 会员等级</h3>
+            <button class="btn sm" id="addLevelBtn"><?= ico('plus') ?> 新增等级</button>
         </div>
         <table class="tb">
             <thead><tr><th>等级名称</th><th>会员数</th><th style="width:150px">操作</th></tr></thead>
@@ -53,8 +53,8 @@ table.tb td,table.tb th{border-bottom:1px dashed var(--input-border)}
                     </td>
                     <td class="dim"><?= (int)$lv['members'] ?> 人</td>
                     <td class="actions">
-                        <button class="btn sm gray" data-edit-level='<?= e(json_encode(['id' => (int)$lv['id'], 'name' => $lv['name'], 'level' => (int)$lv['level']], JSON_UNESCAPED_UNICODE)) ?>'>✏ 修改</button>
-                        <button class="btn sm red" data-del-level="<?= (int)$lv['id'] ?>" data-confirm="确定删除等级 LV<?= (int)$lv['level'] ?> <?= e($lv['name']) ?> ? 关联会员将恢复为无等级">🗑 删除</button>
+                        <button class="btn sm gray" data-edit-level='<?= e(json_encode(['id' => (int)$lv['id'], 'name' => $lv['name'], 'level' => (int)$lv['level']], JSON_UNESCAPED_UNICODE)) ?>'><?= ico('edit') ?> 修改</button>
+                        <button class="btn sm red" data-del-level="<?= (int)$lv['id'] ?>" data-confirm="确定删除等级 LV<?= (int)$lv['level'] ?> <?= e($lv['name']) ?> ? 关联会员将恢复为无等级"><?= ico('trash') ?> 删除</button>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -67,8 +67,8 @@ table.tb td,table.tb th{border-bottom:1px dashed var(--input-border)}
     <!-- 商品分组 -->
     <div class="card">
         <div class="ml-head">
-            <h3>🗂 商品分组</h3>
-            <button class="btn sm" id="addGroupBtn">➕ 添加分组</button>
+            <h3><?= ico('folder') ?> 商品分组</h3>
+            <button class="btn sm" id="addGroupBtn"><?= ico('plus') ?> 添加分组</button>
         </div>
         <table class="tb">
             <thead><tr><th>分组名称</th><th>最低等级</th><th>商品</th><th style="width:150px">操作</th></tr></thead>
@@ -79,8 +79,8 @@ table.tb td,table.tb th{border-bottom:1px dashed var(--input-border)}
                     <td><?= (int)$g['min_level'] > 0 ? '<span class="tag warn">LV' . (int)$g['min_level'] . '+</span>' : '<span class="tag ok">不限制</span>' ?></td>
                     <td><?= (int)$g['products'] ?></td>
                     <td class="actions">
-                        <button class="btn sm gray" data-edit-group='<?= e(json_encode(['id' => (int)$g['id'], 'name' => $g['name'], 'min_level' => (int)$g['min_level']], JSON_UNESCAPED_UNICODE)) ?>'>✏ 修改</button>
-                        <button class="btn sm red" data-del-group="<?= (int)$g['id'] ?>" data-confirm="确定删除分组 <?= e($g['name']) ?> ?<?= (int)$g['products'] > 0 ? ' 该分组下有 ' . (int)$g['products'] . ' 个商品, 需先调整!' : '' ?>">🗑 删除</button>
+                        <button class="btn sm gray" data-edit-group='<?= e(json_encode(['id' => (int)$g['id'], 'name' => $g['name'], 'min_level' => (int)$g['min_level']], JSON_UNESCAPED_UNICODE)) ?>'><?= ico('edit') ?> 修改</button>
+                        <button class="btn sm red" data-del-group="<?= (int)$g['id'] ?>" data-confirm="确定删除分组 <?= e($g['name']) ?> ?<?= (int)$g['products'] > 0 ? ' 该分组下有 ' . (int)$g['products'] . ' 个商品, 需先调整!' : '' ?>"><?= ico('trash') ?> 删除</button>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -101,7 +101,7 @@ table.tb td,table.tb th{border-bottom:1px dashed var(--input-border)}
             <div><label>等级数值(LV显示, 越大越高) *</label><input type="number" id="lv-level" min="1" value="1"></div>
         </div>
         <div class="m-foot">
-            <button class="btn" id="lvSave" style="min-width:110px">💾 保存</button>
+            <button class="btn" id="lvSave" style="min-width:110px"><?= ico('save') ?> 保存</button>
             <button class="btn gray" id="lvCancel">✕ 取消</button>
         </div>
     </div>
@@ -122,7 +122,7 @@ table.tb td,table.tb th{border-bottom:1px dashed var(--input-border)}
             </div>
         </div>
         <div class="m-foot">
-            <button class="btn" id="gpSave" style="min-width:110px">💾 保存</button>
+            <button class="btn" id="gpSave" style="min-width:110px"><?= ico('save') ?> 保存</button>
             <button class="btn gray" id="gpCancel">✕ 取消</button>
         </div>
     </div>

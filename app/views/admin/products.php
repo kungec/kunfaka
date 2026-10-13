@@ -57,7 +57,7 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
 
 <div class="page-head">
     <div>
-        <h2>📦 商品管理</h2>
+        <h2><?= ico('package') ?> 商品管理</h2>
         <div class="sub">商品的上架 · 定价 · 库存 · 批量操作</div>
     </div>
 </div>
@@ -72,10 +72,10 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
 <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
         <div style="display:flex;gap:9px;flex-wrap:wrap">
-            <button class="btn sm" id="addBtn">➕ 添加商品</button>
-            <button class="btn sm green" id="onBtn" disabled data-op="on" data-confirm="确定上架选中的商品?">⬆ 上架选中商品</button>
-            <button class="btn sm gray" id="offBtn" disabled data-op="off" data-confirm="确定下架选中的商品? 下架后前台不可购买">⬇ 下架选中商品</button>
-            <button class="btn sm red" id="delBtn" disabled data-op="delete" data-confirm="⚠ 确定移除选中的商品? 有未售卡密的商品将跳过">🗑 移除选中商品</button>
+            <button class="btn sm" id="addBtn"><?= ico('plus') ?> 添加商品</button>
+            <button class="btn sm green" id="onBtn" disabled data-op="on" data-confirm="确定上架选中的商品?"><?= ico('upload') ?> 上架选中商品</button>
+            <button class="btn sm gray" id="offBtn" disabled data-op="off" data-confirm="确定下架选中的商品? 下架后前台不可购买"><?= ico('download') ?> 下架选中商品</button>
+            <button class="btn sm red" id="delBtn" disabled data-op="delete" data-confirm="确定移除选中的商品? 有未售卡密的商品将跳过"><?= ico('trash') ?> 移除选中商品</button>
         </div>
     </div>
 
@@ -89,7 +89,7 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
                 </select>
             </div>
             <div class="pf"><label>商品名称(模糊搜索)</label><input type="text" name="name" value="<?= e($nameKw) ?>"></div>
-            <div class="pf"><button class="btn" type="submit" style="height:36px">🔍 查询</button></div>
+            <div class="pf"><button class="btn" type="submit" style="height:36px"><?= ico('search') ?> 查询</button></div>
         </div>
     </form>
 
@@ -138,13 +138,13 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
                     </label>
                 </td>
                 <td class="actions">
-                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$p['id'], 'category_id' => (int)$p['category_id'], 'group_id' => (int)$p['group_id'], 'icon' => (string)$p['icon'], 'name' => $p['name'], 'price' => nf($p['price']), 'min_num' => (int)$p['min_num'], 'max_num' => (int)$p['max_num'], 'description' => (string)$p['description'], 'sort' => (int)$p['sort'], 'status' => $sid, 'contact_types' => (string)($p['contact_types'] ?? '')], JSON_UNESCAPED_UNICODE)) ?>'>✏ 编辑</button>
+                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$p['id'], 'category_id' => (int)$p['category_id'], 'group_id' => (int)$p['group_id'], 'icon' => (string)$p['icon'], 'name' => $p['name'], 'price' => nf($p['price']), 'min_num' => (int)$p['min_num'], 'max_num' => (int)$p['max_num'], 'description' => (string)$p['description'], 'sort' => (int)$p['sort'], 'status' => $sid, 'contact_types' => (string)($p['contact_types'] ?? '')], JSON_UNESCAPED_UNICODE)) ?>'><?= ico('edit') ?> 编辑</button>
                     <a class="btn sm gray" href="<?= au('cards', ['product_id' => $p['id']]) ?>">卡密</a>
                     <button class="btn sm red" data-del="<?= (int)$p['id'] ?>" data-confirm="确定移除商品 <?= e($p['name']) ?> ?<?= (int)$p['stock'] > 0 ? ' 该商品还有 ' . (int)$p['stock'] . ' 张未售卡密, 需先清空库存!' : '' ?>">移除</button>
                 </td>
             </tr>
         <?php endforeach; ?>
-        <?php if (!$list): ?><tr><td colspan="12"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="font-size:34px;opacity:.55;margin-bottom:6px">📦</div>暂无商品, 点击右上角「添加商品」创建</div></td></tr><?php endif; ?>
+        <?php if (!$list): ?><tr><td colspan="12"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="margin-bottom:6px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9aa1b5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v9"/></svg></div>暂无商品, 点击右上角「添加商品」创建</div></td></tr><?php endif; ?>
         </tbody>
     </table>
     <div style="font-size:12px;color:var(--muted);padding:10px 2px 0">共 <?= count($list) ?> 条</div>
@@ -155,10 +155,10 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
     <aside class="p-drawer">
         <input type="hidden" id="saveId" value="0">
         <div class="p-dt" id="drawerTabs">
-            <button data-pane="base" class="on">➕ 基本信息</button>
-            <button data-pane="intro">📄 商品介绍</button>
-            <button data-pane="limit">🛒 购买限制</button>
-            <button data-pane="cards">🔑 卡密导入</button>
+            <button data-pane="base" class="on"><?= ico('plus') ?> 基本信息</button>
+            <button data-pane="intro"><?= ico('file') ?> 商品介绍</button>
+            <button data-pane="limit"><?= ico('cart') ?> 购买限制</button>
+            <button data-pane="cards"><?= ico('key') ?> 卡密导入</button>
             <button class="close" id="drawerClose" title="关闭">✕</button>
         </div>
         <div class="p-db on" data-pane="base">
@@ -166,7 +166,7 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
             <input type="hidden" id="f-icon_current" value="">
             <input type="hidden" id="f-icon_reset" value="0">
             <div class="up-zone" id="iconZone">
-                <span class="up-ico" id="iconPrev">🎁</span>
+                <span class="up-ico" id="iconPrev"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9aa1b5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></span>
                 <div class="up-txt">
                     <b>点击上传商品图标</b>
                     jpg / png / webp / gif, 建议正方形<span class="up-file" id="iconFileName"></span>
@@ -222,7 +222,7 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
             <textarea id="f-cards_import" rows="10" placeholder="卡密1&#10;卡密2&#10;..."></textarea>
         </div>
         <div class="p-df">
-            <button class="btn" id="drawerSave" style="min-width:120px">💾 保存</button>
+            <button class="btn" id="drawerSave" style="min-width:120px"><?= ico('save') ?> 保存</button>
             <button class="btn gray" id="drawerCancel">✕ 取消</button>
         </div>
     </aside>
@@ -277,7 +277,7 @@ function openDrawer(data) {
         prev.innerHTML = '<img src="<?= e(site_url("")) ?>' + icon + '" style="width:100%;height:100%;object-fit:cover" alt="">';
         if (rst) rst.style.display = 'inline-flex';
     } else {
-        prev.innerHTML = '🎁';
+        prev.innerHTML = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9aa1b5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>';
         if (rst) rst.style.display = 'none';
     }
     document.getElementById('f-name').value = data ? data.name : '';
@@ -327,7 +327,7 @@ document.getElementById('f-icon_file').addEventListener('change', function () {
 document.getElementById('iconResetBtn').addEventListener('click', function () {
     document.getElementById('f-icon_file').value = '';
     document.getElementById('f-icon_reset').value = '1';
-    document.getElementById('iconPrev').innerHTML = '🎁';
+    document.getElementById('iconPrev').innerHTML = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9aa1b5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>';
     document.getElementById('iconFileName').textContent = '';
     iconZone.classList.remove('has');
     this.style.display = 'none';

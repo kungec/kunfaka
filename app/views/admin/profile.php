@@ -36,7 +36,7 @@ html[data-theme="light"] .pf-id .avatar{background:linear-gradient(135deg,#3b82f
 
 <div class="page-head">
     <div>
-        <h2>👤 个人设置</h2>
+        <h2><?= ico('user') ?> 个人设置</h2>
         <div class="sub">账号资料 · 登录密码 · 安全建议</div>
     </div>
 </div>
@@ -47,7 +47,7 @@ html[data-theme="light"] .pf-id .avatar{background:linear-gradient(135deg,#3b82f
             <span class="avatar">坤</span>
             <div>
                 <div class="nm"><?= e($admin['nickname'] ?: $admin['username']) ?></div>
-                <div class="rl"><span class="tag <?= $admin['role'] === 'super' ? 'pro' : '' ?>"><?= $admin['role'] === 'super' ? '👑 超级管理员' : '普通管理员' ?></span></div>
+                <div class="rl"><span class="tag <?= $admin['role'] === 'super' ? 'pro' : '' ?>"><?= ($admin['role'] === 'super' ? ico('crown') . ' 超级管理员' : '普通管理员') ?></span></div>
             </div>
             <div class="pf-rows">
                 <div class="pf-row"><span class="k">登录账号</span><span class="v"><?= e($admin['username']) ?></span></div>
@@ -58,7 +58,7 @@ html[data-theme="light"] .pf-id .avatar{background:linear-gradient(135deg,#3b82f
         </div>
 
         <div class="card pf-tips">
-            <h3>🔐 安全建议</h3>
+            <h3><?= ico('shield2') ?> 安全建议</h3>
             <p>
                 · 定期修改密码, 不要与其他站点共用同一密码;<br>
                 · 超级管理员可在「管理员」页添加普通管理员并随时禁用;<br>
@@ -85,7 +85,7 @@ html[data-theme="light"] .pf-id .avatar{background:linear-gradient(135deg,#3b82f
             </div>
 
             <div class="ops">
-                <button class="btn" type="submit">💾 确认修改</button>
+                <button class="btn" type="submit"><?= ico('save') ?> 确认修改</button>
                 <a class="btn gray" href="<?= au('logout') ?>">⏻ 注销登录</a>
             </div>
             <p class="pf-note">修改后当前登录状态保留; 建议修改完成后退出并重新登录一次确认新密码可用。</p>

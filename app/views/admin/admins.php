@@ -26,21 +26,21 @@ $me = current_admin();
 
 <div class="page-head">
     <div>
-        <h2>🛡 管理员</h2>
+        <h2><?= ico('shield') ?> 管理员</h2>
         <div class="sub">后台账号的新增 · 启停 · 移除(仅超级管理员)</div>
     </div>
 </div>
 
 <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-        <button class="btn sm" id="addBtn">➕ 添加管理员</button>
+        <button class="btn sm" id="addBtn"><?= ico('plus') ?> 添加管理员</button>
     </div>
 
     <form method="get" action="<?= site_url('admin.php') ?>">
         <input type="hidden" name="s" value="/admins">
         <div class="adm-filters">
             <div class="af"><label>用户名 / 昵称</label><input type="text" name="kw" value="<?= e($kw) ?>"></div>
-            <div class="af"><button class="btn" type="submit" style="height:36px">🔍 查询</button></div>
+            <div class="af"><button class="btn" type="submit" style="height:36px"><?= ico('search') ?> 查询</button></div>
         </div>
     </form>
 
@@ -74,10 +74,10 @@ $me = current_admin();
                 <td class="dim"><?= $a['last_login_at'] > 0 ? e(date('m-d H:i', $a['last_login_at'])) . '<br><small class="mono">' . e($a['last_login_ip']) . '</small>' : '—' ?></td>
                 <td class="dim"><?= $a['prev_login_at'] > 0 ? e(date('m-d H:i', $a['prev_login_at'])) . '<br><small class="mono">' . e($a['prev_login_ip']) . '</small>' : '—' ?></td>
                 <td class="actions">
-                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$a['id'], 'username' => $a['username'], 'nickname' => $a['nickname'], 'role' => $a['role']], JSON_UNESCAPED_UNICODE)) ?>'>✏ 编辑</button>
+                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$a['id'], 'username' => $a['username'], 'nickname' => $a['nickname'], 'role' => $a['role']], JSON_UNESCAPED_UNICODE)) ?>'><?= ico('edit') ?> 编辑</button>
                     <?php if (!$isMe): ?>
                         <button class="btn sm <?= (int)$a['status'] === 1 ? 'gray' : 'green' ?>" data-toggle="<?= (int)$a['id'] ?>" data-confirm="确定<?= (int)$a['status'] === 1 ? '禁用' : '启用' ?> <?= e($a['username']) ?> ?"><?= (int)$a['status'] === 1 ? '禁用' : '启用' ?></button>
-                        <button class="btn sm red" data-del="<?= (int)$a['id'] ?>" data-confirm="确定删除管理员 <?= e($a['username']) ?> ? 此操作不可恢复">🗑 删除</button>
+                        <button class="btn sm red" data-del="<?= (int)$a['id'] ?>" data-confirm="确定删除管理员 <?= e($a['username']) ?> ? 此操作不可恢复"><?= ico('trash') ?> 删除</button>
                     <?php endif; ?>
                 </td>
             </tr>
@@ -105,7 +105,7 @@ $me = current_admin();
             <div><label id="f-pass-label">初始密码 *(至少6位)</label><input type="password" id="f-password" maxlength="64"></div>
         </div>
         <div class="m-foot">
-            <button class="btn" id="admSave" style="min-width:110px">💾 保存</button>
+            <button class="btn" id="admSave" style="min-width:110px"><?= ico('save') ?> 保存</button>
             <button class="btn gray" id="admCancel">✕ 取消</button>
         </div>
     </div>

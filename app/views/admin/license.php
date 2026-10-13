@@ -43,14 +43,14 @@
 </style>
 
 <div class="lic-top">
-    <span class="qq-ico">💬</span>
+    <span class="qq-ico"><?= ico('message', 18) ?></span>
     <span class="qq-bar-tx">官方售后QQ群: <b>307386089</b> —— 授权购买、部署协助、插件咨询请加群。</span>
     <a class="qq-join" href="https://qm.qq.com/cgi-bin/qm/qr?k=307386089" target="_blank" rel="noopener">前往加群 ›</a>
 </div>
 
 <div class="lic-hero <?= $pro ? '' : 'is-free' ?>">
     <div class="lh-main">
-        <div class="lh-badge"><?= $pro ? '👑 专业版授权 · 已激活' : '免费版 · 未激活专业版' ?></div>
+        <div class="lh-badge"><?= ($pro ? ico('crown') . ' 专业版授权 · 已激活' : '免费版 · 未激活专业版') ?></div>
         <div class="lh-title"><?= $pro ? '已解锁全部商店内容' : '解锁应用商店全部插件与主题' ?></div>
         <div class="lh-sub">
             <?php if ($pro): ?>
@@ -83,11 +83,11 @@
     <p class="dim" style="margin:0 0 10px">订单 <b class="mono"><?= e($buySn) ?></b> 正在确认支付, 确认后激活码会自动显示在下方并发送到您留下的邮箱…</p>
     <p class="dim" id="buy-status" style="margin:0">⟳ 正在查询订单状态…</p>
     <div id="buy-done" style="display:none;margin-top:12px">
-        <p style="margin:0 0 8px;color:var(--ok);font-weight:700">✅ 支付成功! 您的永久授权码:</p>
+        <p style="margin:0 0 8px;color:var(--ok);font-weight:700">✓ 支付成功! 您的永久授权码:</p>
         <div class="lic-key">
             <input type="text" id="buy-key" readonly class="mono" style="font-weight:700">
             <button class="btn gray" id="buy-copy" type="button">复制授权码</button>
-            <button class="btn" id="buy-activate" type="button">⚡ 一键激活本站</button>
+            <button class="btn" id="buy-activate" type="button"><?= ico('zap') ?> 一键激活本站</button>
         </div>
         <p class="dim" style="margin:10px 0 0">授权码已同步发送至您的邮箱; 一码仅绑定一个站点, 如需给其他站点使用请勿点击一键激活。</p>
     </div>
@@ -97,7 +97,7 @@
 <div class="lic-grid">
     <?php if ($pro): ?>
     <div class="card lic-card">
-        <h3>🛡 授权管理</h3>
+        <h3><?= ico('shield') ?> 授权管理</h3>
         <div class="lic-badge-chip">✓ 本站专业版已生效<?= (int)$license['license_expires'] > 0 ? '(至 ' . e(date('Y-m-d', $license['license_expires'])) . ')' : '(永久)' ?></div>
         <p class="hint">重验证需联网, 同站重复验证无副作用; 也可粘贴新的授权码为本站续期/换绑。</p>
         <div class="lic-acts"><button class="btn gray" id="verify-btn">✓ 验证授权</button></div>
@@ -107,16 +107,16 @@
         </form>
     </div>
     <div class="card lic-card">
-        <h3>🛒 为其他站点购买授权码</h3>
+        <h3><?= ico('cart') ?> 为其他站点购买授权码</h3>
         <p class="hint">填写邮箱跳转官方收银台, 支持 <b>支付宝 / 微信 / USDT(TRC20)</b>。支付成功后自动生成<b>永久授权码</b>: 本页展示并同步发送邮箱, 可用于激活其他站点。</p>
         <form class="lic-key" id="buy-form">
             <input type="email" id="buy-email" placeholder="接收授权码的邮箱" required>
-            <button class="btn" type="submit">⚡ 购买 ¥<?= e($price) ?></button>
+            <button class="btn" type="submit"><?= ico('zap') ?> 购买 ¥<?= e($price) ?></button>
         </form>
     </div>
     <?php else: ?>
     <div class="card lic-card">
-        <h3>🔑 激活授权码</h3>
+        <h3><?= ico('key') ?> 激活授权码</h3>
         <form class="lic-key" id="act-form">
             <input type="text" id="lic-key" placeholder="YF99-XXXXX-XXXXX-XXXXX" class="mono">
             <button class="btn" type="submit">激活专业版</button>
@@ -124,11 +124,11 @@
         <p class="hint" style="margin:0">向官方购买后获得授权码, 粘贴激活即可(支持离线校验, 无需联网)。<br>注意: 一码仅绑定一个站点, 激活后不可更换。</p>
     </div>
     <div class="card lic-card">
-        <h3>🛒 购买授权码</h3>
+        <h3><?= ico('cart') ?> 购买授权码</h3>
         <p class="hint">填写邮箱后跳转官方收银台, 支持 <b>支付宝 / 微信 / USDT(TRC20)</b>。支付成功后系统自动生成<b>永久授权码</b>: 本页直接展示并同步发送到您的邮箱。</p>
         <form class="lic-key" id="buy-form">
             <input type="email" id="buy-email" placeholder="接收授权码的邮箱" required>
-            <button class="btn" type="submit">⚡ 立即购买 ¥<?= e($price) ?></button>
+            <button class="btn" type="submit"><?= ico('zap') ?> 立即购买 ¥<?= e($price) ?></button>
         </form>
         <p class="hint" style="margin:0">已有授权码? 直接在左侧「激活授权码」粘贴激活。</p>
     </div>
@@ -165,9 +165,9 @@ if (bf) bf.addEventListener('submit', function (ev) {
     yfPost('<?= au('license_buy') ?>', { email: document.getElementById('buy-email').value }).then(function (d) {
         if (d.code === 0 && d.redirect) { location.href = d.redirect; return; }
         btn.disabled = false;
-        btn.textContent = '⚡ 立即购买 ¥<?= e($price) ?>';
+        btn.textContent = '立即购买 ¥<?= e($price) ?>';
         kAlert(d.msg);
-    }).catch(function () { btn.disabled = false; btn.textContent = '⚡ 立即购买 ¥<?= e($price) ?>'; kAlert('网络错误'); });
+    }).catch(function () { btn.disabled = false; btn.textContent = '立即购买 ¥<?= e($price) ?>'; kAlert('网络错误'); });
 });
 var vb = document.getElementById('verify-btn');
 if (vb) vb.addEventListener('click', function () {

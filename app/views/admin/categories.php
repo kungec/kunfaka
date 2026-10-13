@@ -58,7 +58,7 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
 
 <div class="page-head">
     <div>
-        <h2>🗂 分类管理</h2>
+        <h2><?= ico('folder') ?> 分类管理</h2>
         <div class="sub">商品分类的新增 · 排序 · 启停 · 移除</div>
     </div>
 </div>
@@ -66,10 +66,10 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
 <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
         <div style="display:flex;gap:9px;flex-wrap:wrap">
-            <button class="btn sm" id="addBtn">➕ 添加分类</button>
+            <button class="btn sm" id="addBtn"><?= ico('plus') ?> 添加分类</button>
             <button class="btn sm green" id="enableBtn" disabled data-op="enable" data-confirm="确定启用选中的分类?">▶ 启用选中分类</button>
             <button class="btn sm gray" id="disableBtn" disabled data-op="disable" data-confirm="确定停用选中的分类? 停用后前台不再显示">⏸ 停用选中分类</button>
-            <button class="btn sm red" id="delBtn" disabled data-op="delete" data-confirm="⚠ 确定移除选中的分类? 分类下有商品时将跳过">🗑 移除选中分类</button>
+            <button class="btn sm red" id="delBtn" disabled data-op="delete" data-confirm="确定移除选中的分类? 分类下有商品时将跳过"><?= ico('trash') ?> 移除选中分类</button>
         </div>
     </div>
 
@@ -77,7 +77,7 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
         <input type="hidden" name="s" value="/categories">
         <div class="c-filters">
             <div class="cf"><label>分类名称</label><input type="text" name="name" value="<?= e($nameKw) ?>" placeholder="名称关键字"></div>
-            <div class="cf"><button class="btn" type="submit" style="height:36px">🔍 查询</button></div>
+            <div class="cf"><button class="btn" type="submit" style="height:36px"><?= ico('search') ?> 查询</button></div>
         </div>
     </form>
 
@@ -121,12 +121,12 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
                     </label>
                 </td>
                 <td class="actions">
-                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$c['id'], 'name' => $c['name'], 'icon' => $c['icon'], 'image' => (string)($c['image'] ?? ''), 'sort' => (int)$c['sort'], 'status' => $sid], JSON_UNESCAPED_UNICODE)) ?>'>✏ 编辑</button>
+                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$c['id'], 'name' => $c['name'], 'icon' => $c['icon'], 'image' => (string)($c['image'] ?? ''), 'sort' => (int)$c['sort'], 'status' => $sid], JSON_UNESCAPED_UNICODE)) ?>'><?= ico('edit') ?> 编辑</button>
                     <button class="btn sm red" data-del="<?= (int)$c['id'] ?>" data-confirm="确定移除分类 <?= e($c['name']) ?> ?<?= (int)$c['products_count'] > 0 ? ' 该分类下有 ' . (int)$c['products_count'] . ' 个商品, 需先移除商品!' : '' ?>">移除</button>
                 </td>
             </tr>
         <?php endforeach; ?>
-        <?php if (!$list): ?><tr><td colspan="7"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="font-size:34px;opacity:.55;margin-bottom:6px">🗂</div>暂无数据</div></td></tr><?php endif; ?>
+        <?php if (!$list): ?><tr><td colspan="7"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="margin-bottom:6px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9aa1b5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>暂无数据</div></td></tr><?php endif; ?>
         </tbody>
     </table>
     <div style="font-size:12px;color:var(--muted);padding:10px 2px 0">共 <?= count($list) ?> 条</div>
@@ -144,7 +144,7 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
                 <label>分类图片(可选, 上传后优先于表情图标展示)</label>
                 <label class="up-zone" id="upZone" for="f-image">
                     <img class="up-thumb" id="upPreview" src="" alt="" style="display:none">
-                    <span class="up-ph" id="upPh">🖼</span>
+                    <span class="up-ph" id="upPh"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9aa1b5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span>
                     <span class="up-txt"><b>点击上传图片</b><small>jpg / png / webp / gif · ≤3MB</small></span>
                     <input type="file" class="up-input" id="f-image" accept=".jpg,.jpeg,.png,.webp,.gif">
                 </label>
@@ -156,7 +156,7 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
             </label></div>
         </div>
         <div class="m-foot">
-            <button class="btn" id="modalSave" style="min-width:110px">💾 保存</button>
+            <button class="btn" id="modalSave" style="min-width:110px"><?= ico('save') ?> 保存</button>
             <button class="btn gray" id="modalCancel">✕ 取消</button>
         </div>
     </div>

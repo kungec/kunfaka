@@ -60,21 +60,21 @@ td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
 </style>
 
 <div class="mkt-tabs">
-    <a class="mkt-tab<?= !$isTheme && $type !== 'marketing' ? ' on' : '' ?>" href="<?= au('apps', ['type' => 'payment']) ?>">🧩 插件市场</a>
-    <a class="mkt-tab<?= $isTheme ? ' on' : '' ?>" href="<?= au('apps', ['type' => 'theme']) ?>">🎨 主题市场</a>
-    <a class="mkt-tab<?= $type === 'marketing' ? ' on' : '' ?>" href="<?= au('apps', ['type' => 'marketing']) ?>">📣 营销插件</a>
+    <a class="mkt-tab<?= !$isTheme && $type !== 'marketing' ? ' on' : '' ?>" href="<?= au('apps', ['type' => 'payment']) ?>">插件市场</a>
+    <a class="mkt-tab<?= $isTheme ? ' on' : '' ?>" href="<?= au('apps', ['type' => 'theme']) ?>">主题市场</a>
+    <a class="mkt-tab<?= $type === 'marketing' ? ' on' : '' ?>" href="<?= au('apps', ['type' => 'marketing']) ?>">营销插件</a>
 </div>
 
 <?php if (!License::isPro()): ?>
     <a class="mkt-hero" href="<?= au('license') ?>">
-        <span class="h-l"><span class="h-ico">👑</span>
+        <span class="h-l"><span class="h-ico"><?= ico('crown', 20) ?></span>
             <span><span class="h-t">开通专业版</span><br><span class="h-s">全部付费应用免费畅享 · 含USDT免挂支付等付费插件 · 一次开通 永久授权</span></span>
         </span>
         <span class="h-btn">立即开通 →</span>
     </a>
 <?php else: ?>
     <a class="mkt-hero is-pro" href="<?= au('license') ?>">
-        <span class="h-l"><span class="h-ico">👑</span>
+        <span class="h-l"><span class="h-ico"><?= ico('crown', 20) ?></span>
             <span><span class="h-t">专业版授权已激活</span><br><span class="h-s">商店全部付费应用免费下载 · 后续新增应用同步免费</span></span>
         </span>
         <span class="h-btn">管理授权 →</span>
@@ -94,7 +94,7 @@ td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
                     <?php foreach ($authors as $a): ?><option value="<?= e($a) ?>" <?= $curAuthor === $a ? 'selected' : '' ?>><?= e($a) ?></option><?php endforeach; ?>
                 </select>
             </div>
-            <div class="mf"><button class="btn" type="submit" style="height:36px">🔍 查询</button></div>
+            <div class="mf"><button class="btn" type="submit" style="height:36px"><?= ico('search') ?> 查询</button></div>
         </div>
     </form>
     <div class="mkt-pills">
@@ -164,20 +164,20 @@ td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
                                 <a class="btn sm" href="<?= au('app_config', ['name' => $app['name'], 'type' => $type]) ?>">配置</a>
                             <?php endif; ?>
                             <?php if ($proLocked): ?>
-                                <a class="btn sm green" href="<?= au('license') ?>">👑 开通专业版</a>
+                                <a class="btn sm green" href="<?= au('license') ?>"><?= ico('crown') ?> 开通专业版</a>
                             <?php elseif (!$app['enabled']): ?>
                                 <button class="btn sm green" data-toggle="<?= e($app['name']) ?>">启用</button>
                             <?php endif; ?>
                         <?php elseif (!$isTheme): ?>
                             <?php if ($proLocked): ?>
-                                <a class="btn sm green" href="<?= au('license') ?>">👑 开通专业版</a>
+                                <a class="btn sm green" href="<?= au('license') ?>"><?= ico('crown') ?> 开通专业版</a>
                             <?php else: ?>
                                 <button class="btn sm green" data-install="<?= e($app['name']) ?>">安装</button>
                             <?php endif; ?>
                         <?php endif; ?>
                         <?php if ($isTheme): ?>
                             <?php if ($proLocked): ?>
-                                <a class="btn sm green" href="<?= au('license') ?>">👑 开通专业版</a>
+                                <a class="btn sm green" href="<?= au('license') ?>"><?= ico('crown') ?> 开通专业版</a>
                             <?php elseif ($app['name'] === $activeTheme): ?>
                                 <span class="tag ok">✓ 使用中</span>
                             <?php else: ?>
@@ -186,7 +186,7 @@ td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
                         <?php endif; ?>
                     <?php else: ?>
                         <?php if ($proLocked): ?>
-                            <a class="btn sm green" href="<?= au('license') ?>">👑 开通专业版</a>
+                            <a class="btn sm green" href="<?= au('license') ?>"><?= ico('crown') ?> 开通专业版</a>
                         <?php else: ?>
                             <button class="btn sm green" data-download="<?= e($app['name']) ?>">下载安装</button>
                         <?php endif; ?>
@@ -194,7 +194,7 @@ td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
                 </td>
             </tr>
         <?php endforeach; ?>
-        <?php if (!$list): ?><tr><td colspan="8"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="font-size:34px;opacity:.55;margin-bottom:6px">🧩</div>没有符合条件的应用</div></td></tr><?php endif; ?>
+        <?php if (!$list): ?><tr><td colspan="8"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="margin-bottom:6px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9aa1b5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>没有符合条件的应用</div></td></tr><?php endif; ?>
         </tbody>
     </table>
     <div style="font-size:12px;color:var(--muted);padding:10px 2px 0">共 <?= count($list) ?> 个应用</div>

@@ -30,7 +30,7 @@ $pillLink = function ($risk) use ($curKw, $curIp, $curType) {
 
 <div class="page-head">
     <div>
-        <h2>📜 操作日志</h2>
+        <h2><?= ico('logs') ?> 操作日志</h2>
         <div class="sub">后台与业务事件的检索 · 评估 · 清理</div>
     </div>
 </div>
@@ -39,8 +39,8 @@ $pillLink = function ($risk) use ($curKw, $curIp, $curType) {
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
         <span class="dim" style="font-size:12px">按内容关键词自动评估风险: 含删除/清理/禁用/失败等字样的日志标记为「风险较高」。</span>
         <div style="display:flex;gap:9px;flex-wrap:wrap">
-            <button class="btn sm gray" data-clean="30" data-confirm="确定清理 30 天前的日志? 较新日志不受影响">🧹 清理30天前日志</button>
-            <button class="btn sm red" data-clean="all" data-confirm="⚠ 确定清空全部日志? 此操作不可恢复">🗑 清空全部日志</button>
+            <button class="btn sm gray" data-clean="30" data-confirm="确定清理 30 天前的日志? 较新日志不受影响"><?= ico('refresh') ?> 清理30天前日志</button>
+            <button class="btn sm red" data-clean="all" data-confirm="确定清空全部日志? 此操作不可恢复"><?= ico('trash') ?> 清空全部日志</button>
         </div>
     </div>
 
@@ -56,7 +56,7 @@ $pillLink = function ($risk) use ($curKw, $curIp, $curType) {
             </div>
             <div class="lf"><label>从操作时间</label><input type="datetime-local" name="date_from" value="<?= e(arr_get($_GET, 'date_from')) ?>"></div>
             <div class="lf"><label>到操作时间</label><input type="datetime-local" name="date_to" value="<?= e(arr_get($_GET, 'date_to')) ?>"></div>
-            <div class="lf"><label>&nbsp;</label><button class="btn" type="submit" style="width:100%">🔍 查询</button></div>
+            <div class="lf"><label>&nbsp;</label><button class="btn" type="submit" style="width:100%"><?= ico('search') ?> 查询</button></div>
         </div>
     </form>
 
@@ -90,7 +90,7 @@ $pillLink = function ($risk) use ($curKw, $curIp, $curType) {
                 <td><span class="tag <?= $high ? 'bad' : 'ok' ?>"><?= $high ? '风险较高' : '无风险' ?></span></td>
             </tr>
         <?php endforeach; ?>
-        <?php if (!$list): ?><tr><td colspan="6"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="font-size:34px;opacity:.55;margin-bottom:6px">📜</div>暂无日志</div></td></tr><?php endif; ?>
+        <?php if (!$list): ?><tr><td colspan="6"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="margin-bottom:6px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9aa1b5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>暂无日志</div></td></tr><?php endif; ?>
         </tbody>
     </table>
     <div style="font-size:12px;color:var(--muted);padding:10px 2px 0">共 <?= (int)$total ?> 条<?= $total > 100 ? '(显示最近100条, 可用筛选缩小范围)' : '' ?></div>

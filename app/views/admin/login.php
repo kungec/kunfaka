@@ -18,7 +18,7 @@
             <em>坤</em>
             <div><b>坤发卡</b><small>全自动发卡系统 · 管理后台</small></div>
         </div>
-        <?php if ($error): ?><div class="lg-err">⚠ <?= e($error) ?></div><?php endif; ?>
+        <?php if ($error): ?><div class="lg-err"><?= e($error) ?></div><?php endif; ?>
         <input type="hidden" name="_csrf" value="<?= e(csrf_token()) ?>">
         <label class="lg-field">
             <span class="lg-ico">

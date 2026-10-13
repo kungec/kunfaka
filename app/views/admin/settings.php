@@ -1,14 +1,14 @@
 <?php $activeMenu = 'settings'; ?>
 <div class="page-head">
     <div>
-        <h2>⚙️ 系统设置</h2>
+        <h2><?= ico('settings') ?> 系统设置</h2>
         <div class="sub">站点 · 安全 · 邮件</div>
     </div>
 </div>
 
 <?php if ((current_admin()['role'] ?? 'normal') !== 'super'): ?>
 <div class="card" style="border-left:3px solid var(--warn)">
-    <p class="dim" style="font-size:12.5px">⚠ 你当前是普通管理员, 只能查看系统设置; 修改需超级管理员账号。</p>
+    <p class="dim" style="font-size:12.5px">你当前是普通管理员, 只能查看系统设置; 修改需超级管理员账号。</p>
 </div>
 <?php endif; ?>
 
@@ -45,7 +45,7 @@
             <div class="form-row" id="logoImageRow" style="display:<?= $logoType === 'image' ? 'block' : 'none' ?>">
                 <label>Logo 图片</label>
                 <div class="up-zone" id="logoZone">
-                    <span class="up-ico" id="logoPrev"><?php if (setting('logo_image')): ?><img src="<?= e(site_url(setting('logo_image'))) ?>" alt="logo"><?php else: ?>🖼<?php endif; ?></span>
+                    <span class="up-ico" id="logoPrev"><?php if (setting('logo_image')): ?><img src="<?= e(site_url(setting('logo_image'))) ?>" alt="logo"><?php else: ?><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9aa1b5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><?php endif; ?></span>
                     <div class="up-txt">
                         <b>点击上传 Logo 图片</b>
                         png / webp / jpg, ≤2MB, 建议透明底; 换用其他类型会自动停用图片<span class="up-file" id="logoFileName"></span>

@@ -39,7 +39,7 @@ th.o-chk,td.o-chk{width:34px;text-align:center}
 
 <div class="page-head">
     <div>
-        <h2>🧾 商品订单</h2>
+        <h2><?= ico('orders') ?> 商品订单</h2>
         <div class="sub">全部订单的筛选 · 导出 · 清理 · 销毁</div>
     </div>
 </div>
@@ -53,9 +53,9 @@ th.o-chk,td.o-chk{width:34px;text-align:center}
 <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
         <div style="display:flex;gap:9px;flex-wrap:wrap">
-            <button class="btn sm" data-clean="expired" data-confirm="确定删除全部「已过期」订单? 此操作不可恢复">🧹 一键清理无用订单</button>
-            <a class="btn sm green" href="<?= e($exportUrl) ?>">⬇ 导出筛选订单</a>
-            <button class="btn sm red" id="destroyBtn" disabled data-confirm="⚠ 将销毁选中的订单(含已完成订单的发货记录)! 此操作不可恢复, 确定继续?">🗑 销毁选中订单</button>
+            <button class="btn sm" data-clean="expired" data-confirm="确定删除全部「已过期」订单? 此操作不可恢复"><?= ico('refresh') ?> 一键清理无用订单</button>
+            <a class="btn sm green" href="<?= e($exportUrl) ?>"><?= ico('download') ?> 导出筛选订单</a>
+            <button class="btn sm red" id="destroyBtn" disabled data-confirm="将销毁选中的订单(含已完成订单的发货记录)! 此操作不可恢复, 确定继续?"><?= ico('trash') ?> 销毁选中订单</button>
         </div>
         <span class="o-tip">Tips: 上方订单数据会根据下方的查询条件进行筛选显示</span>
     </div>
@@ -83,7 +83,7 @@ th.o-chk,td.o-chk{width:34px;text-align:center}
             <div class="of"><label>会员ID, 0=游客</label><input type="text" name="user_id" value="<?= e(arr_get($_GET, 'user_id')) ?>"></div>
             <div class="of"><label>从下单时间</label><input type="datetime-local" name="date_from" value="<?= e(arr_get($_GET, 'date_from')) ?>"></div>
             <div class="of"><label>到下单时间</label><input type="datetime-local" name="date_to" value="<?= e(arr_get($_GET, 'date_to')) ?>"></div>
-            <div class="of"><label>&nbsp;</label><button class="btn" type="submit" style="width:100%">🔍 查询</button></div>
+            <div class="of"><label>&nbsp;</label><button class="btn" type="submit" style="width:100%"><?= ico('search') ?> 查询</button></div>
         </div>
     </form>
 
@@ -152,7 +152,7 @@ function rowChks() { return Array.prototype.slice.call(document.querySelectorAll
 function syncDestroy() {
     var n = rowChks().filter(function (c) { return c.checked; }).length;
     var b = document.getElementById('destroyBtn');
-    if (b) { b.disabled = n === 0; b.textContent = n > 0 ? '🗑 销毁选中订单(' + n + ')' : '🗑 销毁选中订单'; }
+    if (b) { b.disabled = n === 0; b.textContent = n > 0 ? '销毁选中订单(' + n + ')' : '销毁选中订单'; }
 }
 if (chkAll) chkAll.addEventListener('change', function () {
     rowChks().forEach(function (c) { c.checked = chkAll.checked; });

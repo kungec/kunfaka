@@ -30,13 +30,13 @@
 
 <div class="page-head">
     <div>
-        <h2>📣 公告单页</h2>
+        <h2><?= ico('megaphone') ?> 公告单页</h2>
         <div class="sub">前台公告管理 · 自定义单页</div>
     </div>
 </div>
 
 <div class="card">
-    <h3><?= $edit ? '✏️ 编辑公告 #' . (int)$edit['id'] : '📢 发布公告' ?></h3>
+    <h3><?= $edit ? ico('edit') . ' 编辑公告 #' . (int)$edit['id'] : ico('megaphone') . ' 发布公告' ?></h3>
     <form method="post" action="<?= au('notice_save') ?>" data-ajax>
         <?= csrf_field() ?>
         <input type="hidden" name="id" value="<?= (int)($edit['id'] ?? 0) ?>">
@@ -64,7 +64,7 @@
                     <input type="number" name="sort" value="<?= (int)($edit['sort'] ?? 0) ?>">
                 </div>
                 <div class="nt-publish">
-                    <button class="btn" type="submit"><?= $edit ? '💾 保存修改' : '📢 发布公告' ?></button>
+                    <button class="btn" type="submit"><?= $edit ? ico('save') . ' 保存修改' : ico('megaphone') . ' 发布公告' ?></button>
                     <?php if ($edit): ?><a class="btn gray" href="<?= au('notices') ?>">取消编辑</a><?php endif; ?>
                 </div>
             </div>
@@ -73,7 +73,7 @@
 </div>
 
 <div class="card">
-    <h3>📋 公告列表 <span class="tag"><?= count($list) ?> 条</span></h3>
+    <h3><?= ico('file') ?> 公告列表 <span class="tag"><?= count($list) ?> 条</span></h3>
     <?php if ($list): ?>
     <div class="nt-list">
         <?php foreach ($list as $n): ?>
@@ -101,7 +101,7 @@
 </div>
 
 <div class="card">
-    <h3>📄 自定义单页</h3>
+    <h3><?= ico('file') ?> 自定义单页</h3>
     <p class="dim" style="margin:4px 0 14px;font-size:12.5px">开启后前台导航出现独立页面入口 — 常用于客服联系方式、购买须知、站点介绍。内容纯文本自动换行并安全转义。</p>
     <form method="post" action="<?= au('page_save') ?>" data-ajax>
         <?= csrf_field() ?>
@@ -120,6 +120,6 @@
             <label>页面内容(示例: 客服微信 xxx001 / 工作时间 9:00-23:00 / 售后说明等)</label>
             <textarea name="content" style="min-height:160px" placeholder="在这里填写任意内容, 比如客服联系方式、公告说明、售后政策..."><?= e($spContent) ?></textarea>
         </div>
-        <button class="btn" type="submit">💾 保存单页</button>
+        <button class="btn" type="submit"><?= ico('save') ?> 保存单页</button>
     </form>
 </div>

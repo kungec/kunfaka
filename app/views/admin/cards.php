@@ -44,7 +44,7 @@ th.k-chk,td.k-chk{width:34px;text-align:center}
 
 <div class="page-head">
     <div>
-        <h2>🔑 卡密管理</h2>
+        <h2><?= ico('key') ?> 卡密管理</h2>
         <div class="sub">卡密的导入 · 锁定 · 标记出售 · 导出</div>
     </div>
 </div>
@@ -52,12 +52,12 @@ th.k-chk,td.k-chk{width:34px;text-align:center}
 <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
         <div style="display:flex;gap:9px;flex-wrap:wrap">
-            <button class="btn sm" id="uploadBtn">☁ 上传卡密</button>
-            <button class="btn sm red" id="delBtn" disabled data-op="delete" data-confirm="⚠ 确定移除选中的卡密? 已出售卡密将自动跳过">🗑 移除选中卡密</button>
-            <button class="btn sm gray" id="lockBtn" disabled data-op="lock" data-confirm="确定锁定选中的卡密? 锁定后暂不出库">🔒 锁定选中卡密</button>
-            <button class="btn sm green" id="unlockBtn" disabled data-op="unlock" data-confirm="确定解锁选中的卡密?">🔓 解锁选中卡密</button>
+            <button class="btn sm" id="uploadBtn"><?= ico('upload') ?> 上传卡密</button>
+            <button class="btn sm red" id="delBtn" disabled data-op="delete" data-confirm="确定移除选中的卡密? 已出售卡密将自动跳过"><?= ico('trash') ?> 移除选中卡密</button>
+            <button class="btn sm gray" id="lockBtn" disabled data-op="lock" data-confirm="确定锁定选中的卡密? 锁定后暂不出库"><?= ico('lock') ?> 锁定选中卡密</button>
+            <button class="btn sm green" id="unlockBtn" disabled data-op="unlock" data-confirm="确定解锁选中的卡密?"><?= ico('unlock') ?> 解锁选中卡密</button>
             <button class="btn sm green" id="soldBtn" disabled data-op="marksold" data-confirm="确定将选中卡密更改为已出售? 常用于线下售出后手动核销">↻ 将卡密更改为已出售</button>
-            <a class="btn sm" href="<?= e($exportUrl) ?>">⬇ 导出筛选卡密</a>
+            <a class="btn sm" href="<?= e($exportUrl) ?>"><?= ico('download') ?> 导出筛选卡密</a>
         </div>
     </div>
 
@@ -74,7 +74,7 @@ th.k-chk,td.k-chk{width:34px;text-align:center}
             </div>
             <div class="kf"><label>从入库时间</label><input type="datetime-local" name="date_from" value="<?= e(arr_get($_GET, 'date_from')) ?>"></div>
             <div class="kf"><label>到入库时间</label><input type="datetime-local" name="date_to" value="<?= e(arr_get($_GET, 'date_to')) ?>"></div>
-            <div class="kf"><label>&nbsp;</label><button class="btn" type="submit" style="width:100%">🔍 查询</button></div>
+            <div class="kf"><label>&nbsp;</label><button class="btn" type="submit" style="width:100%"><?= ico('search') ?> 查询</button></div>
         </div>
     </form>
 
@@ -119,13 +119,13 @@ th.k-chk,td.k-chk{width:34px;text-align:center}
                 <td><span class="tag <?= $sid === 0 ? 'ok' : ($sid === 2 ? 'warn' : '') ?>"><?= $stMap[$sid] ?? '未知' ?></span></td>
                 <td class="dim mono"><?= (int)$c['order_id'] > 0 ? '#' . (int)$c['order_id'] : '—' ?></td>
                 <td class="actions">
-                    <?php if ($sid === 0): ?><button class="btn sm gray" data-lock="lock" data-id="<?= (int)$c['id'] ?>" data-confirm="确定锁定该卡密? 锁定后暂不出库">🔒 锁定</button><?php endif; ?>
-                    <?php if ($sid === 2): ?><button class="btn sm green" data-lock="unlock" data-id="<?= (int)$c['id'] ?>">🔓 解锁</button><?php endif; ?>
-                    <?php if ($sid !== 1): ?><button class="btn sm red" data-delcard="<?= (int)$c['id'] ?>" data-confirm="确定删除该卡密?">🗑 删除</button><?php endif; ?>
+                    <?php if ($sid === 0): ?><button class="btn sm gray" data-lock="lock" data-id="<?= (int)$c['id'] ?>" data-confirm="确定锁定该卡密? 锁定后暂不出库"><?= ico('lock') ?> 锁定</button><?php endif; ?>
+                    <?php if ($sid === 2): ?><button class="btn sm green" data-lock="unlock" data-id="<?= (int)$c['id'] ?>"><?= ico('unlock') ?> 解锁</button><?php endif; ?>
+                    <?php if ($sid !== 1): ?><button class="btn sm red" data-delcard="<?= (int)$c['id'] ?>" data-confirm="确定删除该卡密?"><?= ico('trash') ?> 删除</button><?php endif; ?>
                 </td>
             </tr>
         <?php endforeach; ?>
-        <?php if (!$list): ?><tr><td colspan="8"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="font-size:34px;opacity:.55;margin-bottom:6px">🔑</div>暂无卡密, 点击左上角「上传卡密」导入</div></td></tr><?php endif; ?>
+        <?php if (!$list): ?><tr><td colspan="8"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="margin-bottom:6px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9aa1b5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M11 12l9-9M17 6l3 3M14 9l2 2"/></svg></div>暂无卡密, 点击左上角「上传卡密」导入</div></td></tr><?php endif; ?>
         </tbody>
     </table>
     <div style="font-size:12px;color:var(--muted);padding:10px 2px 0">共 <?= (int)$total ?> 条</div>
@@ -141,7 +141,7 @@ th.k-chk,td.k-chk{width:34px;text-align:center}
 <!-- 上传卡密弹窗 -->
 <div class="k-mask" id="kMask">
     <div class="k-modal">
-        <div class="m-head"><span>⬆ 上传卡密</span><button class="x" id="kModalClose" type="button">✕</button></div>
+        <div class="m-head"><span><?= ico('upload') ?> 上传卡密</span><button class="x" id="kModalClose" type="button">✕</button></div>
         <div class="m-body">
             <label>选择商品 *</label>
             <select id="k-product">
@@ -158,7 +158,7 @@ th.k-chk,td.k-chk{width:34px;text-align:center}
             </div>
         </div>
         <div class="m-foot">
-            <button class="btn" id="kSave" style="min-width:110px">💾 保存</button>
+            <button class="btn" id="kSave" style="min-width:110px"><?= ico('save') ?> 保存</button>
             <button class="btn gray" id="kCancel">✕ 取消</button>
         </div>
     </div>
