@@ -429,6 +429,7 @@ class AdminController
             'status' => (int)arr_get($_POST, 'status', 1),
             'sort' => (int)arr_get($_POST, 'sort'),
             'sales_base' => max(0, (int)arr_get($_POST, 'sales_base', 0)),
+            'delivery_type' => arr_get($_POST, 'delivery_type', 'auto') === 'manual' ? 'manual' : 'auto',
             'contact_types' => implode(',', $pickedCt),
         ];
         if ($data['name'] === '') json_out(['code' => 1, 'msg' => '商品名称不能为空']);
@@ -969,6 +970,34 @@ class AdminController
             json_out(['code' => 0, 'msg' => '补发成功']);
         }
         json_out(['code' => 1, 'msg' => '库存不足, 请先为该商品导入卡密']);
+    }
+
+    /** 人工发货(人工处理型商品待处理订单): 管理员填写内容 → 完成订单并邮件通知买家 */
+    public function actionOrderManualDeliver()
+    {
+        $id = (int)arr_get($_POST, 'id');
+        $content = trim(arr_get($_POST, 'content'));
+        $order = DB::fetch('SELECT * FROM orders WHERE id = ?', [$id]);
+        if (!$order) json_out(['code' => 1, 'msg' => '订单不存在']);
+        if ((int)$order['status'] !== 3) json_out(['code' => 1, 'msg' => '仅待处理订单可人工发货']);
+        if ((string)DB::value('SELECT delivery_type FROM products WHERE id = ?', [$order['product_id']]) !== 'manual') {
+            json_out(['code' => 1, 'msg' => '该商品为自动发卡类型, 请使用补发卡密']);
+        }
+        if ($content === '') json_out(['code' => 1, 'msg' => '请填写发货内容']);
+        if (mb_strlen($content) > 5000) json_out(['code' => 1, 'msg' => '发货内容过长(最多5000字)']);
+        DB::update('orders', ['status' => 1, 'cards_content' => $content, 'paid_at' => $order['paid_at'] ?: now()], 'id = ?', [$id]);
+        add_log('admin', '人工发货: 订单 ' . $order['sn'] . ' (' . $order['product_name'] . ')');
+        // 邮件通知买家(邮箱联系方式)
+        $isEmail = $order['contact_type'] === 'email'
+            || ($order['contact_type'] === '' && strpos($order['contact'], '@') !== false);
+        if ($isEmail && $order['contact']) {
+            send_mail(
+                $order['contact'],
+                '【' . setting('site_name', '坤发卡') . '】订单已发货',
+                "您的订单 {$order['sn']} 已完成人工处理, 以下为发货内容:\n\n{$content}\n\n订单查询: " . u('order/detail', ['sn' => $order['sn']])
+            );
+        }
+        json_out(['code' => 0, 'msg' => '人工发货成功' . ($isEmail ? ', 已邮件通知买家' : '')]);
     }
 
     public function actionOrderDel()
@@ -1614,7 +1643,8 @@ class AdminController
             'logo_type', 'logo_text', 'url_rewrite',
             'smtp_open', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_ssl', 'official_api',
             'verify_mode', 'captcha_open', 'turnstile_open', 'turnstile_site_key', 'turnstile_secret_key',
-            'geetest_id', 'geetest_key', 'geetest_timeout', 'order_ip_limit', 'cdn_mode', 'member_open', 'auto_update', 'robots_disallow'];
+            'geetest_id', 'geetest_key', 'geetest_timeout', 'order_ip_limit', 'cdn_mode', 'member_open', 'auto_update', 'robots_disallow',
+            'notify_email', 'stock_alert_num'];
         foreach ($keys as $k) {
             if (isset($_POST[$k])) setting_set($k, is_string($_POST[$k]) ? trim($_POST[$k]) : $_POST[$k]);
         }

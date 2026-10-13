@@ -17,18 +17,46 @@ class OrderService
         if (!$order) return false;
         if ((int)$order['status'] !== 0) return false; // 已处理
 
+        // 人工处理型商品: 不占卡密, 付款即转"待处理"(状态3), 由管理员在后台填写内容发货
+        $deliveryType = (string)DB::value('SELECT delivery_type FROM products WHERE id = ?', [$order['product_id']]);
+        if ($deliveryType === 'manual') {
+            $claimed = DB::exec('UPDATE orders SET status = 3, paid_at = ? WHERE id = ? AND status = 0', [now(), $orderId]);
+            if (!$claimed) return false;
+            $isEmail = $order['contact_type'] === 'email'
+                || ($order['contact_type'] === '' && strpos($order['contact'], '@') !== false);
+            if ($isEmail && $order['contact']) {
+                send_mail(
+                    $order['contact'],
+                    '【' . setting('site_name', '坤发卡') . '】订单已支付, 处理中',
+                    "您的订单 {$order['sn']} 已支付成功, 我们将尽快人工处理并发送结果到本邮箱。\n\n订单查询: " . u('order/detail', ['sn' => $order['sn']])
+                );
+            }
+            self::notifyAdminPaid($order);
+            return true;
+        }
+
         // 原子认领: 仅当仍为待支付时置为已支付, 防止回调/轮询/cron 并发触发重复发卡
         $claimed = DB::exec('UPDATE orders SET status = 1, paid_at = ? WHERE id = ? AND status = 0', [now(), $orderId]);
         if (!$claimed) return false;
 
-        $num = (int)$order['num'];
-        DB::exec('UPDATE cards SET status = 1, order_id = ?, sold_at = ? WHERE product_id = ? AND status = 0 ORDER BY id ASC LIMIT ' . $num,
-            [$orderId, now(), $order['product_id']]);
-        $cards = DB::fetchAll('SELECT content FROM cards WHERE order_id = ? AND product_id = ? ORDER BY id ASC', [$orderId, $order['product_id']]);
+        $num = max(1, (int)$order['num']);
+        // 先查后占: SQLite的UPDATE不支持LIMIT, 用SELECT筛选+IN绑定保持双数据库兼容
+        $pick = DB::fetchAll('SELECT id FROM cards WHERE product_id = ? AND status = 0 ORDER BY id ASC LIMIT ?', [$order['product_id'], $num]);
+        if (count($pick) < $num) {
+            // 库存不足: 订单转"待处理"(状态3)等管理员补卡后补发
+            DB::update('orders', ['status' => 3], 'id = ?', [$orderId]);
+            self::stockAlertCheck($order['product_id']);
+            return false;
+        }
+        $ids = array_map('intval', array_column($pick, 'id'));
+        $ph = implode(',', array_fill(0, count($ids), '?'));
+        DB::exec("UPDATE cards SET status = 1, order_id = ?, sold_at = ? WHERE id IN ($ph)", array_merge([$orderId, now()], $ids));
+        $cards = DB::fetchAll("SELECT content FROM cards WHERE id IN ($ph) ORDER BY id ASC", $ids);
 
         if (count($cards) < $num) {
-            // 库存不足: 回滚本次占用并保持待支付? 库存不足时订单标记待处理(状态3)
+            // 占位校验失败(并发极端情况): 订单转"待处理"
             DB::update('orders', ['status' => 3], 'id = ?', [$orderId]);
+            self::stockAlertCheck($order['product_id']);
             return false;
         }
 
@@ -54,7 +82,42 @@ class OrderService
                 "您的订单 {$order['sn']} 已支付成功, 以下为您的卡密:\n\n" . implode("\n", $contents) . "\n\n订单查询: " . u('order/detail', ['sn' => $order['sn']])
             );
         }
+        self::stockAlertCheck($order['product_id']);
         return true;
+    }
+
+    /** 库存断货预警: 剩余≤阈值时通知管理员(每商品每次跌破只发一次, 回补后自动重置) */
+    public static function stockAlertCheck($productId)
+    {
+        $threshold = (int)setting('stock_alert_num', '5');
+        $to = trim((string)setting('notify_email', ''));
+        if ($threshold <= 0 || $to === '') return;
+        $flagKey = 'stock_alert_' . (int)$productId;
+        $stock = (int)DB::value('SELECT COUNT(*) FROM cards WHERE product_id = ? AND status = 0', [$productId]);
+        if ($stock > 0 && $stock <= $threshold) {
+            if (setting($flagKey) === '1') return; // 已通知过, 避免每单重复轰炸
+            $name = (string)DB::value('SELECT name FROM products WHERE id = ?', [$productId]);
+            send_mail(
+                $to,
+                '【' . setting('site_name', '坤发卡') . '】库存预警: ' . $name,
+                "商品「{$name}」可用库存仅剩 {$stock} 件(预警阈值 {$threshold} 件), 请及时到后台补充卡密。\n\n后台入口: " . site_url(defined('YF_ADMIN_ENTRY') ? YF_ADMIN_ENTRY : 'admin.php')
+            );
+            setting_set($flagKey, '1');
+        } elseif ($stock > $threshold) {
+            if (setting($flagKey) !== '') setting_set($flagKey, '');
+        }
+    }
+
+    /** 人工处理商品有新付款时通知管理员(复用断货预警的通知邮箱) */
+    protected static function notifyAdminPaid($order)
+    {
+        $to = trim((string)setting('notify_email', ''));
+        if ($to === '') return;
+        send_mail(
+            $to,
+            '【' . setting('site_name', '坤发卡') . '】人工发货提醒: ' . $order['product_name'],
+            "商品「{$order['product_name']}」有新订单待人工处理:\n\n订单号: {$order['sn']}\n数量: {$order['num']}\n金额: ¥" . nf($order['total']) . "\n联系方式: {$order['contact']}\n\n请到后台「订单管理」中筛选待处理订单进行发货。"
+        );
     }
 
     /** 是否需要检查链上免挂支付到账(前台轮询时触发) */

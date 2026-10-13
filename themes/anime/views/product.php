@@ -3,8 +3,12 @@
     <h1 class="panel-title"><?= e($product['name']) ?></h1>
     <div class="product-meta">
         <span>💰 单价 <b class="price-text">¥<?= e(nf($product['price'])) ?></b></span>
-        <span>📦 库存 <b class="<?= $stock > 0 ? 'ok-text' : 'bad-text' ?>"><?= $stock ?></b> 件</span>
-        <span>⚡ 支付成功立即自动发货</span>
+        <?php if (($product['delivery_type'] ?? '') === 'manual'): ?>
+            <span>✍️ 人工处理 · 💬 付款后由管理员人工发货</span>
+        <?php else: ?>
+            <span>📦 库存 <b class="<?= $stock > 0 ? 'ok-text' : 'bad-text' ?>"><?= $stock ?></b> 件</span>
+            <span>⚡ 支付成功立即自动发货</span>
+        <?php endif; ?>
     </div>
     <?php if (!empty($product['icon'])): ?>
         <img src="<?= e(site_url(product_image_url($product['icon']))) ?>" alt="<?= e($product['name']) ?>" style="width:auto;max-width:100%;max-height:420px;height:auto;object-fit:contain;display:block;border-radius:12px;margin:10px 0">

@@ -62,6 +62,14 @@
                 <input type="number" name="order_timeout" value="<?= e(setting('order_timeout', '15')) ?>" min="5" max="120" style="max-width:130px">
             </div>
             <div class="form-row">
+                <label>管理员通知邮箱(人工发货提醒 / 库存断货预警, 留空关闭)</label>
+                <input type="text" name="notify_email" value="<?= e(setting('notify_email')) ?>" placeholder="admin@example.com" style="max-width:320px">
+            </div>
+            <div class="form-row">
+                <label>库存预警阈值(件, 自动发卡商品剩余≤此值时邮件提醒补货; 0=关闭)</label>
+                <input type="number" name="stock_alert_num" value="<?= e(setting('stock_alert_num', '5')) ?>" min="0" max="9999" style="max-width:130px">
+            </div>
+            <div class="form-row">
                 <label>当前主题</label>
                 <select name="theme">
                     <?php foreach (theme_list() as $dir => $t): $locked = !empty($t['pro']) && !License::isPro(); ?>

@@ -190,6 +190,11 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
             <input type="number" id="f-price" step="0.01" min="0" value="0.00">
             <label>虚拟已售基数(可选, 前台已售 = 真实销量 + 此数)</label>
             <input type="number" id="f-sales-base" min="0" value="0">
+            <label>发货方式</label>
+            <select id="f-delivery-type">
+                <option value="auto">自动发卡(付款秒发卡密)</option>
+                <option value="manual">人工处理(代充/定制服务, 付款后转待处理由管理员发货)</option>
+            </select>
             <label>排序(越小越靠前)</label>
             <input type="number" id="f-sort" value="0">
             <label>下单联系方式(本商品独立设置, 可多选; 全不选默认邮箱)</label>
@@ -278,6 +283,7 @@ function openDrawer(data) {
     document.getElementById('f-name').value = data ? data.name : '';
     document.getElementById('f-price').value = data ? data.price : '0.00';
     document.getElementById('f-sales-base').value = data ? (data.sales_base || 0) : 0;
+    document.getElementById('f-delivery-type').value = data && data.delivery_type === 'manual' ? 'manual' : 'auto';
     document.getElementById('f-sort').value = data ? data.sort : 0;
     document.getElementById('f-status').checked = data ? data.status === 1 : true;
     document.getElementById('f-description').value = data ? data.description : '';
@@ -335,6 +341,7 @@ document.getElementById('drawerSave').addEventListener('click', function () {
     fd.append('name', document.getElementById('f-name').value.trim());
     fd.append('price', document.getElementById('f-price').value);
     fd.append('sales_base', document.getElementById('f-sales-base').value || '0');
+    fd.append('delivery_type', document.getElementById('f-delivery-type').value);
     fd.append('sort', document.getElementById('f-sort').value || '0');
     fd.append('status', document.getElementById('f-status').checked ? '1' : '0');
     fd.append('description', document.getElementById('f-description').value);

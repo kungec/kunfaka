@@ -58,7 +58,7 @@
     </div>
 <?php else: ?>
     <div class="goods-grid">
-        <?php foreach ($products as $i => $p): $s = isset($stock[$p['id']]) ? $stock[$p['id']] : 0; $gi = $i % 8; ?>
+        <?php foreach ($products as $i => $p): $s = isset($stock[$p['id']]) ? $stock[$p['id']] : 0; $gi = $i % 8; $manual = ($p['delivery_type'] ?? '') === 'manual'; ?>
             <div class="goods-card">
                 <div class="goods-visual gv-<?= $gi ?>">
                     <?php if (!empty($p['icon'])): ?>
@@ -66,7 +66,7 @@
                     <?php else: ?>
                         <span><?= ['🎁','💎','🎮','📱','🎧','⭐','🔥','🛒'][$gi] ?></span>
                     <?php endif; ?>
-                    <span class="gv-stock<?= $s > 0 ? '' : ' soldout' ?>"><?= $s > 0 ? '有货' : '缺货' ?></span>
+                    <span class="gv-stock<?= $manual || $s > 0 ? '' : ' soldout' ?>"><?= $manual ? '人工' : ($s > 0 ? '有货' : '缺货') ?></span>
                 </div>
                 <div class="goods-body">
                     <span class="goods-cat"><?= e($p['cat_name'] ?? '商品') ?></span>
@@ -76,7 +76,7 @@
                             <span class="goods-price"><small>¥</small><?= e(nf($p['price'])) ?></span>
                             <span class="g-sales">已售 <b><?= (int)($p['_sales'] ?? 0) ?></b></span>
                         </div>
-                        <a class="btn-buy" href="<?= u('buy/index', ['product_id' => $p['id']]) ?>"><?= $s > 0 ? '立即购买' : '已缺货' ?></a>
+                        <a class="btn-buy" href="<?= u('buy/index', ['product_id' => $p['id']]) ?>"><?= $manual || $s > 0 ? '立即购买' : '已缺货' ?></a>
                     </div>
                 </div>
             </div>

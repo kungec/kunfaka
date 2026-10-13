@@ -75,10 +75,13 @@ class BuyController
         if ($num < (int)$product['min_num']) $num = (int)$product['min_num'];
         if ((int)$product['max_num'] > 0 && $num > (int)$product['max_num']) $num = (int)$product['max_num'];
         if ($num < 1) $num = 1;
-        $stock = product_stock($product['id']);
-        if ($stock < $num) {
-            View::theme('error', ['msg' => '库存不足, 剩余 ' . $stock . ' 件', 'pageTitle' => '库存不足']);
-            return;
+        // 人工处理型商品无卡密库存概念, 跳过库存校验
+        if (($product['delivery_type'] ?? 'auto') !== 'manual') {
+            $stock = product_stock($product['id']);
+            if ($stock < $num) {
+                View::theme('error', ['msg' => '库存不足, 剩余 ' . $stock . ' 件', 'pageTitle' => '库存不足']);
+                return;
+            }
         }
 
         // 联系方式类型与格式校验(商品级启用类型; 未传类型时兼容旧表单: 含@识别为邮箱, 否则用第一个启用类型)

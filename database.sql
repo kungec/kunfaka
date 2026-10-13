@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS `products` (
   `sales_base` int NOT NULL DEFAULT 0 COMMENT '虚拟已售基数(前台已售=真实+此数)',
   `group_id` int unsigned NOT NULL DEFAULT 0 COMMENT '商品分组(0=不分组)',
   `icon` varchar(255) NOT NULL DEFAULT '' COMMENT '商品图标(上传路径)',
+  `delivery_type` varchar(10) NOT NULL DEFAULT 'auto' COMMENT '发货方式: auto自动发卡 manual人工处理',
   `created_at` int unsigned NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

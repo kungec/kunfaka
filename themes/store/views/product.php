@@ -14,8 +14,13 @@
         <div class="p-cat"><?= e($product['cat_name'] ?? '商品') ?></div>
         <h1 class="p-name"><?= e($product['name']) ?></h1>
         <div class="p-meta">
-            <span class="tag <?= $stock > 0 ? 'ok' : 'bad' ?>">📦 库存 <?= (int)$stock ?> 件</span>
-            <span class="tag muted">⚡ 支付成功立即自动发货</span>
+            <?php if (($product['delivery_type'] ?? '') === 'manual'): ?>
+                <span class="tag blue">✍️ 人工处理</span>
+                <span class="tag muted">💬 付款后由管理员人工发货</span>
+            <?php else: ?>
+                <span class="tag <?= $stock > 0 ? 'ok' : 'bad' ?>">📦 库存 <?= (int)$stock ?> 件</span>
+                <span class="tag muted">⚡ 支付成功立即自动发货</span>
+            <?php endif; ?>
         </div>
         <div class="p-price-row">
             <div class="p-price-label">价格</div>
