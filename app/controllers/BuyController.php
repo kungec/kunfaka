@@ -104,6 +104,12 @@ class BuyController
             View::theme('error', ['msg' => $err, 'pageTitle' => '错误']);
             return;
         }
+        // 下单黑名单: 联系方式或IP命中后台名单时拒绝(统一提示, 不暴露命中原因)
+        if (order_blacklisted($contact, client_ip())) {
+            add_log('risk', '黑名单拦截下单: ' . $contact . ' IP ' . client_ip() . ' 商品#' . $product['id']);
+            View::theme('error', ['msg' => '无法完成下单, 请联系客服处理', 'pageTitle' => '下单失败']);
+            return;
+        }
         // 商品启用的附加信息字段: 收件人姓名 / 邮寄地址
         $shipName = trim((string)(isset($_POST['ship_name']) ? $_POST['ship_name'] : ''));
         $shipAddress = trim((string)(isset($_POST['ship_address']) ? $_POST['ship_address'] : ''));

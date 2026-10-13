@@ -70,6 +70,22 @@
                 <input type="number" name="stock_alert_num" value="<?= e(setting('stock_alert_num', '5')) ?>" min="0" max="9999" style="max-width:130px">
             </div>
             <div class="form-row">
+                <label>Telegram Bot Token(管理员TG推送, 留空关闭; 需服务器可访问 api.telegram.org)</label>
+                <input type="text" name="tg_bot_token" value="<?= e(setting('tg_bot_token')) ?>" placeholder="123456:ABC-DEF..." style="max-width:420px" autocomplete="off">
+            </div>
+            <div class="form-row">
+                <label>Telegram Chat ID(接收通知的会话ID)</label>
+                <input type="text" name="tg_chat_id" value="<?= e(setting('tg_chat_id')) ?>" placeholder="如 123456789" style="max-width:260px">
+            </div>
+            <div class="form-row">
+                <label style="display:flex;align-items:center;gap:8px;font-weight:600;color:var(--text)"><input type="checkbox" name="notify_order_paid" value="1" <?= setting('notify_order_paid') === '1' ? 'checked' : '' ?> style="width:auto"> 每笔订单支付成交时推送TG/邮件通知(默认仅人工发货与断货提醒)</label>
+            </div>
+            <div class="form-row">
+                <label>下单黑名单(每行一条: 邮箱或IP, 命中即拒绝下单)</label>
+                <textarea name="order_blacklist" rows="5" placeholder="baduser@example.com&#10;1.2.3.4" style="max-width:480px;font-family:monospace"><?= e(setting('order_blacklist')) ?></textarea>
+                <input type="hidden" name="blacklist_submitted" value="1">
+            </div>
+            <div class="form-row">
                 <label>当前主题</label>
                 <select name="theme">
                     <?php foreach (theme_list() as $dir => $t): $locked = !empty($t['pro']) && !License::isPro(); ?>

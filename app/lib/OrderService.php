@@ -83,6 +83,7 @@ class OrderService
             );
         }
         self::stockAlertCheck($order['product_id']);
+        self::notifyOrderPaid($order);
         // 优惠券核销(营销插件)
         if (!empty($order['coupon_code'])) {
             $mkt = Plugin::marketingActive();
@@ -95,16 +96,14 @@ class OrderService
     public static function stockAlertCheck($productId)
     {
         $threshold = (int)setting('stock_alert_num', '5');
-        $to = trim((string)setting('notify_email', ''));
-        if ($threshold <= 0 || $to === '') return;
+        if ($threshold <= 0) return;
         $flagKey = 'stock_alert_' . (int)$productId;
         $stock = (int)DB::value('SELECT COUNT(*) FROM cards WHERE product_id = ? AND status = 0', [$productId]);
         if ($stock > 0 && $stock <= $threshold) {
             if (setting($flagKey) === '1') return; // 已通知过, 避免每单重复轰炸
             $name = (string)DB::value('SELECT name FROM products WHERE id = ?', [$productId]);
-            send_mail(
-                $to,
-                '【' . setting('site_name', '坤发卡') . '】库存预警: ' . $name,
+            notify_admin(
+                '库存预警: ' . $name,
                 "商品「{$name}」可用库存仅剩 {$stock} 件(预警阈值 {$threshold} 件), 请及时到后台补充卡密。\n\n后台入口: " . site_url(defined('YF_ADMIN_ENTRY') ? YF_ADMIN_ENTRY : 'admin.php')
             );
             setting_set($flagKey, '1');
@@ -113,15 +112,23 @@ class OrderService
         }
     }
 
-    /** 人工处理商品有新付款时通知管理员(复用断货预警的通知邮箱) */
+    /** 人工处理商品有新付款时通知管理员(复用统一通知通道) */
     protected static function notifyAdminPaid($order)
     {
-        $to = trim((string)setting('notify_email', ''));
-        if ($to === '') return;
-        send_mail(
-            $to,
-            '【' . setting('site_name', '坤发卡') . '】人工发货提醒: ' . $order['product_name'],
+        notify_admin(
+            '人工发货提醒: ' . $order['product_name'],
             "商品「{$order['product_name']}」有新订单待人工处理:\n\n订单号: {$order['sn']}\n数量: {$order['num']}\n金额: ¥" . nf($order['total']) . "\n联系方式: {$order['contact']}\n\n请到后台「订单管理」中筛选待处理订单进行发货。"
+        );
+    }
+
+    /** 支付成功成交推送(开关默认关, 供TG等即时通道) */
+    protected static function notifyOrderPaid($order)
+    {
+        if (setting('notify_order_paid', '0') !== '1') return;
+        $payName = payment_display_name($order['pay_plugin'], $order['channel'] ?? '');
+        notify_admin(
+            '新订单成交: ' . $order['product_name'],
+            "商品「{$order['product_name']}」已支付成交:\n\n订单号: {$order['sn']}\n数量: {$order['num']}\n金额: ¥" . nf($order['total']) . "\n支付方式: {$payName}\n联系方式: {$order['contact']}"
         );
     }
 

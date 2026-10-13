@@ -1657,6 +1657,16 @@ class AdminController
             }
             setting_set('service_contacts', json_encode($clean, JSON_UNESCAPED_UNICODE));
         }
+        // 下单黑名单(多行文本: 每行一条邮箱或IP, 去空行去重)
+        if (isset($_POST['blacklist_submitted'])) {
+            $lines = preg_split('/\r\n|\r|\n/', (string)arr_get($_POST, 'order_blacklist', ''));
+            $clean = [];
+            foreach ($lines as $ln) {
+                $v = strtolower(trim($ln));
+                if ($v !== '' && mb_strlen($v) <= 100 && !in_array($v, $clean, true)) $clean[] = $v;
+            }
+            setting_set('order_blacklist', implode("\n", $clean));
+        }
         // 下单联系方式已迁移为商品级配置(products.contact_types), 全局设置仅保留只读说明
         // 微信/QQ防红开关(复选框: 未随表单提交=关闭)
         if (isset($_POST['anti_red_submitted'])) {
@@ -1668,7 +1678,7 @@ class AdminController
             'smtp_open', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_ssl', 'official_api',
             'verify_mode', 'captcha_open', 'turnstile_open', 'turnstile_site_key', 'turnstile_secret_key',
             'geetest_id', 'geetest_key', 'geetest_timeout', 'order_ip_limit', 'cdn_mode', 'member_open', 'auto_update', 'robots_disallow',
-            'notify_email', 'stock_alert_num'];
+            'notify_email', 'stock_alert_num', 'tg_bot_token', 'tg_chat_id', 'notify_order_paid'];
         foreach ($keys as $k) {
             if (isset($_POST[$k])) setting_set($k, is_string($_POST[$k]) ? trim($_POST[$k]) : $_POST[$k]);
         }

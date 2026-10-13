@@ -671,3 +671,47 @@ function ico($name, $size = 15) {
     if (!isset($p[$name])) return '';
     return '<svg class="ico-svg" width="' . (int)$size . '" height="' . (int)$size . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2.5px;flex:none">' . $p[$name] . '</svg>';
 }
+
+/** Telegram机器人消息推送(管理员通知通道; 未配置或网络不可达时静默跳过) */
+function send_telegram($text)
+{
+    $token = trim((string)setting('tg_bot_token', ''));
+    $chat = trim((string)setting('tg_chat_id', ''));
+    if ($token === '' || $chat === '') return false;
+    try {
+        $ch = curl_init('https://api.telegram.org/bot' . $token . '/sendMessage');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query(['chat_id' => $chat, 'text' => $text]),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 5,
+            CURLOPT_CONNECTTIMEOUT => 3,
+        ]);
+        curl_exec($ch);
+        curl_close($ch);
+        return true;
+    } catch (Exception $ex) {
+        return false;
+    }
+}
+
+/** 管理员统一通知: 邮箱(已配置时) + Telegram(已配置时) */
+function notify_admin($title, $body)
+{
+    $to = trim((string)setting('notify_email', ''));
+    if ($to !== '') send_mail($to, '【' . setting('site_name', '坤发卡') . '】' . $title, $body);
+    send_telegram($title . "\n\n" . $body);
+}
+
+/** 下单黑名单命中检查(每行一条: 邮箱或IP, 精确匹配) */
+function order_blacklisted($contact, $ip)
+{
+    $list = preg_split('/\r\n|\r|\n/', (string)setting('order_blacklist', ''));
+    $set = [];
+    foreach ($list as $line) {
+        $v = strtolower(trim($line));
+        if ($v !== '') $set[$v] = true;
+    }
+    if (!$set) return false;
+    return isset($set[strtolower(trim((string)$contact))]) || isset($set[strtolower(trim((string)$ip))]);
+}
