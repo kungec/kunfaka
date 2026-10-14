@@ -957,7 +957,7 @@ class AdminController
         View::admin('order_detail', ['order' => $order]);
     }
 
-    /** 手动补发(库存不足待处理订单 / 已支付未发货) */
+    /** 手动补发(缺货待处理订单): 补卡后由 OrderService 走补发流程 */
     public function actionOrderDeliver()
     {
         $id = (int)arr_get($_POST, 'id');
@@ -966,8 +966,11 @@ class AdminController
         if ((int)$order['status'] === 0) json_out(['code' => 1, 'msg' => '订单未支付, 不能发货']);
         if ((int)$order['status'] === 1) json_out(['code' => 1, 'msg' => '订单已完成']);
         if ((int)$order['status'] === 2) json_out(['code' => 1, 'msg' => '订单已过期']);
-        if (OrderService::deliver($id)) {
-            json_out(['code' => 0, 'msg' => '补发成功']);
+        if ((string)DB::value('SELECT delivery_type FROM products WHERE id = ?', [$order['product_id']]) === 'manual') {
+            json_out(['code' => 1, 'msg' => '人工处理商品请在订单详情填写内容人工发货']);
+        }
+        if (OrderService::deliver($id, '', '', true)) {
+            json_out(['code' => 0, 'msg' => '补发成功' . ($order['contact_type'] === 'email' ? ', 已邮件通知买家' : '')]);
         }
         json_out(['code' => 1, 'msg' => '库存不足, 请先为该商品导入卡密']);
     }
@@ -985,8 +988,15 @@ class AdminController
         }
         if ($content === '') json_out(['code' => 1, 'msg' => '请填写发货内容']);
         if (mb_strlen($content) > 5000) json_out(['code' => 1, 'msg' => '发货内容过长(最多5000字)']);
-        DB::update('orders', ['status' => 1, 'cards_content' => $content, 'paid_at' => $order['paid_at'] ?: now()], 'id = ?', [$id]);
+        // 原子完成: 仅当仍为待处理时置为已完成, 防重复提交重复发信
+        $ok = DB::update('orders', ['status' => 1, 'cards_content' => $content, 'paid_at' => $order['paid_at'] ?: now()], 'id = ? AND status = 3', [$id]);
+        if (!$ok) json_out(['code' => 1, 'msg' => '订单状态已变更, 请刷新后重试']);
         add_log('admin', '人工发货: 订单 ' . $order['sn'] . ' (' . $order['product_name'] . ')');
+        // 优惠券核销(人工发货同样计入, 与自动发货口径一致)
+        if (!empty($order['coupon_code'])) {
+            $mkt = Plugin::marketingActive();
+            if ($mkt && method_exists($mkt, 'onPaid')) $mkt->onPaid($order);
+        }
         // 邮件通知买家(邮箱联系方式)
         $isEmail = $order['contact_type'] === 'email'
             || ($order['contact_type'] === '' && strpos($order['contact'], '@') !== false);
@@ -1123,6 +1133,8 @@ class AdminController
 
     public function actionAppToggle()
     {
+        // 启停应用=切换支付通道/主题, 改动直接影响资金链路与前台呈现, 仅超级管理员
+        if (!$this->isSuper()) json_out(['code' => 1, 'msg' => '仅超级管理员可启停应用']);
         $name = trim(arr_get($_POST, 'name'));
         $row = DB::fetch('SELECT * FROM apps WHERE name = ?', [$name]);
         if (!$row) json_out(['code' => 1, 'msg' => '请先安装该应用']);
@@ -1138,13 +1150,24 @@ class AdminController
 
     public function actionAppUninstall()
     {
+        if (!$this->isSuper()) json_out(['code' => 1, 'msg' => '仅超级管理员可卸载应用']);
         $name = trim(arr_get($_POST, 'name'));
-        DB::exec('DELETE FROM apps WHERE name = ? AND enabled = 0', [$name]);
+        $row = DB::fetch('SELECT type, enabled FROM apps WHERE name = ?', [$name]);
+        if (!$row) json_out(['code' => 1, 'msg' => '应用不存在']);
+        // 卸载支付插件前检查在途订单: 引用该插件的未支付订单付款后将无法自动发货
+        if (($row['type'] ?? '') === 'payment') {
+            $pending = (int)DB::value('SELECT COUNT(*) FROM orders WHERE pay_plugin = ? AND status = 0', [$name]);
+            if ($pending > 0) json_out(['code' => 1, 'msg' => '还有 ' . $pending . ' 笔未支付订单使用该支付方式, 请先等订单关闭']);
+        }
+        $ok = DB::exec('DELETE FROM apps WHERE name = ? AND enabled = 0', [$name]);
+        if (!$ok) json_out(['code' => 1, 'msg' => '卸载失败: 请先停用该应用']);
         json_out(['code' => 0, 'msg' => '已卸载']);
     }
 
     public function actionAppConfig()
     {
+        // 插件配置含支付网关密钥/收款账户等机密与资金信息, 仅超级管理员可查看
+        if (!$this->isSuper()) json_out(['code' => 1, 'msg' => '仅超级管理员可查看应用配置']);
         $name = trim(arr_get($_GET, 'name'));
         $type = arr_get($_GET, 'type', 'payment') === 'theme' ? 'theme' : 'payment';
         $meta = Plugin::meta($type, $name);
@@ -1168,6 +1191,8 @@ class AdminController
 
     public function actionAppConfigSave()
     {
+        // 保存配置=改支付网关/收款账户/回调地址, 直接影响资金流向, 仅超级管理员
+        if (!$this->isSuper()) json_out(['code' => 1, 'msg' => '仅超级管理员可修改应用配置']);
         $name = trim(arr_get($_POST, 'name'));
         $meta = Plugin::meta('payment', $name) ?: Plugin::meta('theme', $name);
         if (!$meta) json_out(['code' => 1, 'msg' => '应用不存在']);

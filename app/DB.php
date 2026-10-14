@@ -14,6 +14,28 @@ if (!class_exists('DB')) {
         return self::$pdo;
     }
 
+    /** PDO驱动名(mysql/sqlite), 供需要方言差异的逻辑判断(如FOR UPDATE行锁) */
+    public static function driver()
+    {
+        return self::$pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+    }
+
+    /** 开启事务(发货等需要"选卡→占卡→写单"原子完成的场景) */
+    public static function begin()
+    {
+        if (!self::$pdo->inTransaction()) self::$pdo->beginTransaction();
+    }
+
+    public static function commit()
+    {
+        if (self::$pdo->inTransaction()) self::$pdo->commit();
+    }
+
+    public static function rollBack()
+    {
+        if (self::$pdo->inTransaction()) self::$pdo->rollBack();
+    }
+
     public static function init()
     {
         $dsn = 'mysql:host=' . YF_DB_HOST . ';port=' . YF_DB_PORT . ';dbname=' . YF_DB_NAME . ';charset=utf8mb4';

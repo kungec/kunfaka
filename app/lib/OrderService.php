@@ -6,20 +6,22 @@ class OrderService
 {
     /**
      * 标记订单已支付并自动发货
-     * @param int    $orderId  订单ID
-     * @param string $tradeNo  第三方支付流水号
-     * @param string $txid     链上交易哈希(USDT)
+     * @param int    $orderId   订单ID
+     * @param string $tradeNo   第三方支付流水号
+     * @param string $txid      链上交易哈希(USDT)
+     * @param bool   $redeliver 补发模式: 仅接受缺货待处理(状态3)订单, 补卡后重新发货
      * @return bool 是否本次完成发货
      */
-    public static function deliver($orderId, $tradeNo = '', $txid = '')
+    public static function deliver($orderId, $tradeNo = '', $txid = '', $redeliver = false)
     {
         $order = DB::fetch('SELECT * FROM orders WHERE id = ?', [$orderId]);
         if (!$order) return false;
-        if ((int)$order['status'] !== 0) return false; // 已处理
 
         // 人工处理型商品: 不占卡密, 付款即转"待处理"(状态3), 由管理员在后台填写内容发货
         $deliveryType = (string)DB::value('SELECT delivery_type FROM products WHERE id = ?', [$order['product_id']]);
         if ($deliveryType === 'manual') {
+            if ($redeliver) return false; // 人工商品走后台 actionOrderManualDeliver
+            if ((int)$order['status'] !== 0) return false;
             $claimed = DB::exec('UPDATE orders SET status = 3, paid_at = ? WHERE id = ? AND status = 0', [now(), $orderId]);
             if (!$claimed) return false;
             $isEmail = $order['contact_type'] === 'email'
@@ -35,56 +37,72 @@ class OrderService
             return true;
         }
 
-        // 原子认领: 仅当仍为待支付时置为已支付, 防止回调/轮询/cron 并发触发重复发卡
-        $claimed = DB::exec('UPDATE orders SET status = 1, paid_at = ? WHERE id = ? AND status = 0', [now(), $orderId]);
-        if (!$claimed) return false;
+        $status = (int)$order['status'];
+        if ($redeliver) {
+            // 补发仅针对缺货待处理(状态3)订单; 释放旧版本可能遗留的部分占用卡(状态3=买家未收到内容, 释放安全)
+            if ($status !== 3) return false;
+            DB::exec('UPDATE cards SET status = 0, order_id = 0, sold_at = 0 WHERE order_id = ? AND status = 1', [$orderId]);
+        } else {
+            if ($status !== 0) return false;
+        }
 
         $num = max(1, (int)$order['num']);
-        // 先查后占: SQLite的UPDATE不支持LIMIT, 用SELECT筛选+IN绑定保持双数据库兼容
-        $pick = DB::fetchAll('SELECT id FROM cards WHERE product_id = ? AND status = 0 ORDER BY id ASC LIMIT ?', [$order['product_id'], $num]);
-        if (count($pick) < $num) {
+        $contents = [];
+        $done = false;
+        // 事务+行锁保证"选卡→占卡→写单"原子完成: 并发回调不会发出同一张卡;
+        // 进程中断时整体回滚, 订单停留原状态, 网关重试/轮询可再次发货
+        DB::begin();
+        try {
+            if (!$redeliver) {
+                // 原子认领: 仅当仍为待支付时置为已支付, 防止回调/轮询/cron 并发触发重复发卡
+                $claimed = DB::exec('UPDATE orders SET status = 1, paid_at = ? WHERE id = ? AND status = 0', [now(), $orderId]);
+                if (!$claimed) { DB::rollBack(); return false; }
+            }
+            // FOR UPDATE 行锁(MySQL; SQLite为库级写锁)防并发选中同一批卡
+            $lock = DB::driver() === 'mysql' ? ' FOR UPDATE' : '';
+            $pick = DB::fetchAll('SELECT id FROM cards WHERE product_id = ? AND status = 0 ORDER BY id ASC LIMIT ' . $num . $lock, [$order['product_id']]);
+            if (count($pick) >= $num) {
+                $ids = array_map('intval', array_column($pick, 'id'));
+                $ph = implode(',', array_fill(0, count($ids), '?'));
+                DB::exec("UPDATE cards SET status = 1, order_id = ?, sold_at = ? WHERE id IN ($ph) AND status = 0", array_merge([$orderId, now()], $ids));
+                $cards = DB::fetchAll("SELECT content FROM cards WHERE id IN ($ph) ORDER BY id ASC", $ids);
+                if (count($cards) >= $num) {
+                    foreach ($cards as $i => $c) $contents[] = ($num > 1 ? ($i + 1) . '. ' : '') . $c['content'];
+                    $data = ['status' => 1, 'cards_content' => implode("\n", $contents)];
+                    if (!$redeliver) $data['paid_at'] = now();
+                    if ($tradeNo) $data['trade_no'] = $tradeNo;
+                    if ($txid) $data['txid'] = $txid;
+                    DB::update('orders', $data, 'id = ?', [$orderId]);
+                    DB::exec('UPDATE products SET sales = sales + ? WHERE id = ?', [$num, $order['product_id']]);
+                    $done = true;
+                }
+            }
+            if ($done) { DB::commit(); } else { DB::rollBack(); }
+        } catch (Throwable $t) {
+            DB::rollBack();
+            throw $t;
+        }
+        if (!$done) {
             // 库存不足: 订单转"待处理"(状态3)等管理员补卡后补发
             DB::update('orders', ['status' => 3], 'id = ?', [$orderId]);
             self::stockAlertCheck($order['product_id']);
             return false;
         }
-        $ids = array_map('intval', array_column($pick, 'id'));
-        $ph = implode(',', array_fill(0, count($ids), '?'));
-        DB::exec("UPDATE cards SET status = 1, order_id = ?, sold_at = ? WHERE id IN ($ph)", array_merge([$orderId, now()], $ids));
-        $cards = DB::fetchAll("SELECT content FROM cards WHERE id IN ($ph) ORDER BY id ASC", $ids);
 
-        if (count($cards) < $num) {
-            // 占位校验失败(并发极端情况): 订单转"待处理"
-            DB::update('orders', ['status' => 3], 'id = ?', [$orderId]);
-            self::stockAlertCheck($order['product_id']);
-            return false;
-        }
-
-        $contents = [];
-        foreach ($cards as $i => $c) $contents[] = ($num > 1 ? ($i + 1) . '. ' : '') . $c['content'];
-        $data = [
-            'status' => 1,
-            'cards_content' => implode("\n", $contents),
-            'paid_at' => now(),
-        ];
-        if ($tradeNo) $data['trade_no'] = $tradeNo;
-        if ($txid) $data['txid'] = $txid;
-        DB::update('orders', $data, 'id = ?', [$orderId]);
-        DB::exec('UPDATE products SET sales = sales + ? WHERE id = ?', [$num, $order['product_id']]);
-
-        // 邮件通知(联系方式类型为邮箱时; 兼容旧订单按@识别)
+        // 以下为事务外的通知类副作用(补发同样邮件通知买家)
         $isEmail = $order['contact_type'] === 'email'
             || ($order['contact_type'] === '' && strpos($order['contact'], '@') !== false);
         if ($isEmail && $order['contact']) {
+            $intro = $redeliver ? "您的订单 {$order['sn']} 库存已回补, 以下为您的卡密:" : "您的订单 {$order['sn']} 已支付成功, 以下为您的卡密:";
             send_mail(
                 $order['contact'],
                 '【' . setting('site_name', '坤发卡') . '】订单发货成功',
-                "您的订单 {$order['sn']} 已支付成功, 以下为您的卡密:\n\n" . implode("\n", $contents) . "\n\n订单查询: " . u('order/detail', ['sn' => $order['sn']])
+                $intro . "\n\n" . implode("\n", $contents) . "\n\n订单查询: " . u('order/detail', ['sn' => $order['sn']])
             );
         }
         self::stockAlertCheck($order['product_id']);
-        self::notifyOrderPaid($order);
-        // 优惠券核销(营销插件)
+        if (!$redeliver) self::notifyOrderPaid($order);
+        // 优惠券核销(营销插件): 仅在首次发货与补发成功时各恰好核销一次
         if (!empty($order['coupon_code'])) {
             $mkt = Plugin::marketingActive();
             if ($mkt && method_exists($mkt, 'onPaid')) $mkt->onPaid($order);

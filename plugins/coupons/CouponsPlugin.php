@@ -43,13 +43,20 @@ class CouponsPlugin
         $t = now();
         if ((int)$c['starts'] > 0 && $t < (int)$c['starts']) return $fail('优惠码尚未到生效时间');
         if ((int)$c['ends'] > 0 && $t > (int)$c['ends']) return $fail('优惠码已过期');
-        if ((int)$c['max_uses'] > 0 && (int)$c['used'] >= (int)$c['max_uses']) return $fail('优惠码已被领完');
+        if ((int)$c['max_uses'] > 0) {
+            // 占用计算法: 已核销(used) + 在途占用(待支付/待处理订单) 均计入名额; 订单过期(状态2)自动释放
+            $pending = (int)DB::value('SELECT COUNT(*) FROM orders WHERE coupon_code = ? AND status IN (0, 3)', [$c['code']]);
+            if ((int)$c['used'] + $pending >= (int)$c['max_uses']) return $fail('优惠码已被领完');
+        }
         $pids = array_filter(array_map('intval', explode(',', (string)$c['pids'])));
         if ($pids && !in_array((int)$ctx['product_id'], $pids, true)) return $fail('该优惠码不适用于此商品');
         if ((float)$c['min_order'] > 0 && $total < (float)$c['min_order']) return $fail('该优惠码需满 ¥' . nf($c['min_order']) . ' 可用');
-        $usedByMe = (int)DB::value('SELECT COUNT(*) FROM coupon_used WHERE coupon_id = ? AND contact = ?', [$c['id'], (string)$ctx['contact']]);
+        // 联系方式统一小写比较, 防大小写变体绕过每联系方式限用
+        $contact = strtolower(trim((string)$ctx['contact']));
+        $usedByMe = (int)DB::value('SELECT COUNT(*) FROM coupon_used WHERE coupon_id = ? AND contact = ?', [$c['id'], $contact]);
         if ((int)$c['per_user'] > 0 && $usedByMe >= (int)$c['per_user']) return $fail('该优惠码每联系方式限用 ' . (int)$c['per_user'] . ' 次, 您已使用');
-        $discount = (float)$c['type'] === 'percent'
+        // 注意: 此处是字符串比较, 不能写成 (float)$c['type'] === 'percent'(恒为假, 百分比券会按固定金额扣)
+        $discount = (string)$c['type'] === 'percent'
             ? round($total * min(100, max(0, (float)$c['value'])) / 100, 2)
             : min((float)$c['value'], $total);
         $discount = min($discount, round($total - 0.01, 2));
@@ -67,7 +74,7 @@ class CouponsPlugin
         DB::insert('coupon_used', [
             'coupon_id' => $c['id'],
             'order_sn' => $order['sn'],
-            'contact' => $order['contact'],
+            'contact' => strtolower(trim((string)$order['contact'])),
             'amount' => $order['discount'],
             'created_at' => now(),
         ]);
