@@ -32,7 +32,7 @@ class AlipayF2fPlugin extends PaymentBase
         if (!$this->client()->verify($req)) return null;
         if (!isset($req['trade_status']) || $req['trade_status'] !== 'TRADE_SUCCESS') return null;
         if (!isset($req['out_trade_no'])) return null;
-        $money = isset($req['total_amount']) && is_numeric($req['total_amount']) ? (float)$req['total_amount'] : -1;
+        $money = isset($req['total_amount']) && is_numeric($req['total_amount']) ? (float)$req['total_amount'] : null;
         return ['sn' => $req['out_trade_no'], 'trade_no' => isset($req['trade_no']) ? $req['trade_no'] : '', 'money' => $money];
     }
 }

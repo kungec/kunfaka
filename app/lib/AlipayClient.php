@@ -54,11 +54,12 @@ class AlipayClient
     {
         if (empty($params['sign'])) return false;
         $sign = $params['sign'];
-        unset($params['sign'], $params['sign_type']);
+        // 剔除签名参数与本框架路由参数(s/plugin为回调URL自带, 不在支付宝签名串内, 混入会导致验签恒失败)
+        unset($params['sign'], $params['sign_type'], $params['_csrf'], $params['s'], $params['plugin']);
         ksort($params);
         $pairs = [];
         foreach ($params as $k => $v) {
-            if ($v === '' || $v === null) continue;
+            if ($v === '' || $v === null || is_array($v)) continue;
             $pairs[] = $k . '=' . $v;
         }
         $data = implode('&', $pairs);

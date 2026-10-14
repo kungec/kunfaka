@@ -62,6 +62,10 @@ class Updater
     public static function download(array $info)
     {
         if (empty($info['url'])) return false;
+        // 更新包地址必须与版本接口同域: 版本接口被劫持时也不能把下载引向任意主机
+        $apiHost = parse_url(rtrim(setting('official_api', ''), '/'), PHP_URL_HOST);
+        $pkgHost = parse_url((string)$info['url'], PHP_URL_HOST);
+        if (!$apiHost || !$pkgHost || strcasecmp((string)$apiHost, (string)$pkgHost) !== 0) return false;
         if (is_file(self::PKG_FILE) && self::pkgShaMatches($info)) return true;
         @unlink(self::PKG_FILE);
         $ch = curl_init();
@@ -69,15 +73,16 @@ class Updater
         curl_setopt_array($ch, [
             CURLOPT_URL => $info['url'],
             CURLOPT_FILE => $fp,
-            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_FOLLOWLOCATION => false, // 禁止跟随重定向(防302转向内网/恶意源绕过同域校验)
             CURLOPT_TIMEOUT => 120,
             CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_MAXFILESIZE => 200 * 1024 * 1024, // 包大小上限200MB(防磁盘耗尽)
         ]);
         curl_tls($ch);
         $ok = curl_exec($ch) !== false && curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200;
         curl_close($ch);
         fclose($fp);
-        if (!$ok || !is_file(self::PKG_FILE) || !self::pkgShaMatches($info)) {
+        if (!$ok || !is_file(self::PKG_FILE) || filesize(self::PKG_FILE) > 200 * 1024 * 1024 || !self::pkgShaMatches($info)) {
             @unlink(self::PKG_FILE);
             return false;
         }
@@ -86,8 +91,9 @@ class Updater
 
     protected static function pkgShaMatches(array $info)
     {
-        if (empty($info['sha256'])) return true; // 未提供校验值则跳过(不推荐)
-        return hash_file('sha256', self::PKG_FILE) === strtolower($info['sha256']);
+        // 未提供sha256直接拒绝(fail-closed): 宁可更新失败也不安装来源不明的包
+        if (empty($info['sha256'])) return false;
+        return hash_file('sha256', self::PKG_FILE) === strtolower((string)$info['sha256']);
     }
 
     /** 应用已下载的更新包: 解压覆盖(跳过保护清单) + 数据库升级 */
@@ -97,31 +103,45 @@ class Updater
         if (!class_exists('ZipArchive')) throw new Exception('缺少 zip 扩展, 无法自动更新');
         $zip = new ZipArchive();
         if ($zip->open(self::PKG_FILE) !== true) throw new Exception('更新包损坏, 无法解压');
-        $protected = self::protectedPaths();
+        // 计算公共顶层目录: 仅当所有条目都在同一第一段目录下时才剥离(兼容GitHub源码包与make_package根级包)
+        $stripPrefix = null;
         for ($i = 0; $i < $zip->numFiles; $i++) {
-            $name = $zip->getNameIndex($i);
-            // 剥离zip顶层公共目录(适配GitHub源码包)
-            if (strpos($name, '/') !== false) {
-                $parts = explode('/', $name);
-                array_shift($parts);
-                $name = implode('/', $parts);
+            $n = (string)$zip->getNameIndex($i);
+            if ($n === '') continue;
+            $seg = strpos($n, '/') === false ? '' : substr($n, 0, strpos($n, '/'));
+            if ($seg === '') { $stripPrefix = null; break; } // 存在顶层文件 → 根级结构包, 不剥离
+            if ($stripPrefix === null) $stripPrefix = $seg;
+            elseif ($stripPrefix !== $seg) { $stripPrefix = null; break; } // 多个顶层目录 → 不剥离
+        }
+        $fail = null;
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = (string)$zip->getNameIndex($i);
+            if ($name === '') continue;
+            if ($stripPrefix !== null && strpos($name, $stripPrefix . '/') === 0) {
+                $name = substr($name, strlen($stripPrefix) + 1);
             }
-            if ($name === '' || self::isProtected($name)) continue;
+            // Zip Slip 防护: 统一分隔符后拒绝上跳路径/绝对路径/盘符; 保护清单在归一化之后判断
+            $name = str_replace('\\', '/', $name);
+            if ($name === '' || strpos($name, '..') !== false || $name[0] === '/' || preg_match('#^[A-Za-z]:#', $name)) continue;
+            if (self::isProtected($name)) continue;
             $target = YF_ROOT . '/' . $name;
             if (substr($name, -1) === '/') {
-                if (!is_dir($target)) @mkdir($target, 0755, true);
+                if (!is_dir($target) && !@mkdir($target, 0755, true)) { $fail = "目录创建失败: {$name}"; break; }
                 continue;
             }
             $dir = dirname($target);
-            if (!is_dir($dir)) @mkdir($dir, 0755, true);
+            if (!is_dir($dir) && !@mkdir($dir, 0755, true)) { $fail = "目录创建失败: {$name}"; break; }
+            if (is_link($target)) { $fail = "目标为符号链接, 拒绝覆盖: {$name}"; break; }
             $stream = $zip->getStream($zip->getNameIndex($i));
-            if ($stream) {
-                file_put_contents($target, $stream);
-                @chmod($target, 0644);
-                fclose($stream);
-            }
+            if (!$stream) { $fail = "读取更新包条目失败: {$name}"; break; }
+            $w = @file_put_contents($target, $stream);
+            fclose($stream);
+            if ($w === false) { $fail = "写入失败(请检查目录权限): {$name}"; break; }
+            @chmod($target, 0644);
         }
         $zip->close();
+        // 任一条目失败即抛异常: 调用方不会标记 updated_version, 下次可整包重试
+        if ($fail !== null) throw new Exception('更新应用失败: ' . $fail);
         // 数据库升级(幂等; SQLite测试环境DDL自动跳过, 生产MySQL完整执行)
         try {
             Upgrade::run(DB::handle());

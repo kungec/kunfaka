@@ -46,8 +46,10 @@ class CodepayPlugin extends PaymentBase
     public function notify(array $req)
     {
         if (!EpayClient::verifyNotify($req, $this->cfg('key'))) return null;
-        if (isset($req['trade_status']) && $req['trade_status'] !== 'TRADE_SUCCESS') return null;
-        $money = isset($req['money']) && is_numeric($req['money']) ? (float)$req['money'] : -1;
+        // 交易状态必须存在且为成功: 字段缺失的回调不因宽松判断而放行
+        if (!isset($req['trade_status']) || $req['trade_status'] !== 'TRADE_SUCCESS') return null;
+        // 网关未带回金额时返回null(无从比对), 不能用-1哨兵值混入金额校验
+        $money = isset($req['money']) && is_numeric($req['money']) ? (float)$req['money'] : null;
         return ['sn' => $req['out_trade_no'], 'trade_no' => isset($req['trade_no']) ? $req['trade_no'] : '', 'money' => $money];
     }
 }

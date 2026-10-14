@@ -39,6 +39,11 @@ class PayController
             View::theme('error', ['msg' => '订单已过期, 请重新下单', 'pageTitle' => '订单过期']);
             return;
         }
+        // 双保险: 状态仍是待支付但已过到期时间(cron未及关闭)时同样拒绝发起支付, 防过期订单被继续支付
+        if ((int)$order['expired_at'] > 0 && (int)$order['expired_at'] < now()) {
+            View::theme('error', ['msg' => '订单已过期, 请重新下单', 'pageTitle' => '订单过期']);
+            return;
+        }
         $plugin = Plugin::payment($code);
         if (!$plugin || !$plugin->enabled) {
             View::theme('error', ['msg' => '支付方式不可用', 'pageTitle' => '错误']);
@@ -109,24 +114,45 @@ class PayController
             $result = $plugin->notify($req);
             if (is_array($result) && !empty($result['sn'])) {
                 $order = DB::fetch('SELECT * FROM orders WHERE sn = ?', [$result['sn']]);
+                // 回调归属校验: 订单发起支付时记录的插件必须与回调入口插件一致, 防跨渠道伪造/串渠道发货
+                if ($order && !empty($order['pay_plugin']) && $order['pay_plugin'] !== $plugin->code) {
+                    add_log('pay', '订单 ' . $order['sn'] . ' 回调渠道不符(订单渠道 ' . $order['pay_plugin'] . ', 入口 ' . $plugin->code . '), 已拒绝');
+                    echo 'fail';
+                    return;
+                }
                 if ($order && (int)$order['status'] === 0) {
-                    // 金额一致性校验(网关回调带回金额时), 防止异常金额发货
-                    if (isset($result['money']) && abs((float)$result['money'] - (float)$order['total']) > 0.01) {
+                    // 金额一致性校验: 网关带回有效金额时严格比对; 缺失金额不在此拦截(链上按唯一金额精确对账, 法币可经回跳核实兜底)
+                    if (isset($result['money']) && $result['money'] !== null && (float)$result['money'] > 0
+                        && abs((float)$result['money'] - (float)$order['total']) > 0.01) {
                         add_log('pay', '订单 ' . $order['sn'] . ' 回调金额不符(收到 ' . $result['money'] . ', 应付 ' . $order['total'] . '), 已拒绝发货');
                         echo 'fail';
                         return;
                     }
-                    OrderService::deliver($order['id'], isset($result['trade_no']) ? $result['trade_no'] : '');
-                    add_log('pay', '订单 ' . $order['sn'] . ' 支付成功并自动发货(' . $plugin->name . ')');
+                    // 过期处理: 过期在宽限期(30分钟)内照常发货; 超宽限期转人工(状态3), 网关停发重试, 由管理员核对收款后补发或退款
+                    $expiredAt = (int)$order['expired_at'];
+                    if ($expiredAt > 0 && $expiredAt < now() - 1800) {
+                        add_log('pay', '订单 ' . $order['sn'] . ' 已过期超宽限仍收到支付成功回调, 已转人工处理(请核对收款后补发或退款)');
+                        DB::update('orders', ['status' => 3], 'id = ? AND status = 0', [$order['id']]);
+                        echo $plugin->ack();
+                        return;
+                    }
+                    if (OrderService::deliver($order['id'], isset($result['trade_no']) ? $result['trade_no'] : '')) {
+                        add_log('pay', '订单 ' . $order['sn'] . ' 支付成功并自动发货(' . $plugin->name . ')');
+                    } else {
+                        // 发货未完成(缺货转待处理/状态已变更): 仍应答成功终止重试, 状态3订单在后台补发
+                        add_log('pay', '订单 ' . $order['sn'] . ' 支付成功但自动发货未完成(缺货转待处理), 请在后台处理(' . $plugin->name . ')');
+                    }
                 }
                 echo $plugin->ack();
                 return;
             }
             echo 'fail';
         } catch (Exception $ex) {
-            echo 'fail: ' . $ex->getMessage();
+            add_log('pay', '回调处理异常(' . $plugin->code . '): ' . $ex->getMessage());
+            echo 'fail';
         } catch (Throwable $ex) {
-            echo 'fail: ' . $ex->getMessage();
+            add_log('pay', '回调处理异常(' . $plugin->code . '): ' . $ex->getMessage());
+            echo 'fail';
         }
     }
 
