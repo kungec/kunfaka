@@ -24,6 +24,11 @@ function curl_tls($ch) {
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 }
 
+/** LIKE通配符转义(值仍走参数绑定, 此处转义%/_/\ 防通配符注入造成慢查询或模糊探测) */
+function like_escape($s) {
+    return addcslashes((string)$s, "%_\\");
+}
+
 /** 出站API地址防护: 必须HTTPS且解析到公网IP(防把可配置的链上/汇率接口指向内网做SSRF); 合法返回true */
 function outbound_api_guard($url) {
     $u = parse_url(trim((string)$url));

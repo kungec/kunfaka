@@ -76,7 +76,9 @@ if (!class_exists('DB')) {
     /** 插入, 返回自增ID */
     public static function insert($table, $data)
     {
+        self::assertIdent($table);
         $cols = array_keys($data);
+        foreach ($cols as $c) self::assertIdent($c);
         $sql = 'INSERT INTO `' . $table . '` (`' . implode('`,`', $cols) . '`) VALUES (' . rtrim(str_repeat('?,', count($cols)), ',') . ')';
         self::query($sql, array_values($data));
         return self::$pdo->lastInsertId();
@@ -85,11 +87,21 @@ if (!class_exists('DB')) {
     /** 更新, 返回影响行数 */
     public static function update($table, $data, $where, $params = [])
     {
+        self::assertIdent($table);
         $sets = [];
-        foreach (array_keys($data) as $c) $sets[] = '`' . $c . '` = ?';
+        foreach (array_keys($data) as $c) {
+            self::assertIdent($c);
+            $sets[] = '`' . $c . '` = ?';
+        }
         $sql = 'UPDATE `' . $table . '` SET ' . implode(', ', $sets) . ' WHERE ' . $where;
         $st = self::query($sql, array_merge(array_values($data), $params));
         return $st->rowCount();
+    }
+
+    /** 表名/列名白名单校验: 标识符无法参数化, 以白名单防未来调用误传用户输入形成注入 */
+    private static function assertIdent($name)
+    {
+        if (!preg_match('/^[A-Za-z0-9_]+$/', (string)$name)) throw new Exception('非法数据库标识符');
     }
 
     public static function exec($sql, $params = [])

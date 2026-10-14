@@ -71,7 +71,7 @@
             </div>
             <div class="form-row">
                 <label>Telegram Bot Token(管理员TG推送, 留空关闭; 需服务器可访问 api.telegram.org)</label>
-                <input type="text" name="tg_bot_token" value="<?= e(setting('tg_bot_token')) ?>" placeholder="123456:ABC-DEF..." style="max-width:420px" autocomplete="off">
+                <input type="password" name="tg_bot_token" value="" placeholder="已设置, 留空保持不变" style="max-width:420px" autocomplete="new-password">
             </div>
             <div class="form-row">
                 <label>Telegram Chat ID(接收通知的会话ID)</label>
@@ -279,7 +279,7 @@
                 </div>
                 <div class="form-row">
                     <label>Turnstile Secret Key</label>
-                    <input type="text" name="turnstile_secret_key" value="<?= e(setting('turnstile_secret_key')) ?>">
+                    <input type="password" name="turnstile_secret_key" value="" placeholder="已设置, 留空保持不变" autocomplete="new-password">
                     <div class="desc">Cloudflare Dashboard → Turnstile → Add site。</div>
                 </div>
             </div>
@@ -290,7 +290,7 @@
                 </div>
                 <div class="form-row">
                     <label>极验 Captcha Key</label>
-                    <input type="text" name="geetest_key" value="<?= e(setting('geetest_key')) ?>">
+                    <input type="password" name="geetest_key" value="" placeholder="已设置, 留空保持不变" autocomplete="new-password">
                 </div>
                 <div class="form-row">
                     <label>验证有效期(秒)</label>
@@ -333,7 +333,7 @@
                 <label>邮箱账号 / 授权码</label>
                 <div class="form-inline">
                     <input type="text" name="smtp_user" value="<?= e(setting('smtp_user')) ?>" placeholder="xxx@qq.com" style="max-width:200px">
-                    <input type="text" name="smtp_pass" value="<?= e(setting('smtp_pass')) ?>" placeholder="SMTP授权码" style="max-width:180px">
+                    <input type="password" name="smtp_pass" value="" placeholder="已设置留空不变, 换新填新值" style="max-width:180px" autocomplete="new-password">
                 </div>
                 <div class="desc">QQ邮箱需开启SMTP服务并填写授权码；卡密自动发送到买家邮箱。</div>
             </div>

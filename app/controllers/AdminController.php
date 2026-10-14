@@ -202,7 +202,7 @@ class AdminController
         $where = '1';
         $params = [];
         $name = trim(arr_get($_GET, 'name'));
-        if ($name !== '') { $where .= ' AND name LIKE ?'; $params[] = '%' . $name . '%'; }
+        if ($name !== '') { $where .= ' AND name LIKE ?'; $params[] = '%' . like_escape($name) . '%'; }
         $status = arr_get($_GET, 'status', '');
         if ($status !== '') { $where .= ' AND status = ?'; $params[] = (int)$status; }
         $list = DB::fetchAll("SELECT *, (SELECT COUNT(*) FROM products p WHERE p.category_id = categories.id) AS products_count FROM categories WHERE {$where} ORDER BY sort ASC, id ASC", $params);
@@ -318,19 +318,25 @@ class AdminController
         $name = trim(arr_get($_GET, 'name'));
         if ($name !== '') {
             $where .= ' AND p.name LIKE ?';
-            $params[] = '%' . $name . '%';
+            $params[] = '%' . like_escape($name) . '%';
         }
         $status = arr_get($_GET, 'status', '');
         if ($status !== '') {
             $where .= ' AND p.status = ?';
             $params[] = (int)$status;
         }
+        // 真分页: 此前固定LIMIT 200, 第201个商品后台不可见不可编辑
+        $page = max(1, (int)arr_get($_GET, 'page', 1));
+        $per = 50;
+        $ptotal = (int)DB::value("SELECT COUNT(*) FROM products p WHERE {$where}", $params);
+        $ppages = max(1, (int)ceil($ptotal / $per));
+        $page = min($page, $ppages);
         $list = DB::fetchAll(
             "SELECT p.*, c.name AS cat_name, g.name AS group_name,
              (SELECT COUNT(*) FROM cards cc WHERE cc.product_id = p.id AND cc.status = 0) AS stock
              FROM products p LEFT JOIN categories c ON c.id = p.category_id
              LEFT JOIN product_groups g ON g.id = p.group_id
-             WHERE {$where} ORDER BY p.sort ASC, p.id DESC LIMIT 200", $params);
+             WHERE {$where} ORDER BY p.sort ASC, p.id DESC LIMIT {$per} OFFSET " . (($page - 1) * $per), $params);
         $dayStart = strtotime(date('Y-m-d'));
         $yStart = $dayStart - 86400;
         $weekStart = $dayStart - ((int)date('N') - 1) * 86400;
@@ -361,6 +367,9 @@ class AdminController
             'catId' => $catId,
             'stats' => $stats,
             'salesMap' => $salesMap,
+            'page' => $page,
+            'pages' => $ppages,
+            'ptotal' => $ptotal,
         ]);
     }
 
@@ -523,7 +532,7 @@ class AdminController
         $kw = trim(arr_get($_GET, 'kw'));
         if ($kw !== '') {
             $where .= ' AND (username LIKE ? OR nickname LIKE ?)';
-            $params = array_merge($params, ['%' . $kw . '%', '%' . $kw . '%']);
+            $params = array_merge($params, ['%' . like_escape($kw) . '%', '%' . like_escape($kw) . '%']);
         }
         $status = arr_get($_GET, 'status', '');
         if ($status !== '') {
@@ -685,7 +694,7 @@ class AdminController
         $fuzzy = trim(arr_get($_GET, 'fuzzy'));
         if ($fuzzy !== '') {
             $where .= ' AND c.content LIKE ?';
-            $params[] = '%' . $fuzzy . '%';
+            $params[] = '%' . like_escape($fuzzy) . '%';
         }
         $status = arr_get($_GET, 'status', '');
         if ($status !== '') {
@@ -735,7 +744,7 @@ class AdminController
         $exact = trim(arr_get($_GET, 'exact'));
         if ($exact !== '') { $where .= ' AND c.content = ?'; $params[] = $exact; }
         $fuzzy = trim(arr_get($_GET, 'fuzzy'));
-        if ($fuzzy !== '') { $where .= ' AND c.content LIKE ?'; $params[] = '%' . $fuzzy . '%'; }
+        if ($fuzzy !== '') { $where .= ' AND c.content LIKE ?'; $params[] = '%' . like_escape($fuzzy) . '%'; }
         $status = arr_get($_GET, 'status', '');
         if ($status !== '') { $where .= ' AND c.status = ?'; $params[] = (int)$status; }
         $rows = DB::fetchAll(
@@ -759,6 +768,9 @@ class AdminController
                 date('Y-m-d H:i:s', $c['created_at']),
                 $c['sold_at'] > 0 ? date('Y-m-d H:i:s', $c['sold_at']) : '',
             ]);
+        }
+        if (count($rows) >= 5000) {
+            fputcsv($out, ['注意', '结果已达导出上限5000条, 可能有遗漏, 请增加筛选条件缩小范围后分批导出']);
         }
         exit;
     }
@@ -887,13 +899,13 @@ class AdminController
         $where = '1';
         $params = [];
         $sn = trim(arr_get($_GET, 'sn'));
-        if ($sn !== '') { $where .= ' AND o.sn LIKE ?'; $params[] = $sn . '%'; }
+        if ($sn !== '') { $where .= ' AND o.sn LIKE ?'; $params[] = like_escape($sn) . '%'; }
         $pid = (int)arr_get($_GET, 'product_id');
         if ($pid > 0) { $where .= ' AND o.product_id = ?'; $params[] = $pid; }
         $card = trim(arr_get($_GET, 'card'));
-        if ($card !== '') { $where .= ' AND o.cards_content LIKE ?'; $params[] = '%' . $card . '%'; }
+        if ($card !== '') { $where .= ' AND o.cards_content LIKE ?'; $params[] = '%' . like_escape($card) . '%'; }
         $contact = trim(arr_get($_GET, 'contact'));
-        if ($contact !== '') { $where .= ' AND o.contact LIKE ?'; $params[] = '%' . $contact . '%'; }
+        if ($contact !== '') { $where .= ' AND o.contact LIKE ?'; $params[] = '%' . like_escape($contact) . '%'; }
         $status = arr_get($_GET, 'status', '');
         if ($status !== '') { $where .= ' AND o.status = ?'; $params[] = (int)$status; }
         $plugin = trim(arr_get($_GET, 'plugin'));
@@ -936,6 +948,9 @@ class AdminController
                 date('Y-m-d H:i:s', $o['created_at']),
                 $o['paid_at'] > 0 ? date('Y-m-d H:i:s', $o['paid_at']) : '',
             ]);
+        }
+        if (count($rows) >= 5000) {
+            fputcsv($out, ['注意', '结果已达导出上限5000条, 可能有遗漏, 请增加筛选条件缩小范围后分批导出']);
         }
         exit;
     }
@@ -1434,11 +1449,11 @@ class AdminController
         $where = '1';
         $params = [];
         $name = trim(arr_get($_GET, 'username'));
-        if ($name !== '') { $where .= ' AND u.username LIKE ?'; $params[] = '%' . $name . '%'; }
+        if ($name !== '') { $where .= ' AND u.username LIKE ?'; $params[] = '%' . like_escape($name) . '%'; }
         $uid = arr_get($_GET, 'uid', '');
         if ($uid !== '') { $where .= ' AND u.id = ?'; $params[] = (int)$uid; }
         $email = trim(arr_get($_GET, 'email'));
-        if ($email !== '') { $where .= ' AND u.email LIKE ?'; $params[] = '%' . $email . '%'; }
+        if ($email !== '') { $where .= ' AND u.email LIKE ?'; $params[] = '%' . like_escape($email) . '%'; }
         $ip = trim(arr_get($_GET, 'reg_ip'));
         if ($ip !== '') { $where .= ' AND u.reg_ip = ?'; $params[] = $ip; }
         $status = arr_get($_GET, 'status', '');
@@ -1541,7 +1556,7 @@ class AdminController
         $kw = trim(arr_get($_GET, 'kw'));
         if ($kw !== '') {
             $where .= ' AND message LIKE ?';
-            $params[] = '%' . $kw . '%';
+            $params[] = '%' . like_escape($kw) . '%';
         }
         $ip = trim(arr_get($_GET, 'ip'));
         if ($ip !== '') {
@@ -1576,16 +1591,20 @@ class AdminController
 
     public function actionLogsClear()
     {
-        $scope = arr_get($_POST, 'scope', 'all');
+        // scope白名单: 任何非合法取值一律按"清理30天前"处理, 破坏性操作不设宽松兜底
+        $scope = arr_get($_POST, 'scope', '30');
+        if ($scope === 'all') {
+            $n = (int)DB::value('SELECT COUNT(*) FROM logs');
+            DB::exec('DELETE FROM logs');
+            add_log('system', '管理员清空系统日志(原 ' . $n . ' 条)');
+            json_out(['code' => 0, 'msg' => '已清空 ' . $n . ' 条日志']);
+        }
         if ($scope === '30') {
             $n = DB::exec('DELETE FROM logs WHERE created_at < ?', [now() - 30 * 86400]);
             add_log('system', '管理员清理30天前日志, 共 ' . $n . ' 条');
             json_out(['code' => 0, 'msg' => '已清理 ' . $n . ' 条30天前日志']);
         }
-        $n = (int)DB::value('SELECT COUNT(*) FROM logs');
-        DB::exec('DELETE FROM logs');
-        add_log('system', '管理员清空系统日志(原 ' . $n . ' 条)');
-        json_out(['code' => 0, 'msg' => '已清空 ' . $n . ' 条日志']);
+        json_out(['code' => 1, 'msg' => '无效的清理范围']);
     }
 
     public function actionOrderClean()
@@ -1663,6 +1682,8 @@ class AdminController
 
     public function actionSettings()
     {
+        // 设置页回显SMTP授权码/人机验证密钥等机密(密钥框已改不回显, 但表单结构/客服配置仍属敏感), 仅超级管理员可查看
+        if (!$this->isSuper()) json_out(['code' => 1, 'msg' => '仅超级管理员可查看系统设置']);
         View::admin('settings');
     }
 
@@ -1697,22 +1718,12 @@ class AdminController
             }
             setting_set('order_blacklist', implode("\n", $clean));
         }
-        // 下单联系方式已迁移为商品级配置(products.contact_types), 全局设置仅保留只读说明
         // 微信/QQ防红开关(复选框: 未随表单提交=关闭)
         if (isset($_POST['anti_red_submitted'])) {
             setting_set('wx_anti_red', isset($_POST['wx_anti_red']) ? '1' : '0');
             setting_set('qq_anti_red', isset($_POST['qq_anti_red']) ? '1' : '0');
         }
-        $keys = ['site_name', 'site_url', 'announcement', 'order_timeout',
-            'logo_type', 'logo_text', 'url_rewrite',
-            'smtp_open', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_ssl', 'official_api',
-            'verify_mode', 'captcha_open', 'turnstile_open', 'turnstile_site_key', 'turnstile_secret_key',
-            'geetest_id', 'geetest_key', 'geetest_timeout', 'order_ip_limit', 'cdn_mode', 'member_open', 'auto_update', 'robots_disallow',
-            'notify_email', 'stock_alert_num', 'tg_bot_token', 'tg_chat_id', 'notify_order_paid'];
-        foreach ($keys as $k) {
-            if (isset($_POST[$k])) setting_set($k, is_string($_POST[$k]) ? trim($_POST[$k]) : $_POST[$k]);
-        }
-        // 主题切换独立门控: 专业版主题需已激活专业版, 不得随设置表单免检写入
+        // ---- 先校验后写库: 主题与Logo任一不合法即整体失败, 不出现"文本设置已生效"的半保存状态 ----
         if (isset($_POST['theme'])) {
             $t = trim((string)$_POST['theme']);
             $tmeta = Plugin::meta('theme', $t);
@@ -1722,12 +1733,8 @@ class AdminController
             if (!empty($tmeta['pro']) && !License::isPro()) {
                 json_out(['code' => 2, 'msg' => '该主题为专业版专享, 请先开通99元专业版']);
             }
-            setting_set('theme', $t);
         }
-        // Logo 类型白名单 + 图片上传
-        if (isset($_POST['logo_type']) && !in_array($_POST['logo_type'], ['default', 'text', 'image'], true)) {
-            setting_set('logo_type', 'default');
-        }
+        $logoMove = null;
         if (!empty($_FILES['logo_image_file']['tmp_name']) && $_FILES['logo_image_file']['error'] === UPLOAD_ERR_OK) {
             $f = $_FILES['logo_image_file'];
             if ($f['size'] > 2 * 1024 * 1024) {
@@ -1746,9 +1753,35 @@ class AdminController
             if (!move_uploaded_file($f['tmp_name'], $dir . '/' . $fname)) {
                 json_out(['code' => 1, 'msg' => 'Logo 保存失败, 请检查目录权限']);
             }
+            $logoMove = $fname;
+        }
+        // ---- 校验全部通过, 开始写入 ----
+        // 密钥类留空=保留原值(表单不回显明文, 只在填写新值时覆盖)
+        $secretKeys = ['smtp_pass', 'turnstile_secret_key', 'geetest_key', 'tg_bot_token'];
+        $keys = ['site_name', 'site_url', 'announcement', 'order_timeout',
+            'logo_type', 'logo_text', 'url_rewrite',
+            'smtp_open', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_ssl', 'official_api',
+            'verify_mode', 'captcha_open', 'turnstile_open', 'turnstile_site_key', 'turnstile_secret_key',
+            'geetest_id', 'geetest_key', 'geetest_timeout', 'order_ip_limit', 'cdn_mode', 'member_open', 'auto_update', 'robots_disallow',
+            'notify_email', 'stock_alert_num', 'tg_bot_token', 'tg_chat_id', 'notify_order_paid'];
+        foreach ($keys as $k) {
+            if (!isset($_POST[$k])) continue;
+            if (in_array($k, $secretKeys, true) && trim((string)$_POST[$k]) === '') continue;
+            setting_set($k, is_string($_POST[$k]) ? trim($_POST[$k]) : $_POST[$k]);
+        }
+        // 主题切换(校验已通过)
+        if (isset($_POST['theme'])) {
+            setting_set('theme', trim((string)$_POST['theme']));
+        }
+        // Logo 类型白名单兜底
+        if (isset($_POST['logo_type']) && !in_array($_POST['logo_type'], ['default', 'text', 'image'], true)) {
+            setting_set('logo_type', 'default');
+        }
+        // Logo 落库与旧图清理
+        if ($logoMove !== null) {
             $oldLogo = setting('logo_image');
             if ($oldLogo && strpos($oldLogo, 'uploads/') === 0) @unlink(YF_ROOT . '/' . $oldLogo);
-            setting_set('logo_image', 'uploads/' . $fname);
+            setting_set('logo_image', 'uploads/' . $logoMove);
         }
         // CDN模式白名单兜底(仅允许三个合法值)
         if (isset($_POST['cdn_mode']) && !in_array($_POST['cdn_mode'], ['auto', 'off', 'cloudflare', 'cdn'], true)) {
