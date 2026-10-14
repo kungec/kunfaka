@@ -9,7 +9,10 @@ class TronService
 {
     public static function apiBase()
     {
-        return rtrim(setting('usdt_api', 'https://api.trongrid.io'), '/');
+        // 扫链API是支付确认的信任锚: 自定义地址必须HTTPS+公网(防内网SSRF/信任锚替换), 非法则回退官方
+        $custom = trim(setting('usdt_api', ''));
+        if ($custom !== '' && outbound_api_guard($custom)) return rtrim($custom, '/');
+        return 'https://api.trongrid.io';
     }
 
     public static function contract()
@@ -62,6 +65,10 @@ class TronService
             if (is_array($a) && isset($a['t'], $a['r']) && (int)$a['t'] > now() - 300 && (float)$a['r'] > 0) return (float)$a['r'];
         }
         $api = rtrim((isset($cfg['rate_api']) && $cfg['rate_api'] !== '') ? $cfg['rate_api'] : 'https://api.coingecko.com/api/v3', '/');
+        // 汇率接口同样走出站防护, 非法配置回退官方
+        if ($api !== 'https://api.coingecko.com/api/v3' && !outbound_api_guard($api)) {
+            $api = 'https://api.coingecko.com/api/v3';
+        }
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL => $api . '/simple/price?ids=tether&vs_currencies=cny',
@@ -91,19 +98,27 @@ class TronService
         $rate = self::rateCny($cfg);
         $base = round((float)$order['total'] / $rate, 2);
         if ($base <= 0) throw new Exception('金额计算异常');
-        for ($i = 0; $i < 300; $i++) {
-            $tail = rand(1, 9999) / 1000000;
-            $amount = number_format($base + $tail, 6, '.', '');
-            $exists = DB::value(
-                'SELECT id FROM orders WHERE status = 0 AND pay_plugin = ? AND expected_amount = ? AND id != ?',
-                ['usdt_trc20', $amount, $order['id']]
-            );
-            if (!$exists) {
-                DB::update('orders', ['expected_amount' => $amount], 'id = ?', [$order['id']]);
-                return $amount;
+        // GET_LOCK命名锁串行化分配(MySQL/MariaDB; SQLite为单写环境自动降级): 彻底消除"查后写"并发同额竞态
+        $locked = false;
+        try { $locked = (int)DB::value("SELECT GET_LOCK('kf_amount_assign', 5)") === 1; } catch (Throwable $t) {}
+        try {
+            for ($i = 0; $i < 300; $i++) {
+                $tail = rand(1, 9999) / 1000000;
+                $amount = number_format($base + $tail, 6, '.', '');
+                // 在途占用范围含: 待支付(0)/待处理(3)/2小时内过期的订单(宽限期), 防迟到付款被新订单金额错配
+                $exists = DB::value(
+                    'SELECT id FROM orders WHERE pay_plugin = ? AND expected_amount = ? AND id != ? AND (status IN (0, 3) OR (status = 2 AND expired_at > ?))',
+                    ['usdt_trc20', $amount, $order['id'], now() - 7200]
+                );
+                if (!$exists) {
+                    DB::update('orders', ['expected_amount' => $amount], 'id = ?', [$order['id']]);
+                    return $amount;
+                }
             }
+            throw new Exception('唯一金额分配失败, 请稍后重试');
+        } finally {
+            if ($locked) { try { DB::exec("SELECT RELEASE_LOCK('kf_amount_assign')"); } catch (Throwable $t) {} }
         }
-        throw new Exception('唯一金额分配失败, 请稍后重试');
     }
 
     /**
@@ -116,7 +131,8 @@ class TronService
         $transfers = self::getTransfers($wallet, $minTs);
         foreach ($transfers as $t) {
             if (bccomp($t['amount'], $order['expected_amount'], 6) !== 0) continue;
-            if ($t['ts'] > 0 && $t['ts'] < $minTs) continue;
+            // 时间戳严格校验: 缺失时间戳宁可漏检不可错检, 早于订单创建的转账一律排除
+            if ($t['ts'] <= 0 || $t['ts'] < $minTs) continue;
             $used = DB::value('SELECT id FROM orders WHERE txid = ? AND id != ?', [$t['txid'], $order['id']]);
             if ($used) continue;
             OrderService::deliver((int)$order['id'], '', $t['txid']);
@@ -153,7 +169,8 @@ class TronService
         foreach ($orders as $order) {
             foreach ($transfers as $t) {
                 if (bccomp($t['amount'], $order['expected_amount'], 6) !== 0) continue;
-                if ($t['ts'] > 0 && $t['ts'] < $minTs) continue;
+                // 时间戳严格校验: 缺失宁可漏检; 早于订单创建的转账一律排除
+                if ($t['ts'] <= 0 || $t['ts'] < $minTs) continue;
                 if (DB::value('SELECT id FROM orders WHERE txid = ? AND id != ?', [$t['txid'], $order['id']])) continue;
                 if (OrderService::deliver((int)$order['id'], '', $t['txid'])) {
                     add_log('usdt', 'USDT到账: 订单 ' . $order['sn'] . ' 金额 ' . $t['amount'] . ' USDT, 哈希 ' . substr($t['txid'], 0, 24));

@@ -25,11 +25,14 @@ class WechatNativePlugin extends PaymentBase
     public function pay(array $order)
     {
         $client = $this->client();
+        // 商品名截断(微信限127字符) + 传订单过期时间(防超时付款后回调不发货)
+        $expire = (int)($order['expired_at'] ?? 0);
         $codeUrl = $client->nativePay(
             $order['sn'],
             (string)round((float)$order['total'] * 100),
-            $order['product_name'],
-            $this->notifyUrl()
+            mb_substr((string)$order['product_name'], 0, 100),
+            $this->notifyUrl(),
+            $expire > now() ? date('Y-m-d\TH:i:sP', $expire) : ''
         );
         return ['type' => 'qrcode', 'qr' => $codeUrl, 'extra' => ['tip' => '请使用微信扫一扫付款']];
     }

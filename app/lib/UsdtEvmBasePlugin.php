@@ -73,20 +73,28 @@ abstract class UsdtEvmBasePlugin extends PaymentBase
         $premium = (float)$this->cfg('premium', '1');
         $base = round((float)$order['total'] / $rate * (1 + $premium / 100), 2);
         if ($base <= 0) throw new Exception('金额计算异常');
-        // 尾数1~9999 * 0.000001 USDT(约合几厘钱), 用于区分并发订单
-        for ($i = 0; $i < 300; $i++) {
-            $tail = rand(1, 9999) / 1000000;
-            $amount = number_format($base + $tail, 6, '.', '');
-            $exists = DB::value(
-                'SELECT id FROM orders WHERE status = 0 AND pay_plugin = ? AND expected_amount = ? AND id != ?',
-                [$this->slug, $amount, $order['id']]
-            );
-            if (!$exists) {
-                DB::update('orders', ['expected_amount' => $amount], 'id = ?', [$order['id']]);
-                return $amount;
+        // GET_LOCK命名锁串行化分配(MySQL/MariaDB; SQLite为单写环境自动降级): 彻底消除"查后写"并发同额竞态
+        $locked = false;
+        try { $locked = (int)DB::value("SELECT GET_LOCK('kf_amount_assign', 5)") === 1; } catch (Throwable $t) {}
+        try {
+            // 尾数1~9999 * 0.000001 USDT(约合几厘钱), 用于区分并发订单
+            for ($i = 0; $i < 300; $i++) {
+                $tail = rand(1, 9999) / 1000000;
+                $amount = number_format($base + $tail, 6, '.', '');
+                // 在途占用范围含: 待支付(0)/待处理(3)/2小时内过期的订单(宽限期), 防迟到付款被新订单金额错配
+                $exists = DB::value(
+                    'SELECT id FROM orders WHERE pay_plugin = ? AND expected_amount = ? AND id != ? AND (status IN (0, 3) OR (status = 2 AND expired_at > ?))',
+                    [$this->slug, $amount, $order['id'], now() - 7200]
+                );
+                if (!$exists) {
+                    DB::update('orders', ['expected_amount' => $amount], 'id = ?', [$order['id']]);
+                    return $amount;
+                }
             }
+            throw new Exception('唯一金额分配失败, 请稍后重试');
+        } finally {
+            if ($locked) { try { DB::exec("SELECT RELEASE_LOCK('kf_amount_assign')"); } catch (Throwable $t) {} }
         }
-        throw new Exception('唯一金额分配失败, 请稍后重试');
     }
 
     public function pollOrder(array $order)
@@ -106,7 +114,8 @@ abstract class UsdtEvmBasePlugin extends PaymentBase
             if (strcasecmp((string)$tx['to'], $addr) !== 0) continue;
             if (bccomp((string)$tx['value'], $wantRaw) !== 0) continue;
             $ts = isset($tx['timeStamp']) ? (int)$tx['timeStamp'] : 0;
-            if ($ts > 0 && $ts < $minTs) continue;
+            // 时间戳严格校验: 缺失宁可漏检不可错检, 早于订单创建的转账一律排除
+            if ($ts <= 0 || $ts < $minTs) continue;
             $txid = (string)$tx['hash'];
             if (DB::value('SELECT id FROM orders WHERE txid = ? AND id != ?', [$txid, $order['id']])) continue;
             OrderService::deliver((int)$order['id'], '', $txid);
@@ -138,6 +147,10 @@ abstract class UsdtEvmBasePlugin extends PaymentBase
     protected function transfers($addr)
     {
         $api = rtrim($this->cfg('api_base', $this->scanApi), '/');
+        // 扫链API是支付确认的信任锚: 自定义地址必须HTTPS+公网(防内网SSRF/信任锚替换), 非法则回退官方
+        if ($api !== rtrim($this->scanApi, '/') && !outbound_api_guard($api)) {
+            $api = rtrim($this->scanApi, '/');
+        }
         $url = $api . '/api?module=account&action=tokentx&contractaddress=' . urlencode($this->contract)
             . '&address=' . urlencode($addr) . '&page=1&offset=50&sort=desc&apikey=' . urlencode(trim($this->cfg('scan_key')));
         $ch = curl_init();

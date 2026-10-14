@@ -188,6 +188,14 @@ class PayController
     public function actionCheck()
     {
         $sn = trim(arr_get($_REQUEST, 'sn'));
+        if ($sn === '') json_out(['code' => 1, 'msg' => '订单不存在']);
+        // 频控: 同一会话对同一订单每3秒最多触发一次到账检测(前端即3秒轮询), 防外部刷爆链上API配额
+        $key = 'poll_' . md5($sn);
+        $last = isset($_SESSION[$key]) ? (int)$_SESSION[$key] : 0;
+        if (now() - $last < 3) {
+            json_out(['code' => 0, 'status' => -1, 'paid' => false, 'detail_url' => u('order/detail', ['sn' => $sn])]);
+        }
+        $_SESSION[$key] = now();
         $order = OrderService::pollCheck($sn);
         if (!$order) json_out(['code' => 1, 'msg' => '订单不存在']);
         json_out([

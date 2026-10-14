@@ -87,38 +87,44 @@ class AlipayClient
         return $params;
     }
 
-    /** 电脑网站支付: 返回跳转URL */
-    public function pagePay($outTradeNo, $totalAmount, $subject, $notifyUrl, $returnUrl)
+    /** 电脑网站支付: 返回跳转URL; $timeoutMinutes为订单有效期(分钟, 选填, 同步给网关防超时付款) */
+    public function pagePay($outTradeNo, $totalAmount, $subject, $notifyUrl, $returnUrl, $timeoutMinutes = 0)
     {
-        $params = $this->sysParams('alipay.trade.page.pay', [
+        $biz = [
             'out_trade_no' => $outTradeNo,
             'product_code' => 'FAST_PAGE_TRADE',
             'total_amount' => $totalAmount,
             'subject' => $subject,
-        ], $notifyUrl, $returnUrl);
+        ];
+        if ($timeoutMinutes > 0) $biz['timeout_expresso'] = $timeoutMinutes . 'm';
+        $params = $this->sysParams('alipay.trade.page.pay', $biz, $notifyUrl, $returnUrl);
         return $this->gateway . '?' . $this->buildQuery($params);
     }
 
     /** 手机网站支付: 返回跳转URL */
-    public function wapPay($outTradeNo, $totalAmount, $subject, $notifyUrl, $returnUrl)
+    public function wapPay($outTradeNo, $totalAmount, $subject, $notifyUrl, $returnUrl, $timeoutMinutes = 0)
     {
-        $params = $this->sysParams('alipay.trade.wap.pay', [
+        $biz = [
             'out_trade_no' => $outTradeNo,
             'product_code' => 'QUICK_WAP_WAY',
             'total_amount' => $totalAmount,
             'subject' => $subject,
-        ], $notifyUrl, $returnUrl);
+        ];
+        if ($timeoutMinutes > 0) $biz['timeout_expresso'] = $timeoutMinutes . 'm';
+        $params = $this->sysParams('alipay.trade.wap.pay', $biz, $notifyUrl, $returnUrl);
         return $this->gateway . '?' . $this->buildQuery($params);
     }
 
     /** 当面付预下单: 返回二维码内容 */
-    public function precreate($outTradeNo, $totalAmount, $subject, $notifyUrl)
+    public function precreate($outTradeNo, $totalAmount, $subject, $notifyUrl, $timeoutMinutes = 0)
     {
-        $params = $this->sysParams('alipay.trade.precreate', [
+        $biz = [
             'out_trade_no' => $outTradeNo,
             'total_amount' => $totalAmount,
             'subject' => $subject,
-        ], $notifyUrl);
+        ];
+        if ($timeoutMinutes > 0) $biz['timeout_expresso'] = $timeoutMinutes . 'm';
+        $params = $this->sysParams('alipay.trade.precreate', $biz, $notifyUrl);
         $res = $this->httpPost($this->gateway, $this->buildQuery($params));
         $json = json_decode($res, true);
         if (!$json) throw new Exception('支付宝接口响应异常: ' . substr($res, 0, 200));

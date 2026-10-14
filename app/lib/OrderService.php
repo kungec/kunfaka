@@ -30,7 +30,7 @@ class OrderService
                 send_mail(
                     $order['contact'],
                     '【' . setting('site_name', '坤发卡') . '】订单已支付, 处理中',
-                    "您的订单 {$order['sn']} 已支付成功, 我们将尽快人工处理并发送结果到本邮箱。\n\n订单查询: " . u('order/detail', ['sn' => $order['sn']])
+                    "您的订单 {$order['sn']} 已支付成功, 我们将尽快人工处理并发送结果到本邮箱。" . self::orderLink($order['sn'])
                 );
             }
             self::notifyAdminPaid($order);
@@ -97,7 +97,7 @@ class OrderService
             send_mail(
                 $order['contact'],
                 '【' . setting('site_name', '坤发卡') . '】订单发货成功',
-                $intro . "\n\n" . implode("\n", $contents) . "\n\n订单查询: " . u('order/detail', ['sn' => $order['sn']])
+                $intro . "\n\n" . implode("\n", $contents) . self::orderLink($order['sn'])
             );
         }
         self::stockAlertCheck($order['product_id']);
@@ -108,6 +108,13 @@ class OrderService
             if ($mkt && method_exists($mkt, 'onPaid')) $mkt->onPaid($order);
         }
         return true;
+    }
+
+    /** 订单查询链接(cron/CLI下未配置site_url时Host为localhost, 链接无效则省略) */
+    private static function orderLink($sn)
+    {
+        $link = u('order/detail', ['sn' => $sn]);
+        return (strpos($link, '//localhost/') !== false) ? '' : "\n\n订单查询: " . $link;
     }
 
     /** 库存断货预警: 剩余≤阈值时通知管理员(每商品每次跌破只发一次, 回补后自动重置) */
@@ -155,6 +162,12 @@ class OrderService
     {
         $order = DB::fetch('SELECT * FROM orders WHERE sn = ?', [$sn]);
         if (!$order) return null;
+        // 懒过期: 待支付但已到到期时间(cron未及关闭)时就地关闭, 口径与cron/发起支付入口一致, 且不再触发链上轮询
+        if ((int)$order['status'] === 0 && (int)$order['expired_at'] > 0 && (int)$order['expired_at'] < now()) {
+            DB::exec('UPDATE orders SET status = 2 WHERE id = ? AND status = 0', [$order['id']]);
+            $order['status'] = 2;
+            return DB::fetch('SELECT sn, status, cards_content, expired_at, total, expected_amount, pay_plugin FROM orders WHERE sn = ?', [$sn]);
+        }
         if ((int)$order['status'] === 0 && $order['pay_plugin'] !== '') {
             $plugin = Plugin::payment($order['pay_plugin']);
             if ($plugin && $plugin->enabled) {

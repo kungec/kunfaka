@@ -24,6 +24,21 @@ function curl_tls($ch) {
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 }
 
+/** 出站API地址防护: 必须HTTPS且解析到公网IP(防把可配置的链上/汇率接口指向内网做SSRF); 合法返回true */
+function outbound_api_guard($url) {
+    $u = parse_url(trim((string)$url));
+    if (!$u || empty($u['host']) || ($u['scheme'] ?? '') !== 'https') return false;
+    $host = $u['host'];
+    if (filter_var($host, FILTER_VALIDATE_IP)) {
+        $ip = $host;
+    } else {
+        if (!filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) return false;
+        $ip = gethostbyname($host);
+        if ($ip === $host) return false;
+    }
+    return (bool)filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+}
+
 /** Cloudflare 官方IP段(用于自动识别请求是否经过CF) */
 function cf_ip_ranges() {
     return [
@@ -267,7 +282,7 @@ function send_mail($to, $subject, $body) {
     if (setting('smtp_open') !== '1') return false;
     try {
         require_once YF_ROOT . '/app/lib/Smtp.php';
-        $smtp = new Smtp(setting('smtp_host'), (int)setting('smtp_port'), (bool)setting('smtp_ssl'), setting('smtp_user'), setting('smtp_pass'));
+        $smtp = new Smtp(setting('smtp_host'), (int)setting('smtp_port'), (int)setting('smtp_ssl'), setting('smtp_user'), setting('smtp_pass'));
         return $smtp->send($to, $subject, $body, setting('site_name', '坤发卡'));
     } catch (Exception $ex) {
         return false;
@@ -345,10 +360,19 @@ function current_admin() {
     return $row;
 }
 
-/** 当前登录前台会员ID(未登录0; 会员功能关闭时视为游客) */
+/** 当前登录前台会员ID(未登录0; 会员功能关闭时视为游客; 每请求回查一次状态, 被禁用/删除的会员立即失效) */
 function current_user_id() {
     if (!member_open()) return 0;
-    return isset($_SESSION['front_user_id']) ? (int)$_SESSION['front_user_id'] : 0;
+    static $checked = null;
+    if ($checked !== null) return $checked;
+    $uid = isset($_SESSION['front_user_id']) ? (int)$_SESSION['front_user_id'] : 0;
+    if ($uid <= 0) return $checked = 0;
+    $ok = (int)DB::value('SELECT status FROM users WHERE id = ?', [$uid]) === 1;
+    if (!$ok) {
+        unset($_SESSION['front_user_id'], $_SESSION['front_user_name']);
+        return $checked = 0;
+    }
+    return $checked = $uid;
 }
 
 /** 写系统日志(失败静默, 不影响业务) */

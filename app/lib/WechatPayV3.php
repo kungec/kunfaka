@@ -39,18 +39,20 @@ class WechatPayV3
             . '",signature="' . base64_encode($sig) . '"';
     }
 
-    /** Native下单, 返回 code_url */
-    public function nativePay($outTradeNo, $totalFen, $description, $notifyUrl)
+    /** Native下单, 返回 code_url; $timeExpire为RFC3339格式的订单过期时间(选填) */
+    public function nativePay($outTradeNo, $totalFen, $description, $notifyUrl, $timeExpire = '')
     {
         $path = '/v3/pay/transactions/native';
-        $body = json_encode([
+        $bodyArr = [
             'mchid' => $this->mchId,
             'appid' => $this->appId,
             'description' => $description,
             'out_trade_no' => $outTradeNo,
             'notify_url' => $notifyUrl,
             'amount' => ['total' => (int)$totalFen, 'currency' => 'CNY'],
-        ], JSON_UNESCAPED_UNICODE);
+        ];
+        if ($timeExpire !== '') $bodyArr['time_expire'] = $timeExpire;
+        $body = json_encode($bodyArr, JSON_UNESCAPED_UNICODE);
         $auth = $this->authHeader('POST', $path, $body);
         $res = $this->request($this->baseUrl . $path, $body, [
             'Accept: application/json',
@@ -106,10 +108,17 @@ class WechatPayV3
         $signature = isset($headers['Wechatpay-Signature']) ? $headers['Wechatpay-Signature'] : (isset($headers['wechatpay-signature']) ? $headers['wechatpay-signature'] : '');
         $serial = isset($headers['Wechatpay-Serial']) ? $headers['Wechatpay-Serial'] : (isset($headers['wechatpay-serial']) ? $headers['wechatpay-serial'] : '');
         if (!$timestamp || !$nonce || !$signature || !$serial) return null;
+        // 时间戳新鲜度(官方建议±5分钟): 拦截过期报文重放
+        if (abs(now() - (int)$timestamp) > 300) return null;
 
         $message = $timestamp . "\n" . $nonce . "\n" . $body . "\n";
         $certs = $this->platformCerts();
-        if (empty($certs[$serial])) return null;
+        if (empty($certs[$serial])) {
+            // 未知序列号: 平台证书可能已轮换而本地缓存未过期, 强制刷新一次再验(防轮换期回调持续失败最长7天)
+            setting_set('wechat_certs_cache', '');
+            $certs = $this->platformCerts();
+            if (empty($certs[$serial])) return null;
+        }
         $pub = openssl_pkey_get_public($certs[$serial]);
         if (!$pub) return null;
         $ok = openssl_verify($message, base64_decode($signature), $pub, OPENSSL_ALGO_SHA256);

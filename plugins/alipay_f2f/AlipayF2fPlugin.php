@@ -23,7 +23,9 @@ class AlipayF2fPlugin extends PaymentBase
     public function pay(array $order)
     {
         $client = $this->client();
-        $qr = $client->precreate($order['sn'], number_format((float)$order['total'], 2, '.', ''), $order['product_name'], $this->notifyUrl());
+        // 订单有效期同步给网关(分钟), 防超时付款后回调不发货
+        $timeout = (int)($order['expired_at'] ?? 0) > now() ? (int)ceil(((int)$order['expired_at'] - now()) / 60) : 0;
+        $qr = $client->precreate($order['sn'], number_format((float)$order['total'], 2, '.', ''), $order['product_name'], $this->notifyUrl(), $timeout);
         return ['type' => 'qrcode', 'qr' => $qr, 'extra' => ['tip' => '请使用支付宝扫一扫付款']];
     }
 

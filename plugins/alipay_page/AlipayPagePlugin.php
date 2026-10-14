@@ -24,12 +24,14 @@ class AlipayPagePlugin extends PaymentBase
     {
         $client = $this->client();
         $amount = number_format((float)$order['total'], 2, '.', '');
+        // 订单有效期同步给网关(分钟), 防超时付款后回调不发货
+        $timeout = (int)($order['expired_at'] ?? 0) > now() ? (int)ceil(((int)$order['expired_at'] - now()) / 60) : 0;
         $ua = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower($_SERVER['HTTP_USER_AGENT']) : '';
         $isMobile = preg_match('/(mobile|android|iphone|ipad|phone)/i', $ua) === 1;
         if ($isMobile) {
-            $url = $client->wapPay($order['sn'], $amount, $order['product_name'], $this->notifyUrl(), $this->returnUrl($order['sn']));
+            $url = $client->wapPay($order['sn'], $amount, $order['product_name'], $this->notifyUrl(), $this->returnUrl($order['sn']), $timeout);
         } else {
-            $url = $client->pagePay($order['sn'], $amount, $order['product_name'], $this->notifyUrl(), $this->returnUrl($order['sn']));
+            $url = $client->pagePay($order['sn'], $amount, $order['product_name'], $this->notifyUrl(), $this->returnUrl($order['sn']), $timeout);
         }
         return ['type' => 'redirect', 'url' => $url];
     }
