@@ -486,6 +486,9 @@ class AdminController
             }
             $data['icon'] = '';
         }
+        // 服务端权威校验: 价格必须为正, 数量上限不得小于下限(此前负价/0价/限购倒挂均可保存)
+        if ((float)$data['price'] <= 0) json_out(['code' => 1, 'msg' => '商品价格必须大于0']);
+        if ((int)$data['max_num'] < (int)$data['min_num']) json_out(['code' => 1, 'msg' => '单次限购上限不能小于下限']);
         if ($id > 0) {
             DB::update('products', $data, 'id = ?', [$id]);
         } else {
@@ -503,6 +506,9 @@ class AdminController
         $id = (int)arr_get($_POST, 'id');
         $count = (int)DB::value('SELECT COUNT(*) FROM cards WHERE product_id = ? AND status = 0', [$id]);
         if ($count > 0) json_out(['code' => 1, 'msg' => '该商品还有 ' . $count . ' 张未售卡密, 请先清空库存']);
+        // 在途订单检查: 待支付(0)/待处理(3)订单删除商品后将无法正常发货或补发
+        $pending = (int)DB::value('SELECT COUNT(*) FROM orders WHERE product_id = ? AND status IN (0, 3)', [$id]);
+        if ($pending > 0) json_out(['code' => 1, 'msg' => '该商品还有 ' . $pending . ' 笔未支付/待处理订单, 请先关闭订单再删除']);
         DB::exec('DELETE FROM products WHERE id = ?', [$id]);
         json_out(['code' => 0, 'msg' => '删除成功']);
     }
@@ -736,6 +742,11 @@ class AdminController
             "SELECT c.*, p.name AS product_name FROM cards c LEFT JOIN products p ON p.id = c.product_id
              WHERE {$where} ORDER BY c.id DESC LIMIT 5000", $params);
         $stMap = [0 => '未出售', 1 => '已出售', 2 => '已锁定'];
+        $csvCell = function ($v) {
+            // CSV公式注入防护: =+-@/Tab/回车开头的单元格前置单引号(防Excel/WPS打开时被当公式执行)
+            $v = (string)$v;
+            return ($v !== '' && preg_match('/^[=+\-@\t\r]/', $v)) ? "'" . $v : $v;
+        };
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="cards-' . date('Ymd-His') . '.csv"');
         $out = fopen('php://output', 'w');
@@ -743,8 +754,8 @@ class AdminController
         fputcsv($out, ['ID', '卡密内容', '商品', '状态', '备注', '订单号', '入库时间', '出售时间']);
         foreach ($rows as $c) {
             fputcsv($out, [
-                $c['id'], $c['content'], $c['product_name'], $stMap[(int)$c['status']] ?? (string)$c['status'],
-                $c['note'], $c['order_id'] > 0 ? $c['order_id'] : '',
+                $c['id'], $csvCell($c['content']), $csvCell($c['product_name']), $stMap[(int)$c['status']] ?? (string)$c['status'],
+                $csvCell($c['note']), $c['order_id'] > 0 ? $c['order_id'] : '',
                 date('Y-m-d H:i:s', $c['created_at']),
                 $c['sold_at'] > 0 ? date('Y-m-d H:i:s', $c['sold_at']) : '',
             ]);
@@ -826,14 +837,10 @@ class AdminController
             json_out(['code' => 0, 'msg' => '已将 ' . $n . ' 张卡密标记为已出售']);
         }
         if ($op === 'delete') {
-            $done = 0;
-            $skip = 0;
-            foreach ($ids as $id) {
-                $cnt = (int)DB::value('SELECT COUNT(*) FROM cards WHERE id = ? AND status = 1', [$id]);
-                if ($cnt > 0) { $skip++; continue; }
-                DB::exec('DELETE FROM cards WHERE id = ?', [$id]);
-                $done++;
-            }
+            // 原子防越权: DELETE带status条件, 消除"先查后删"间隙里卡被售出仍被删除的TOCTOU
+            $inIds = implode(',', $ids);
+            $done = DB::exec("DELETE FROM cards WHERE id IN ({$inIds}) AND status <> 1");
+            $skip = count($ids) - $done;
             $msg = '已移除 ' . $done . ' 张卡密' . ($skip > 0 ? ', ' . $skip . ' 张已出售卡密已跳过' : '');
             json_out(['code' => $done > 0 ? 0 : 1, 'msg' => $msg]);
         }
@@ -848,13 +855,6 @@ class AdminController
         if ((int)$card['status'] === 1) json_out(['code' => 1, 'msg' => '已售出的卡密不能删除(影响订单)']);
         DB::exec('DELETE FROM cards WHERE id = ?', [$id]);
         json_out(['code' => 0, 'msg' => '删除成功']);
-    }
-
-    public function actionCardsClear()
-    {
-        $productId = (int)arr_get($_POST, 'product_id');
-        DB::exec('DELETE FROM cards WHERE product_id = ? AND status = 0', [$productId]);
-        json_out(['code' => 0, 'msg' => '未售卡密已清空']);
     }
 
     // ---------- 订单管理 ----------
@@ -920,12 +920,17 @@ class AdminController
         $out = fopen('php://output', 'w');
         fwrite($out, "\xEF\xBB\xBF");
         fputcsv($out, ['订单号', '商品ID', '商品', '数量', '单价', '金额', '联系方式', '联系类型', '支付方式', '支付状态', '发货内容', '会员', 'IP', '下单时间', '支付时间']);
+        $csvCell = function ($v) {
+            // CSV公式注入防护: =+-@/Tab/回车开头的单元格前置单引号(防Excel/WPS打开时被当公式执行)
+            $v = (string)$v;
+            return ($v !== '' && preg_match('/^[=+\-@\t\r]/', $v)) ? "'" . $v : $v;
+        };
         foreach ($rows as $o) {
             fputcsv($out, [
-                $o['sn'], $o['product_id'], $o['product_name'], $o['num'], $o['unit_price'], $o['total'],
-                $o['contact'], $o['contact_type'], payment_display_name($o['pay_plugin'], $o['channel'] ?? ''),
+                $o['sn'], $o['product_id'], $csvCell($o['product_name']), $o['num'], $o['unit_price'], $o['total'],
+                $csvCell($o['contact']), $o['contact_type'], payment_display_name($o['pay_plugin'], $o['channel'] ?? ''),
                 $stMap[(int)$o['status']] ?? (string)$o['status'],
-                (string)$o['cards_content'],
+                $csvCell((string)$o['cards_content']),
                 $o['member_name'] !== null && $o['member_name'] !== '' ? $o['member_name'] : ($o['user_id'] > 0 ? 'UID' . $o['user_id'] : '游客'),
                 $o['ip'],
                 date('Y-m-d H:i:s', $o['created_at']),
@@ -1274,7 +1279,7 @@ class AdminController
         }
         $api = rtrim(Market::apiUrl(), '/');
         if ($api === '') json_out(['code' => 1, 'msg' => '未配置官方市场地址(主控域名)']);
-        $returnUrl = site_url('admin.php') . '?s=/license';
+        $returnUrl = au('license'); // 随机后台入口部署下 site_url('admin.php') 会404, 授权购买后回跳断链
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $api . '/api/buy');
         curl_setopt($ch, CURLOPT_POST, true);

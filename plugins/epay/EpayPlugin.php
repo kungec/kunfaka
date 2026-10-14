@@ -20,7 +20,7 @@ class EpayPlugin extends PaymentBase
         $t = isset($this->config['types']) ? $this->config['types'] : [];
         if (is_string($t)) $t = array_filter(array_map('trim', explode(',', $t)));
         $t = array_values(array_intersect((array)$t, ['alipay', 'wxpay', 'qqpay']));
-        if (!$t) $t = [$this->cfg('type', 'alipay')];
+        if (!$t) $t = ['alipay', 'wxpay']; // 运行时兜底与配置表单默认一致(此前表单显示支付宝+微信, 实际只开放支付宝)
         return $t;
     }
 

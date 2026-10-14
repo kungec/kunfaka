@@ -82,7 +82,7 @@ td.m-act .btn{margin:2px 4px 2px 0;white-space:nowrap}
 <?php endif; ?>
 
 <div class="card">
-    <form method="get" action="<?= site_url('admin.php') ?>">
+    <form method="get" action="<?= au('apps') ?>">
         <input type="hidden" name="s" value="/apps">
         <input type="hidden" name="type" value="<?= e($type) ?>">
         <input type="hidden" name="filter" value="<?= e($curFilter) ?>">

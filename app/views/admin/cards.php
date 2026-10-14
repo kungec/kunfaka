@@ -61,7 +61,7 @@ th.k-chk,td.k-chk{width:34px;text-align:center}
         </div>
     </div>
 
-    <form method="get" action="<?= site_url('admin.php') ?>">
+    <form method="get" action="<?= au('cards') ?>">
         <input type="hidden" name="s" value="/cards">
         <div class="k-filters">
             <div class="kf"><label>卡密信息(精确搜索, 速度快)</label><input type="text" name="exact" value="<?= e(arr_get($_GET, 'exact')) ?>"></div>

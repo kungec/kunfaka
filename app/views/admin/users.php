@@ -9,7 +9,7 @@ foreach (['username', 'uid', 'email', 'reg_ip', 'status', 'level'] as $k) {
 }
 $tabLink = function ($status) use ($f) {
     $p = $f;
-    if ($status !== '') $p['status'] = $status;
+    if ($status !== '') { $p['status'] = $status; } else { unset($p['status']); }
     return au('users', $p);
 };
 $pageLink = function ($i) use ($f) {
@@ -69,7 +69,7 @@ th.u-chk,td.u-chk{width:34px;text-align:center}
         <span class="dim" style="font-size:11.5px">Tips: 勾选会员后可批量启用 / 禁用 / 移除</span>
     </div>
 
-    <form method="get" action="<?= site_url('admin.php') ?>">
+    <form method="get" action="<?= au('users') ?>">
         <input type="hidden" name="s" value="/users">
         <div class="u-filters">
             <div class="uf"><label>用户名</label><input type="text" name="username" value="<?= e(arr_get($_GET, 'username')) ?>"></div>

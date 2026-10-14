@@ -2,6 +2,7 @@
 <div class="panel">
     <h1 class="panel-title">订单查询</h1>
     <form class="buy-form" method="get" action="<?= u('order/query') ?>">
+        <input type="hidden" name="s" value="/order/query">
         <div class="form-row">
             <label>订单号 / 联系方式</label>
             <input type="text" name="kw" value="<?= e($kw) ?>" placeholder="输入订单号或下单时填写的邮箱/QQ">

@@ -322,9 +322,10 @@
                 <div class="form-inline">
                     <input type="text" name="smtp_host" value="<?= e(setting('smtp_host')) ?>" placeholder="smtp.qq.com" style="max-width:200px">
                     <input type="number" name="smtp_port" value="<?= e(setting('smtp_port', '465')) ?>" style="max-width:90px">
-                    <select name="smtp_ssl" style="max-width:100px">
+                    <select name="smtp_ssl" style="max-width:120px">
                         <option value="1" <?= setting('smtp_ssl') === '1' ? 'selected' : '' ?>>SSL</option>
-                        <option value="0" <?= setting('smtp_ssl') !== '1' ? 'selected' : '' ?>>无加密</option>
+                        <option value="2" <?= setting('smtp_ssl') === '2' ? 'selected' : '' ?>>STARTTLS</option>
+                        <option value="0" <?= setting('smtp_ssl') !== '1' && setting('smtp_ssl') !== '2' ? 'selected' : '' ?>>无加密</option>
                     </select>
                 </div>
             </div>

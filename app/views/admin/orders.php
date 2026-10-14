@@ -9,7 +9,7 @@ foreach (['sn', 'product_id', 'card', 'contact', 'status', 'plugin', 'ip', 'user
 }
 $tabLink = function ($status) use ($f) {
     $p = $f;
-    if ($status !== '') $p['status'] = $status;
+    if ($status !== '') { $p['status'] = $status; } else { unset($p['status']); }
     return au('orders', $p);
 };
 $pageLink = function ($i) use ($f) {
@@ -60,7 +60,7 @@ th.o-chk,td.o-chk{width:34px;text-align:center}
         <span class="o-tip">Tips: 上方订单数据会根据下方的查询条件进行筛选显示</span>
     </div>
 
-    <form method="get" action="<?= site_url('admin.php') ?>">
+    <form method="get" action="<?= au('orders') ?>">
         <input type="hidden" name="s" value="/orders">
         <div class="o-filters">
             <div class="of"><label>订单号</label><input type="text" name="sn" value="<?= e(arr_get($_GET, 'sn')) ?>" placeholder="完整或前缀"></div>

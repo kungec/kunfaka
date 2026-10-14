@@ -44,7 +44,7 @@ $pillLink = function ($risk) use ($curKw, $curIp, $curType) {
         </div>
     </div>
 
-    <form method="get" action="<?= site_url('admin.php') ?>">
+    <form method="get" action="<?= au('logs') ?>">
         <input type="hidden" name="s" value="/logs">
         <div class="l-filters">
             <div class="lf"><label>搜索日志</label><input type="text" name="kw" value="<?= e($curKw) ?>" placeholder="内容关键字"></div>

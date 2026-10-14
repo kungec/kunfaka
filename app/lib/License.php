@@ -47,6 +47,7 @@ class License
             throw new Exception('授权码格式不正确');
         }
         $api = setting('official_api');
+        $rejected = '';
         if ($api) {
             try {
                 // 主域名归一: 发送去www的根域名(www/@ 在主控视为同一站点)
@@ -60,10 +61,13 @@ class License
                     if ($host !== '') setting_set('license_domain', strtolower(preg_replace('/:\d+$/', '', preg_replace('/^www\./i', '', $host))));
                     return;
                 }
+                // 主控明确返回业务拒绝(吊销/域名不符/码无效): 直接终止, 不得落入离线校验兜底
+                if (is_array($res) && isset($res['code'])) $rejected = (string)($res['msg'] ?? ('code ' . $res['code']));
             } catch (Exception $ex) {
-                // 网络失败转离线校验
+                // 仅网络失败才转离线校验
             }
         }
+        if ($rejected !== '') throw new Exception('激活被拒绝: ' . $rejected);
         // 离线校验: 末段为前两段的HMAC校验值(需站长在config中自定义YF_OFFLINE_SECRET才可用)
         $secret = self::offlineSecret();
         if ($secret === '') {

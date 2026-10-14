@@ -138,23 +138,3 @@
 })();
 </script>
 <?php endif; ?>
-<?php if ($payments): ?>
-<script>
-(function () {
-    var rows = document.querySelectorAll('.pay-opt input');
-    var plugin = document.getElementById('payPlugin');
-    var channel = document.getElementById('payChannel');
-    function sync() {
-        rows.forEach(function (r) {
-            r.closest('.pay-opt').classList.toggle('on', r.checked);
-            if (r.checked) {
-                plugin.value = r.value;
-                channel.value = r.getAttribute('data-channel') || '';
-            }
-        });
-    }
-    rows.forEach(function (r) { r.addEventListener('change', sync); });
-    sync();
-})();
-</script>
-<?php endif; ?>

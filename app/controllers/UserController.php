@@ -78,13 +78,19 @@ class UserController
                 if (DB::value('SELECT id FROM users WHERE username = ?', [$username])) { $error = '用户名已被占用'; break; }
                 if ($email !== '' && DB::value('SELECT id FROM users WHERE email = ?', [$email])) { $error = '该邮箱已注册'; break; }
 
-                $uid = (int)DB::insert('users', [
-                    'username' => $username,
-                    'password' => password_hash($pass, PASSWORD_DEFAULT),
-                    'email' => $email,
-                    'created_at' => now(),
-                    'reg_ip' => $ip,
-                ]);
+                try {
+                    $uid = (int)DB::insert('users', [
+                        'username' => $username,
+                        'password' => password_hash($pass, PASSWORD_DEFAULT),
+                        'email' => $email,
+                        'created_at' => now(),
+                        'reg_ip' => $ip,
+                    ]);
+                } catch (PDOException $ex) {
+                    // 并发注册撞唯一键(23000): 前置查询存在竞态窗口, 以数据库唯一约束兜底
+                    if ((int)($ex->getCode() ?? 0) === 23000) { $error = '用户名或邮箱已被使用'; break; }
+                    throw $ex;
+                }
                 Security::regRecord($ip);
                 session_regenerate_id(true);
                 $_SESSION['front_user_id'] = $uid;

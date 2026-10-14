@@ -9,7 +9,7 @@ foreach (['cat', 'name', 'status'] as $k) {
 }
 $tabLink = function ($status) use ($f) {
     $p = $f;
-    if ($status !== '') $p['status'] = $status;
+    if ($status !== '') { $p['status'] = $status; } else { unset($p['status']); }
     return au('products', $p);
 };
 ?>
@@ -79,7 +79,7 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
         </div>
     </div>
 
-    <form method="get" action="<?= site_url('admin.php') ?>">
+    <form method="get" action="<?= au('products') ?>">
         <input type="hidden" name="s" value="/products">
         <div class="p-filters">
             <div class="pf"><label>商品分类</label>
@@ -138,7 +138,7 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
                     </label>
                 </td>
                 <td class="actions">
-                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$p['id'], 'category_id' => (int)$p['category_id'], 'group_id' => (int)$p['group_id'], 'icon' => (string)$p['icon'], 'name' => $p['name'], 'price' => nf($p['price']), 'min_num' => (int)$p['min_num'], 'max_num' => (int)$p['max_num'], 'description' => (string)$p['description'], 'sort' => (int)$p['sort'], 'status' => $sid, 'contact_types' => (string)($p['contact_types'] ?? '')], JSON_UNESCAPED_UNICODE)) ?>'><?= ico('edit') ?> 编辑</button>
+                    <button class="btn sm gray" data-edit='<?= e(json_encode(['id' => (int)$p['id'], 'category_id' => (int)$p['category_id'], 'group_id' => (int)$p['group_id'], 'icon' => (string)$p['icon'], 'name' => $p['name'], 'price' => nf($p['price']), 'min_num' => (int)$p['min_num'], 'max_num' => (int)$p['max_num'], 'description' => (string)$p['description'], 'sort' => (int)$p['sort'], 'status' => $sid, 'sales_base' => (int)$p['sales_base'], 'contact_types' => (string)($p['contact_types'] ?? '')], JSON_UNESCAPED_UNICODE)) ?>'><?= ico('edit') ?> 编辑</button>
                     <a class="btn sm gray" href="<?= au('cards', ['product_id' => $p['id']]) ?>">卡密</a>
                     <button class="btn sm red" data-del="<?= (int)$p['id'] ?>" data-confirm="确定移除商品 <?= e($p['name']) ?> ?<?= (int)$p['stock'] > 0 ? ' 该商品还有 ' . (int)$p['stock'] . ' 张未售卡密, 需先清空库存!' : '' ?>">移除</button>
                 </td>

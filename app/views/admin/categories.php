@@ -73,7 +73,7 @@ th.c-chk,td.c-chk{width:34px;text-align:center}
         </div>
     </div>
 
-    <form method="get" action="<?= site_url('admin.php') ?>">
+    <form method="get" action="<?= au('categories') ?>">
         <input type="hidden" name="s" value="/categories">
         <div class="c-filters">
             <div class="cf"><label>分类名称</label><input type="text" name="name" value="<?= e($nameKw) ?>" placeholder="名称关键字"></div>

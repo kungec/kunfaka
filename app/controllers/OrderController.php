@@ -93,6 +93,11 @@ class OrderController
         $recentIp = (int)DB::value('SELECT COUNT(*) FROM contact_otps WHERE ip = ? AND created_at > ?', [$ip, now() - 1800]);
         if ($recentIp >= 10) return '请求过于频繁, 请稍后再试';
         $code = (string)random_int(100000, 999999);
+        $site = setting('site_name', '坤发卡');
+        // 先发信后入库: 发送失败时不落记录, 避免失败尝试占满频控后10分钟无法再请求
+        $ok = send_mail($contact, $site . ' 订单查询验证码',
+            "您正在查询在 {$site} 购买的订单。\n\n验证码: {$code}\n\n10分钟内有效, 请勿泄露给他人。如非本人操作请忽略本邮件。");
+        if (!$ok) return '验证码邮件发送失败, 请稍后再试';
         DB::insert('contact_otps', [
             'contact' => mb_substr($contact, 0, 100),
             'code' => $code,
@@ -101,10 +106,7 @@ class OrderController
             'created_at' => now(),
             'expires_at' => now() + 600,
         ]);
-        $site = setting('site_name', '坤发卡');
-        $ok = send_mail($contact, $site . ' 订单查询验证码',
-            "您正在查询在 {$site} 购买的订单。\n\n验证码: {$code}\n\n10分钟内有效, 请勿泄露给他人。如非本人操作请忽略本邮件。");
-        return $ok ? '' : '验证码邮件发送失败, 请稍后再试';
+        return '';
     }
 
     /** 校验验证码并通过后放行会话 */

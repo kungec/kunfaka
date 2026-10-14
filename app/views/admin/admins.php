@@ -36,7 +36,7 @@ $me = current_admin();
         <button class="btn sm" id="addBtn"><?= ico('plus') ?> 添加管理员</button>
     </div>
 
-    <form method="get" action="<?= site_url('admin.php') ?>">
+    <form method="get" action="<?= au('admins') ?>">
         <input type="hidden" name="s" value="/admins">
         <div class="adm-filters">
             <div class="af"><label>用户名 / 昵称</label><input type="text" name="kw" value="<?= e($kw) ?>"></div>
