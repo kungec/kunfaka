@@ -12,7 +12,7 @@
             <?php foreach ($orders as $o): ?>
                 <a class="order-item" href="<?= u('order/detail', ['sn' => $o['sn']]) ?>">
                     <div class="oi-line"><b><?= e($o['product_name']) ?> × <?= (int)$o['num'] ?></b>
-                        <span class="oi-status <?= (int)$o['status'] === 1 ? 'ok-text' : ((int)$o['status'] === 0 ? 'warn-text' : 'bad-text') ?>"><?= (int)$o['status'] === 1 ? '已完成' : ((int)$o['status'] === 0 ? '待支付' : '已关闭') ?></span></div>
+                        <span class="oi-status <?= (int)$o['status'] === 1 ? 'ok-text' : ((int)$o['status'] === 0 ? 'warn-text' : 'bad-text') ?>"><?= (int)$o['status'] === 1 ? '已完成' : ((int)$o['status'] === 0 ? '待支付' : ((int)$o['status'] === 3 ? '处理中' : '已关闭')) ?></span></div>
                     <div class="oi-line dim mono"><?= e($o['sn']) ?> · ¥<?= e(nf($o['total'])) ?> · <?= e(date('m-d H:i', $o['created_at'])) ?></div>
                 </a>
             <?php endforeach; ?>

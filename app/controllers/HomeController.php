@@ -9,7 +9,8 @@ class HomeController
         $catId = isset($_GET['cat']) ? (int)$_GET['cat'] : 0;
         $kw = trim((string)(isset($_GET['kw']) ? $_GET['kw'] : ''));
         $categories = cat_list();
-        $where = 'status = 1';
+        // 停用分类下的商品同样不可见(关联分类启用状态)
+        $where = 'status = 1 AND category_id IN (SELECT id FROM categories WHERE status = 1)';
         $params = [];
         if ($catId > 0) {
             $where .= ' AND category_id = ?';

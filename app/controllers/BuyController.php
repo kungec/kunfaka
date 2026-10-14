@@ -7,7 +7,8 @@ class BuyController
     public function actionIndex()
     {
         $id = isset($_GET['product_id']) ? (int)$_GET['product_id'] : 0;
-        $product = DB::fetch('SELECT * FROM products WHERE id = ? AND status = 1', [$id]);
+        // 停用分类下的商品不可直达购买
+        $product = DB::fetch('SELECT * FROM products WHERE id = ? AND status = 1 AND category_id IN (SELECT id FROM categories WHERE status = 1)', [$id]);
         if (!$product) {
             View::theme('error', ['msg' => '商品不存在或已下架', 'pageTitle' => '商品不存在']);
             return;
@@ -69,7 +70,7 @@ class BuyController
         $contactType = trim(arr_get($_POST, 'contact_type'));
         // 买家在商品页选择的支付方式(直购模式: 创建后直接跳转支付)
         $pluginCode = trim(arr_get($_POST, 'plugin'));
-        $product = DB::fetch('SELECT * FROM products WHERE id = ? AND status = 1', [$productId]);
+        $product = DB::fetch('SELECT * FROM products WHERE id = ? AND status = 1 AND category_id IN (SELECT id FROM categories WHERE status = 1)', [$productId]);
         if (!$product) {
             View::theme('error', ['msg' => '商品不存在或已下架', 'pageTitle' => '错误']);
             return;

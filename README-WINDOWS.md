@@ -67,12 +67,18 @@ IIS 管理器 → 服务器节点 → PHP Manager → Register new PHP version �
    - 物理路径：`C:\inetpub\wwwroot\kunfaka`
    - 端口：如 `8080`（或绑定你的域名）
    - 应用程序池：默认即可（.NET CLR 版本选"无托管代码"更佳）
-3. **目录权限（关键）**：给应用池身份对站点目录的"修改"权限：
+3. **目录权限（关键）**：安装阶段先授予应用池身份对站点目录的"修改"权限（安装向导要写 `data/`、根目录重命名 admin.php）：
    ```bat
    icacls C:\inetpub\wwwroot\kunfaka /grant "IIS_IUSRS:(OI)(CI)M" /T
    ```
    （若自定义了应用池名称，改授 `IIS AppPool\你的应用池名`）
-   安装向导需要写 `data/`、根目录（重命名 admin.php）；运行期需要写 `data/`、`uploads/`。
+   **安装完成后立即收紧为最小权限**——代码目录只读，仅数据目录可写（防止Web层任意写文件问题升级为代码执行）：
+   ```bat
+   icacls C:\inetpub\wwwroot\kunfaka /grant "IIS_IUSRS:(OI)(CI)RX" /T
+   icacls C:\inetpub\wwwroot\kunfaka\data /grant "IIS_IUSRS:(OI)(CI)M" /T
+   icacls C:\inetpub\wwwroot\kunfaka\uploads /grant "IIS_IUSRS:(OI)(CI)M" /T
+   ```
+   注意：收紧后"在线更新/应用市场安装"会因根目录只读而失败，属预期行为（安全取舍）；需要时临时授予修改权限，更新完再收回。
 4. 浏览器访问 `http://localhost:8080/install.php`：
    - **之前在这台机器装失败过的**：先删除 `data\config.php` 与 `data\install.lock`，再进向导；
    - 第1步环境检测 → 第2步协议 → 第3步填数据库信息（地址 `127.0.0.1`、端口 `3306`、库名/账号/密码）+ 管理员账号密码 → 完成。
@@ -86,6 +92,10 @@ schtasks /create /tn "kunfaka_cron" /tr "\"C:\php74\php.exe\" \"C:\inetpub\wwwro
 ```
 作用：未支付订单超时自动关闭、链上支付（USDT/BTC/ETH/XMR）到账轮询。
 也可用访问URL方式：`http://你的域名/cron.php?key=YF_KEY的值`（YF_KEY 见 `data\config.php`）。
+
+> 安全建议：SYSTEM 是最高权限账户，cron 进程若被利用会放大危害。更稳妥的做法是
+> 新建一个普通本地用户（如 `kunfaka_cron`，仅授予站点目录读取 + `data\`、`uploads\` 修改权限），
+> 用 `/ru kunfaka_cron /rp 密码` 替代 `/ru SYSTEM` 运行计划任务。
 
 ## 六、安全收尾
 

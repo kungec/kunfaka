@@ -47,19 +47,24 @@ class Upgrade
         foreach ($seeds as $k => $v) $st->execute([$k, $v]);
         $log('OK: 配置种子已就绪(不覆盖已有配置)');
 
-        // 默认主题切换(v1.9): 仅当当前是旧默认 anime 时切换
-        $cur = '';
-        foreach ($pdo->query("SELECT v FROM settings WHERE k = 'theme'") as $row) $cur = $row['v'];
-        if ($cur === '' || $cur === 'anime') {
-            if ($isSqlite) {
-                $pdo->exec("UPDATE settings SET v = 'store' WHERE k = 'theme'");
-                if ((int)$pdo->exec("UPDATE settings SET v = 'store' WHERE k = 'theme' AND 0") === 0 && (int)$pdo->query("SELECT COUNT(*) FROM settings WHERE k = 'theme'")->fetchColumn() === 0) {
-                    $pdo->exec("INSERT INTO settings (k, v) VALUES ('theme', 'store')");
+        // 默认主题切换(v1.9): 仅当当前是旧默认 anime 时切换; 以迁移标记保证一次性, 避免每次升级把管理员手动选回的anime再次改回store
+        $migrated = '';
+        foreach ($pdo->query("SELECT v FROM settings WHERE k = 'theme_v19_migrated'") as $row) $migrated = $row['v'];
+        if ($migrated === '') {
+            $cur = '';
+            foreach ($pdo->query("SELECT v FROM settings WHERE k = 'theme'") as $row) $cur = $row['v'];
+            if ($cur === '' || $cur === 'anime') {
+                if ($isSqlite) {
+                    $pdo->exec("UPDATE settings SET v = 'store' WHERE k = 'theme'");
+                    if ((int)$pdo->exec("UPDATE settings SET v = 'store' WHERE k = 'theme' AND 0") === 0 && (int)$pdo->query("SELECT COUNT(*) FROM settings WHERE k = 'theme'")->fetchColumn() === 0) {
+                        $pdo->exec("INSERT INTO settings (k, v) VALUES ('theme', 'store')");
+                    }
+                } else {
+                    $pdo->exec("INSERT INTO settings (k, v) VALUES ('theme', 'store') ON DUPLICATE KEY UPDATE v = 'store'");
                 }
-            } else {
-                $pdo->exec("INSERT INTO settings (k, v) VALUES ('theme', 'store') ON DUPLICATE KEY UPDATE v = 'store'");
+                $log('OK: 默认主题已切换为 云商城(store)');
             }
-            $log('OK: 默认主题已切换为 云商城(store)');
+            $pdo->exec("INSERT INTO settings (k, v) VALUES ('theme_v19_migrated', '1')");
         }
 
         // 旧版单条公告设置导入为公告记录(仅公告表为空时执行一次)
@@ -197,14 +202,14 @@ class Upgrade
         $col('orders', 'ship_name', "varchar(100) NOT NULL DEFAULT '' COMMENT '收件人姓名'", 'channel');
         $col('orders', 'ship_address', "varchar(300) NOT NULL DEFAULT '' COMMENT '邮寄地址'", 'ship_name');
         $col('products', 'contact_types', "varchar(200) NOT NULL DEFAULT '' COMMENT '商品级下单联系方式: 逗号分隔(空=默认email)'");
-        $col('orders', 'channel', "varchar(20) NOT NULL DEFAULT '' COMMENT '聚合支付渠道: alipay/wxpay/qqpay'", 'pay_plugin');
         $col('categories', 'status', "tinyint NOT NULL DEFAULT 1 COMMENT '1启用 0停用(前台隐藏)'");
         $col('categories', 'image', "varchar(200) NOT NULL DEFAULT '' COMMENT '分类图片(上传路径)'");
         // 授权域名主域名归一: 历史数据里带www前缀的license_domain去掉www(与主控归一规则一致)
+        // 直接用传入的$pdo, 不依赖DB门面(CLI升级工具不加载DB类); 捕获Throwable(类缺失等Error也兜住)
         try {
-            $bad = DB::value("SELECT k FROM settings WHERE k = 'license_domain' AND v LIKE 'www.%'");
-            if ($bad) DB::exec("UPDATE settings SET v = SUBSTR(v, 5) WHERE k = 'license_domain' AND v LIKE 'www.%' AND length(v) > 5");
-        } catch (Exception $ex) {}
+            $bad = $pdo->query("SELECT k FROM settings WHERE k = 'license_domain' AND v LIKE 'www.%'")->fetchColumn();
+            if ($bad) $pdo->exec("UPDATE settings SET v = SUBSTR(v, 5) WHERE k = 'license_domain' AND v LIKE 'www.%' AND length(v) > 5");
+        } catch (Throwable $ex) {}
         $col('cards', 'note', "varchar(200) NOT NULL DEFAULT '' COMMENT '备注信息'");
         $col('users', 'level_id', "int unsigned NOT NULL DEFAULT 0 COMMENT '会员等级(0=无等级)'");
         $col('products', 'group_id', "int unsigned NOT NULL DEFAULT 0 COMMENT '商品分组(0=不分组)'");
@@ -226,8 +231,11 @@ class Upgrade
         ] as [$c, $def, $after]) {
             $col('admin_users', $c, $def, $after);
         }
-        // 最早创建的管理员设为超级管理员(仅一次)
-        $pdo->exec("UPDATE admin_users SET role = 'super' WHERE id = (SELECT id FROM (SELECT id FROM admin_users ORDER BY id ASC LIMIT 1) t) AND role <> 'super'");
+        // 最早创建的管理员设为超级管理员(仅一次): 仅当系统中不存在任何超级管理员时才执行, 防止降权账号在每次升级时被自动提回
+        $superCount = (int)$pdo->query('SELECT COUNT(*) FROM admin_users WHERE role = \'super\'')->fetchColumn();
+        if ($superCount === 0) {
+            $pdo->exec("UPDATE admin_users SET role = 'super' WHERE id = (SELECT id FROM (SELECT id FROM admin_users ORDER BY id ASC LIMIT 1) t) AND role <> 'super'");
+        }
 
         // logs.ua
         $st = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'logs' AND COLUMN_NAME = 'ua'");

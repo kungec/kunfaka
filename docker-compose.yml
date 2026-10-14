@@ -1,5 +1,6 @@
 services:
   # 坤发卡站点(PHP 8.2 + Apache)
+  # 安全提示: 生产环境请 ①修改下方MySQL默认密码 ②勿将8080直接暴露公网, 建议前置反向代理统一HTTPS
   app:
     build: .
     ports:

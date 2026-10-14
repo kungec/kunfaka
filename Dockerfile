@@ -31,9 +31,11 @@ COPY docker/apache-kunfaka.conf /etc/apache2/sites-available/000-default.conf
 COPY . /var/www/html
 
 COPY docker/docker-entrypoint.sh /usr/local/bin/kunfaka-entrypoint
+# 整站授予 www-data: 安装向导需要写data/并在根目录重命名admin.php; 在线更新/应用市场安装同样写站点目录。
+# 更高安全要求的部署可在安装完成后手动收回根目录写权限(仅保留data/、uploads/可写)
 RUN chmod 755 /usr/local/bin/kunfaka-entrypoint \
     && mkdir -p /var/www/html/data /var/www/html/uploads \
-    && chown -R www-data:www-data /var/www/html/data /var/www/html/uploads
+    && chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
 

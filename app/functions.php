@@ -124,8 +124,17 @@ function site_url($path = '') {
     if ($base === null) {
         $base = trim((string)setting('site_url'));
         if ($base === '') {
+            // 协议探测与bootstrap会话Cookie一致: 支持反代终结TLS的场景(X-Forwarded-Proto)
             $scheme = (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off') ? 'https' : 'http';
-            $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+            if ($scheme === 'http' && !empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+                if (strtolower(trim(explode(',', (string)$_SERVER['HTTP_X_FORWARDED_PROTO'])[0])) === 'https') $scheme = 'https';
+            }
+            // Host头校验: 非法格式(注入字符/缺失)一律回退localhost, 防Host注入进入生成的链接与支付回调地址
+            $rawHost = trim((string)($_SERVER['HTTP_HOST'] ?? ''));
+            $hostPart = preg_replace('/:\d{1,5}$/', '', $rawHost);
+            $okHost = $hostPart !== '' && (filter_var($hostPart, FILTER_VALIDATE_IP)
+                || filter_var($hostPart, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME));
+            $host = $okHost ? $rawHost : 'localhost';
             $dir = rtrim(str_replace('\\', '/', dirname(isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '/')), '/');
             $base = $scheme . '://' . $host . $dir . '/';
         }

@@ -118,6 +118,8 @@ class Market
             $json = json_decode((string)$res, true);
             throw new Exception($json && isset($json['msg']) ? $json['msg'] : '下载失败(HTTP ' . $httpCode . ')');
         }
+        // 应用包体积上限50MB: 防异常响应(压缩炸弹/超大文件)耗尽磁盘与内存
+        if (strlen((string)$res) > 50 * 1024 * 1024) throw new Exception('安装包体积异常, 已中止安装');
         $dir = $type === 'theme' ? 'themes' : 'plugins';
         $tmp = YF_DATA . '/tmp_' . $name . '.zip';
         file_put_contents($tmp, $res);

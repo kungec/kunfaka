@@ -112,6 +112,9 @@ docker compose up -d --build
 
 访问 `http://IP:8080/install.php` 完成安装。数据库: 地址 `db` / 库名 `kunfaka` / 用户 `kunfaka` / 密码 `kunfaka123`。自带 cron 服务与数据卷, 升级镜像不丢配置。
 
+> 安全提示: compose 内为演示用默认密码, 生产部署务必修改 `docker-compose.yml` 中的 `MYSQL_PASSWORD`/`MYSQL_ROOT_PASSWORD`;
+> 8080 端口请勿直接暴露公网, 建议前置反向代理(Nginx/Caddy)统一 HTTPS 后再对外。
+
 ### Windows Server + IIS
 
 支持 Windows Server 2016/2019/2022 + IIS 10 + PHP 7.4~8.3 + MySQL 5.6/5.7/8.0。
