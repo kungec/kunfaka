@@ -127,17 +127,40 @@ abstract class UsdtEvmBasePlugin extends PaymentBase
 
     public function sweep()
     {
-        if (trim($this->cfg('wallet_address')) === '') return 0;
+        $addr = trim($this->cfg('wallet_address'));
+        if ($addr === '') return 0;
         $orders = DB::fetchAll(
             'SELECT * FROM orders WHERE status = 0 AND pay_plugin = ? AND expected_amount > 0 AND expired_at > ? ORDER BY created_at ASC LIMIT 30',
             [$this->slug, now()]
         );
+        if (!$orders) return 0;
+        // 批量化: 一轮只调一次链上API, 内存中按唯一金额匹配(此前每订单各拉一次, 30单=30次请求, 免费配额极易被打满)
+        try {
+            $txs = $this->transfers($addr);
+        } catch (Exception $ex) {
+            return 0; // 本轮API失败, 下轮重试
+        }
         $paid = 0;
         foreach ($orders as $order) {
-            try {
-                if ($this->pollOrder($order)) $paid++;
-            } catch (Exception $ex) {
-                // 单笔失败不影响其他
+            // 期望金额换算为链上最小单位(USDT展示6位小数, 按代币实际小数位补零)
+            $wantRaw = str_replace('.', '', number_format((float)$order['expected_amount'], 6, '.', ''));
+            $pad = $this->tokenDecimals - 6;
+            if ($pad > 0) $wantRaw .= str_repeat('0', $pad);
+            $minTs = (int)$order['created_at'] - 120;
+            foreach ($txs as $tx) {
+                if (!isset($tx['hash'], $tx['value'], $tx['to'])) continue;
+                if (strcasecmp((string)$tx['to'], $addr) !== 0) continue;
+                if (bccomp((string)$tx['value'], $wantRaw) !== 0) continue;
+                $ts = isset($tx['timeStamp']) ? (int)$tx['timeStamp'] : 0;
+                // 时间戳严格校验: 缺失宁可漏检不可错检, 早于订单创建的转账一律排除
+                if ($ts <= 0 || $ts < $minTs) continue;
+                $txid = (string)$tx['hash'];
+                if (DB::value('SELECT id FROM orders WHERE txid = ? AND id != ?', [$txid, $order['id']])) continue;
+                if (OrderService::deliver((int)$order['id'], '', $txid)) {
+                    add_log('usdt', 'USDT(' . $this->netName . ')到账: 订单 ' . $order['sn'] . ' 金额 ' . $order['expected_amount'] . ' USDT, 哈希 ' . substr($txid, 0, 24));
+                    $paid++;
+                }
+                break;
             }
         }
         return $paid;

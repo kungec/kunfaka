@@ -187,20 +187,40 @@ class Upgrade
         }
 
         // ---- 列补齐(幂等) ----
+        // 整体try/catch兜底: 目标表不存在等异常环境跳过该项, 不让升级中断在半途
         $col = function ($table, $column, $def, $after = null) use ($pdo, $log) {
-            $st = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{$table}' AND COLUMN_NAME = '{$column}'");
-            if ((int)$st->fetchColumn() === 0) {
-                $sql = "ALTER TABLE `{$table}` ADD COLUMN `{$column}` {$def}" . ($after ? " AFTER `{$after}`" : '');
-                $pdo->exec($sql);
-                $log("OK: {$table}.{$column} 已添加");
+            try {
+                $st = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{$table}' AND COLUMN_NAME = '{$column}'");
+                if ((int)$st->fetchColumn() === 0) {
+                    $sql = "ALTER TABLE `{$table}` ADD COLUMN `{$column}` {$def}" . ($after ? " AFTER `{$after}`" : '');
+                    $pdo->exec($sql);
+                    $log("OK: {$table}.{$column} 已添加");
+                }
+            } catch (Throwable $ex) {
+                $log("跳过: {$table}.{$column} (" . substr($ex->getMessage(), 0, 60) . ")");
             }
         };
         $col('orders', 'user_id', "int unsigned NOT NULL DEFAULT 0 COMMENT '下单会员ID'", 'sn');
-        try { $pdo->exec("ALTER TABLE `orders` ADD INDEX `idx_user` (`user_id`)"); } catch (Exception $ex) {}
         $col('orders', 'contact_type', "varchar(20) NOT NULL DEFAULT '' COMMENT '联系方式类型'", 'contact');
         $col('orders', 'channel', "varchar(20) NOT NULL DEFAULT '' COMMENT '聚合支付渠道: alipay/wxpay/qqpay'", 'pay_plugin');
         $col('orders', 'ship_name', "varchar(100) NOT NULL DEFAULT '' COMMENT '收件人姓名'", 'channel');
         $col('orders', 'ship_address', "varchar(300) NOT NULL DEFAULT '' COMMENT '邮寄地址'", 'ship_name');
+        // 列兜底: 极老版本升级上来的站点可能没有trade_no/txid/expected_amount列, 缺列会让链上相关索引永远建不上
+        $col('orders', 'trade_no', "varchar(64) NOT NULL DEFAULT '' COMMENT '第三方流水号'", 'ship_address');
+        $col('orders', 'txid', "varchar(100) NOT NULL DEFAULT '' COMMENT '链上交易哈希'", 'trade_no');
+        $col('orders', 'expected_amount', "decimal(20,10) NOT NULL DEFAULT 0.0000000000 COMMENT '链上应收唯一金额'", 'total');
+        // ---- 索引补齐(全部列就位后执行; 幂等, 已存在时静默跳过) ----
+        // idx_coupon_code/idx_txid/idx_contact/idx_status_paid: 查单/优惠券占用/txid去重/后台销量统计高频查询
+        // uk_sn/idx_created/idx_status_amount: 此前只存在于database.sql, 走老版本升级的站点一直缺失
+        // (uk_sn为订单号唯一约束, 历史数据有重复时会创建失败并跳过)
+        try { $pdo->exec("ALTER TABLE `orders` ADD INDEX `idx_user` (`user_id`)"); } catch (Exception $ex) {}
+        try { $pdo->exec("ALTER TABLE `orders` ADD INDEX `idx_coupon_code` (`coupon_code`)"); } catch (Exception $ex) {}
+        try { $pdo->exec("ALTER TABLE `orders` ADD INDEX `idx_txid` (`txid`)"); } catch (Exception $ex) {}
+        try { $pdo->exec("ALTER TABLE `orders` ADD INDEX `idx_contact` (`contact`(191))"); } catch (Exception $ex) {}
+        try { $pdo->exec("ALTER TABLE `orders` ADD INDEX `idx_status_paid` (`status`,`paid_at`)"); } catch (Exception $ex) {}
+        try { $pdo->exec("ALTER TABLE `orders` ADD UNIQUE KEY `uk_sn` (`sn`)"); } catch (Exception $ex) {}
+        try { $pdo->exec("ALTER TABLE `orders` ADD INDEX `idx_created` (`created_at`)"); } catch (Exception $ex) {}
+        try { $pdo->exec("ALTER TABLE `orders` ADD INDEX `idx_status_amount` (`status`,`pay_plugin`,`expected_amount`)"); } catch (Exception $ex) {}
         $col('products', 'contact_types', "varchar(200) NOT NULL DEFAULT '' COMMENT '商品级下单联系方式: 逗号分隔(空=默认email)'");
         $col('categories', 'status', "tinyint NOT NULL DEFAULT 1 COMMENT '1启用 0停用(前台隐藏)'");
         $col('categories', 'image', "varchar(200) NOT NULL DEFAULT '' COMMENT '分类图片(上传路径)'");
@@ -232,24 +252,30 @@ class Upgrade
             $col('admin_users', $c, $def, $after);
         }
         // 最早创建的管理员设为超级管理员(仅一次): 仅当系统中不存在任何超级管理员时才执行, 防止降权账号在每次升级时被自动提回
-        $superCount = (int)$pdo->query('SELECT COUNT(*) FROM admin_users WHERE role = \'super\'')->fetchColumn();
-        if ($superCount === 0) {
-            $pdo->exec("UPDATE admin_users SET role = 'super' WHERE id = (SELECT id FROM (SELECT id FROM admin_users ORDER BY id ASC LIMIT 1) t) AND role <> 'super'");
-        }
+        try {
+            $superCount = (int)$pdo->query('SELECT COUNT(*) FROM admin_users WHERE role = \'super\'')->fetchColumn();
+            if ($superCount === 0) {
+                $pdo->exec("UPDATE admin_users SET role = 'super' WHERE id = (SELECT id FROM (SELECT id FROM admin_users ORDER BY id ASC LIMIT 1) t) AND role <> 'super'");
+            }
+        } catch (Throwable $ex) {}
 
         // logs.ua
-        $st = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'logs' AND COLUMN_NAME = 'ua'");
-        if ((int)$st->fetchColumn() === 0) {
-            $pdo->exec("ALTER TABLE `logs` ADD COLUMN `ua` varchar(255) NOT NULL DEFAULT '' COMMENT '浏览器UA'");
-            $log('OK: logs.ua 已添加');
-        }
+        try {
+            $st = $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'logs' AND COLUMN_NAME = 'ua'");
+            if ((int)$st->fetchColumn() === 0) {
+                $pdo->exec("ALTER TABLE `logs` ADD COLUMN `ua` varchar(255) NOT NULL DEFAULT '' COMMENT '浏览器UA'");
+                $log('OK: logs.ua 已添加');
+            }
+        } catch (Throwable $ex) {}
 
         // orders.expected_amount 精度扩容(6→10位小数, 适配BTC等高精度链上金额)
-        $st = $pdo->query("SELECT NUMERIC_SCALE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'orders' AND COLUMN_NAME = 'expected_amount'");
-        $sc = $st->fetch(PDO::FETCH_ASSOC);
-        if ($sc && (int)$sc['NUMERIC_SCALE'] < 10) {
-            $pdo->exec("ALTER TABLE `orders` MODIFY `expected_amount` decimal(20,10) NOT NULL DEFAULT 0.0000000000");
-            $log('OK: orders.expected_amount 精度已扩容至 decimal(20,10)');
-        }
+        try {
+            $st = $pdo->query("SELECT NUMERIC_SCALE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'orders' AND COLUMN_NAME = 'expected_amount'");
+            $sc = $st->fetch(PDO::FETCH_ASSOC);
+            if ($sc && (int)$sc['NUMERIC_SCALE'] < 10) {
+                $pdo->exec("ALTER TABLE `orders` MODIFY `expected_amount` decimal(20,10) NOT NULL DEFAULT 0.0000000000");
+                $log('OK: orders.expected_amount 精度已扩容至 decimal(20,10)');
+            }
+        } catch (Throwable $ex) {}
     }
 }

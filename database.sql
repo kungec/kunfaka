@@ -128,7 +128,11 @@ CREATE TABLE IF NOT EXISTS `orders` (
   UNIQUE KEY `uk_sn` (`sn`),
   KEY `idx_user` (`user_id`),
   KEY `idx_status_amount` (`status`,`pay_plugin`,`expected_amount`),
-  KEY `idx_created` (`created_at`)
+  KEY `idx_created` (`created_at`),
+  KEY `idx_coupon_code` (`coupon_code`),
+  KEY `idx_txid` (`txid`),
+  KEY `idx_contact` (`contact`(191)),
+  KEY `idx_status_paid` (`status`,`paid_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 前台会员
