@@ -255,7 +255,6 @@ INSERT IGNORE INTO `settings` (`k`,`v`) VALUES
 ('geetest_id',''),
 ('geetest_key',''),
 ('geetest_timeout','120'),
-('contact_types','email,qq'),
 ('service_contacts',''),
 ('singlepage_open','0'),
 ('singlepage_title','关于我们'),

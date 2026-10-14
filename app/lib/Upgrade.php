@@ -103,7 +103,7 @@ class Upgrade
                 `status` tinyint NOT NULL DEFAULT 1,
                 `created_at` int unsigned NOT NULL DEFAULT 0,
                 UNIQUE KEY `uk_code` (`code`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
             "CREATE TABLE IF NOT EXISTS `coupon_used` (
                 `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `coupon_id` int unsigned NOT NULL,
@@ -112,7 +112,7 @@ class Upgrade
                 `amount` decimal(10,2) NOT NULL DEFAULT 0,
                 `created_at` int unsigned NOT NULL DEFAULT 0,
                 KEY `idx_coupon` (`coupon_id`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
             "CREATE TABLE IF NOT EXISTS `users` (
                 `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `username` varchar(32) NOT NULL,
@@ -122,13 +122,13 @@ class Upgrade
                 `created_at` int unsigned NOT NULL DEFAULT 0,
                 `reg_ip` varchar(45) NOT NULL DEFAULT '',
                 UNIQUE KEY `uk_username` (`username`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
             "CREATE TABLE IF NOT EXISTS `registers` (
                 `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `ip` varchar(45) NOT NULL,
                 `created_at` int unsigned NOT NULL DEFAULT 0,
                 KEY `idx_ip` (`ip`,`created_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
             "CREATE TABLE IF NOT EXISTS `login_fails` (
                 `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `scene` varchar(10) NOT NULL,
@@ -137,7 +137,7 @@ class Upgrade
                 `fail_at` int unsigned NOT NULL DEFAULT 0,
                 KEY `idx_key` (`scene`,`account`,`ip`,`fail_at`),
                 KEY `idx_scene_ip` (`scene`,`ip`,`fail_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
             "CREATE TABLE IF NOT EXISTS `logs` (
                 `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `type` varchar(20) NOT NULL DEFAULT 'system',
@@ -147,7 +147,7 @@ class Upgrade
                 `created_at` int unsigned NOT NULL DEFAULT 0,
                 KEY `idx_type` (`type`,`created_at`),
                 KEY `idx_created` (`created_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
             "CREATE TABLE IF NOT EXISTS `notices` (
                 `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `title` varchar(200) NOT NULL,
@@ -156,19 +156,19 @@ class Upgrade
                 `sort` int NOT NULL DEFAULT 0 COMMENT '越大越靠前',
                 `created_at` int unsigned NOT NULL DEFAULT 0,
                 KEY `idx_status` (`status`,`sort`,`id`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
             "CREATE TABLE IF NOT EXISTS `member_levels` (
                 `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `name` varchar(50) NOT NULL,
                 `level` int NOT NULL DEFAULT 1 COMMENT '等级数值(越大越高)',
                 `created_at` int unsigned NOT NULL DEFAULT 0
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
             "CREATE TABLE IF NOT EXISTS `product_groups` (
                 `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `name` varchar(100) NOT NULL,
                 `min_level` int NOT NULL DEFAULT 0 COMMENT '可见所需最低等级数值(0=不限制)',
                 `created_at` int unsigned NOT NULL DEFAULT 0
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
             "CREATE TABLE IF NOT EXISTS `contact_otps` (
                 `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `contact` varchar(100) NOT NULL DEFAULT '',
@@ -179,7 +179,7 @@ class Upgrade
                 `expires_at` int unsigned NOT NULL DEFAULT 0,
                 KEY `idx_contact` (`contact`,`expires_at`),
                 KEY `idx_ip` (`ip`,`created_at`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
         ];
         foreach ($ddl as $sql) {
             $pdo->exec($sql);

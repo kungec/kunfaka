@@ -56,6 +56,20 @@ if (setting('auto_update', '0') === '1') {
     }
 }
 
+// 4. 每日数据清理(每天首个触发执行一次): 过期OTP已失效即删, 登录失败/注册记录保留30天, 防三表无限膨胀
+$today = date('Y-m-d');
+if (setting('cleanup_last_date', '') !== $today) {
+    try {
+        $c1 = DB::exec('DELETE FROM contact_otps WHERE expires_at < ?', [now() - 3600]);
+        $c2 = DB::exec('DELETE FROM login_fails WHERE fail_at < ?', [now() - 30 * 86400]);
+        $c3 = DB::exec('DELETE FROM registers WHERE created_at < ?', [now() - 30 * 86400]);
+        setting_set('cleanup_last_date', $today);
+        echo "[cleanup] otp={$c1} login_fails={$c2} registers={$c3}\n";
+    } catch (Throwable $ex) {
+        echo '[cleanup] error: ' . $ex->getMessage() . "\n";
+    }
+}
+
 if ($lockFp) {
     flock($lockFp, LOCK_UN);
     fclose($lockFp);
