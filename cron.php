@@ -16,6 +16,15 @@ if (PHP_SAPI !== 'cli') {
     }
 }
 
+// 链上轮询多单多插件时耗时可能超过默认限时(Windows下按墙钟计), 放开执行时限
+@set_time_limit(0);
+
+// 单实例锁: 上一轮未跑完时本轮直接退出, 防止重入并发拉链上API触发限频
+$lockFp = fopen(YF_DATA . '/cron.lock', 'c');
+if ($lockFp && !flock($lockFp, LOCK_EX | LOCK_NB)) {
+    exit("[cron] previous run still in progress, skipped\n");
+}
+
 require YF_ROOT . '/app/lib/Router.php';
 
 // 1. 过期未支付订单
@@ -23,13 +32,14 @@ $n = DB::exec('UPDATE orders SET status = 2 WHERE status = 0 AND expired_at > 0 
 echo '[expire] ' . $n . " orders expired\n";
 
 // 2. 链上免挂支付轮询(USDT/BTC/ETH/XMR等, 由各插件实现sweep)
+// 捕获Throwable: PHP8下插件抛Error(TypeError等)不再中断后续插件与更新预取
 foreach (Plugin::scan('payment') as $pname => $pmeta) {
     try {
         $plugin = Plugin::payment($pname);
         if (!$plugin || !$plugin->enabled) continue;
         $c = $plugin->sweep();
         echo "[{$pname}] checked, {$c} paid\n";
-    } catch (Exception $ex) {
+    } catch (Throwable $ex) {
         echo "[{$pname}] error: " . $ex->getMessage() . "\n";
     }
 }
@@ -41,7 +51,12 @@ if (setting('auto_update', '0') === '1') {
         if ($info && Updater::hasUpdate($info)) {
             echo Updater::download($info) ? "[update] 包已预取 v{$info['version']}\n" : "[update] 包预取中\n";
         }
-    } catch (Exception $ex) {
+    } catch (Throwable $ex) {
         echo '[update] error: ' . $ex->getMessage() . "\n";
     }
+}
+
+if ($lockFp) {
+    flock($lockFp, LOCK_UN);
+    fclose($lockFp);
 }

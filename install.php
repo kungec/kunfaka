@@ -19,18 +19,10 @@ ini_set('display_errors', '1');
 $lockFile = YF_DATA . '/install.lock';
 $installed = is_file($lockFile);
 
-// 防重装接管: 若配置存在且数据库中已有管理员, 无论lock是否存在都拒绝安装(GET/POST均拦截)
-$blocked = false;
-if (is_file(YF_DATA . '/config.php')) {
-    try {
-        require_once YF_DATA . '/config.php'; // bootstrap可能已加载过, 避免常量重复定义
-        $chk = new PDO('mysql:host=' . YF_DB_HOST . ';port=' . YF_DB_PORT . ';dbname=' . YF_DB_NAME . ';charset=utf8mb4', YF_DB_USER, YF_DB_PASS, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-        $c = (int)$chk->query('SELECT COUNT(*) FROM admin_users')->fetchColumn();
-        if ($c > 0) $blocked = true;
-    } catch (Exception $ex) {
-        $blocked = false; // 数据库不可达时按lock文件判断
-    }
-}
+// 防重装接管: 检测到配置文件存在即无条件拒绝安装(GET/POST均拦截)。
+// 此前"config存在+数据库不可达+lock缺失"时放行向导, 攻击者可将站点安装到自己的数据库完成接管;
+// 如需重装, 请先删除 data/config.php 与 data/install.lock
+$blocked = is_file(YF_DATA . '/config.php');
 if ($blocked || $installed) {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Content-Type: application/json; charset=utf-8');
@@ -77,6 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!preg_match('/^[0-9]{1,5}$/', $port) || (int)$port < 1 || (int)$port > 65535) throw new Exception('数据库端口格式不正确');
         if (!preg_match('/^[A-Za-z0-9_\x{4e00}-\x{9fa5}]{3,20}$/u', $adminUser)) throw new Exception('管理员账号需为3-20位字母/数字/下划线/中文');
         if ($installed) throw new Exception('系统已安装, 如需重装请先删除 data/install.lock');
+        if (is_file(YF_DATA . '/config.php')) throw new Exception('配置文件已存在, 如需重装请先删除 data/config.php');
+
+        // 原子抢占安装锁(fopen 'x' 模式): 防并发安装/接管竞态, 后到者直接失败
+        $lockFp = @fopen($lockFile, 'x');
+        if (!$lockFp) throw new Exception('系统正在安装或已完成安装(无法创建安装锁)');
 
         $pdo = new PDO("mysql:host={$host};port={$port};charset=utf8mb4", $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
         // 数据库不存在则尝试创建(宝塔授权一般允许)
@@ -98,15 +95,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $st->execute([$adminUser, password_hash($adminPass, PASSWORD_DEFAULT), $adminUser, 'super', time()]);
         }
 
-        // 随机后台入口: 复制 admin.php → admin_xxxxxx.php, 并移除原入口
-        $adminEntry = 'admin_' . strtolower(bin2hex(random_bytes(3))) . '.php';
+        // 随机后台入口: 复制 admin.php → admin_xxxxxxxxxxxx.php(16位hex, 防枚举), 并移除原入口
+        $adminEntry = 'admin_' . strtolower(bin2hex(random_bytes(8))) . '.php';
         if (!@copy(__DIR__ . '/admin.php', __DIR__ . '/' . $adminEntry)) {
             $adminEntry = 'admin.php'; // 重命名失败时退回默认入口
         } else {
             @unlink(__DIR__ . '/admin.php');
         }
 
-        // 写配置
+        // 写配置: 失败必须报错并回滚安装锁(此前写失败时lock已落盘会展示"安装完成"而后台入口指向不存在的文件)
         $cfg = "<?php\n"
             . "define('YF_DB_HOST', '{$host}');\n"
             . "define('YF_DB_PORT', '{$port}');\n"
@@ -115,12 +112,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             . "define('YF_DB_PASS', '" . addslashes($pass) . "');\n"
             . "define('YF_ADMIN_ENTRY', '{$adminEntry}');\n"
             . "define('YF_KEY', '" . bin2hex(random_bytes(16)) . "');\n";
-        file_put_contents(YF_DATA . '/config.php', $cfg);
-        file_put_contents($lockFile, date('Y-m-d H:i:s'));
+        if (@file_put_contents(YF_DATA . '/config.php', $cfg) === false) {
+            @unlink($lockFile);
+            throw new Exception('配置文件写入失败, 请检查 data 目录写权限后重试');
+        }
+        fwrite($lockFp, date('Y-m-d H:i:s'));
+        fclose($lockFp);
 
         header('Location: install.php?step=4&entry=' . urlencode($adminEntry));
         exit;
     } catch (Exception $ex) {
+        if (isset($lockFp) && $lockFp) { @fclose($lockFp); @unlink($lockFile); }
         $error = $ex->getMessage();
         $step = 3;
     }
