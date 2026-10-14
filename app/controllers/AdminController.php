@@ -8,13 +8,17 @@ class AdminController
     {
         $public = ['actionLogin', 'actionCaptchaImage'];
         if (!in_array($method, $public)) {
-            if (empty($_SESSION['admin_id']) || !current_admin()) {
-                unset($_SESSION['admin_id'], $_SESSION['admin_name']);
+            // 会话空闲过期: 4小时无操作强制重新登录(降低Cookie被窃取后的长期可用性)
+            $last = isset($_SESSION['admin_last']) ? (int)$_SESSION['admin_last'] : 0;
+            $expired = $last > 0 && now() - $last > 4 * 3600;
+            if ($expired || empty($_SESSION['admin_id']) || !current_admin()) {
+                unset($_SESSION['admin_id'], $_SESSION['admin_name'], $_SESSION['admin_last']);
                 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
                     json_out(['code' => 401, 'msg' => '登录已失效']);
                 }
                 redirect(au('login'));
             }
+            $_SESSION['admin_last'] = now();
             if ($_SERVER['REQUEST_METHOD'] === 'POST') csrf_check();
             // 自动更新调度: 开关开启时在后台请求中静默检测并应用新版本(仅超级管理员请求触发)
             $adm = current_admin();

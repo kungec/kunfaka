@@ -177,8 +177,8 @@ class PayController
                         }
                     }
                 }
-            } catch (Exception $ex) {
-                // 核实失败不阻塞跳转, 订单页轮询/Webhook仍可发货
+            } catch (Throwable $ex) {
+                // 核实失败(含TypeError等Error)不阻塞跳转, 订单页轮询/Webhook仍可发货
             }
         }
         redirect(u('order/detail', ['sn' => $sn]));
