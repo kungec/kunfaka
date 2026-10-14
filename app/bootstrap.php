@@ -8,7 +8,7 @@ define('YF_BOOTSTRAP_LOADED', 1);
 
 if (!defined('YF_ROOT')) define('YF_ROOT', dirname(__DIR__));
 if (!defined('YF_DATA')) define('YF_DATA', YF_ROOT . '/data');
-if (!defined('YF_VERSION')) define('YF_VERSION', '2.43.5');
+if (!defined('YF_VERSION')) define('YF_VERSION', '2.43.6');
 if (!defined('YF_START')) define('YF_START', microtime(true));
 
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_WARNING);
