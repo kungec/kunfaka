@@ -84,15 +84,22 @@
         var sn = window.YF_POLL_SN;
         var statusEl = document.getElementById('poll-status');
         var times = 0;
+        // 检测地址由服务端注入(绝对路径): 伪静态+子目录部署下相对路径会解析错位导致轮询404
+        var checkUrl = (typeof window.YF_CHECK_URL === 'string' && window.YF_CHECK_URL) ? window.YF_CHECK_URL : 'index.php?s=/pay/check';
+        checkUrl += (checkUrl.indexOf('?') >= 0 ? '&' : '?') + 'sn=' + encodeURIComponent(sn);
         var timer = setInterval(function () {
             times++;
-            fetch('index.php?s=/pay/check&sn=' + encodeURIComponent(sn), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            fetch(checkUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function (r) { return r.json(); })
                 .then(function (d) {
                     if (d && d.paid) {
                         clearInterval(timer);
                         if (statusEl) statusEl.textContent = '支付成功! 正在跳转…';
                         setTimeout(function () { location.href = d.detail_url; }, 800);
+                    } else if (d && (d.status === 2 || d.status === 3)) {
+                        // 订单已超时关闭/待人工处理: 停止空转并明确告知, 不再默默轮到10分钟上限
+                        clearInterval(timer);
+                        if (statusEl) statusEl.textContent = d.status === 2 ? '订单已超时关闭, 如已付款请凭订单号查询或联系客服' : '订单处理中, 结果将以邮件或订单查询页为准';
                     }
                 })
                 .catch(function () { });

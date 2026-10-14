@@ -32,7 +32,7 @@
                 <div class="contact-types">
                     <?php $first = true; foreach ($contactTypes as $ct): ?>
                         <label class="ct-item">
-                            <input type="radio" name="contact_type" value="<?= e($ct) ?>" data-ph="<?= e(contact_type_placeholder($ct)) ?>" <?= $first ? 'checked' : '' ?>>
+                            <input type="radio" name="contact_type" value="<?= e($ct) ?>" data-ph="<?= e(contact_type_placeholder($ct)) ?>" <?= ($first || ($ct === 'email' && $contactPrefill !== '')) ? 'checked' : '' ?>>
                             <?= e(contact_type_label($ct)) ?>
                         </label>
                     <?php $first = false; endforeach; ?>
@@ -78,7 +78,7 @@
             <input type="hidden" name="channel" id="payChannel" value="<?= e($payments[0]['channel'] ?? '') ?>">
         </div>
         <?php endif; ?>
-        <button class="btn-buy big" type="submit" <?= $stock <= 0 ? 'disabled' : '' ?>>下单购买 · 全自动秒发</button>
+        <button class="btn-buy big" type="submit" <?= ($stock <= 0 || !$payments) ? 'disabled' : '' ?>>下单购买 · 全自动秒发</button>
     </form>
 </div>
 <script>

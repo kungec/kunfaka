@@ -45,7 +45,7 @@
 <div class="lic-top">
     <span class="qq-ico"><?= ico('message', 18) ?></span>
     <span class="qq-bar-tx">官方售后QQ群: <b>307386089</b> —— 授权购买、部署协助、插件咨询请加群。</span>
-    <a class="qq-join" href="https://qm.qq.com/cgi-bin/qm/qr?k=307386089" target="_blank" rel="noopener">前往加群 ›</a>
+    <span class="qq-join">官方交流群: 307386089</span>
 </div>
 
 <div class="lic-hero <?= $pro ? '' : 'is-free' ?>">

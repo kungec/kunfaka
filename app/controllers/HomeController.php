@@ -18,7 +18,7 @@ class HomeController
         }
         if ($kw !== '') {
             $where .= ' AND name LIKE ?';
-            $params[] = '%' . mb_substr($kw, 0, 50) . '%';
+            $params[] = '%' . like_escape(mb_substr($kw, 0, 50)) . '%';
         }
         $products = DB::fetchAll("SELECT * FROM products WHERE {$where} ORDER BY sort ASC, id DESC LIMIT 100", $params);
         // 分组等级可见性过滤(低于分组最低等级的会员/游客不可见)
@@ -42,7 +42,8 @@ class HomeController
             }
         }
         $catCounts = [];
-        foreach (DB::fetchAll("SELECT category_id, COUNT(*) AS n FROM products WHERE status = 1 GROUP BY category_id") as $r) {
+        // 角标口径与列表一致: 仅统计启用分类下的在售商品(排除分组等级不可见的在下方过滤)
+        foreach (DB::fetchAll("SELECT category_id, COUNT(*) AS n FROM products WHERE status = 1 AND category_id IN (SELECT id FROM categories WHERE status = 1) GROUP BY category_id") as $r) {
             $catCounts[(int)$r['category_id']] = (int)$r['n'];
         }
         foreach ($products as &$p) {

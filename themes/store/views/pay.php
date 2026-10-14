@@ -36,5 +36,5 @@
         <a class="btn-ghost" href="<?= u('order/detail', ['sn' => $order['sn']]) ?>">查看订单</a>
         <a class="btn-ghost" href="<?= u('home/index') ?>">返回首页</a>
     </div>
-    <script>YF_POLL_SN = <?= json_encode($order['sn']) ?>;</script>
+    <script>YF_POLL_SN = <?= json_encode($order["sn"]) ?>; YF_CHECK_URL = <?= json_encode(u("pay/check")) ?>;</script>
 </div>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0e1f">
 <title>管理后台登录 - 坤发卡</title>
-<link rel="stylesheet" href="<?= site_url('assets/css/admin.css') ?>?v=6.2.0">
+<link rel="stylesheet" href="<?= site_url('assets/css/admin.css') ?>?v=<?= YF_VERSION ?>">
 </head>
 <body>
 <div class="lg-page">

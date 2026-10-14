@@ -44,7 +44,7 @@
                     <div class="contact-types">
                         <?php $first = true; foreach ($contactTypes as $ct): ?>
                             <label class="ct-item">
-                                <input type="radio" name="contact_type" value="<?= e($ct) ?>" data-ph="<?= e(contact_type_placeholder($ct)) ?>" <?= $first ? 'checked' : '' ?>>
+                                <input type="radio" name="contact_type" value="<?= e($ct) ?>" data-ph="<?= e(contact_type_placeholder($ct)) ?>" <?= ($first || ($ct === 'email' && $contactPrefill !== '')) ? 'checked' : '' ?>>
                                 <?= e(contact_type_label($ct)) ?>
                             </label>
                         <?php $first = false; endforeach; ?>

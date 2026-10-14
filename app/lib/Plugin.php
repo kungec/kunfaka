@@ -23,7 +23,8 @@ class Plugin
     /** 单个插件/主题元信息 */
     public static function meta($type, $name)
     {
-        $name = preg_replace('/[^a-z0-9_\-]/', '', (string)$name);
+        // 保留大小写: 市场侧白名单允许大写(/i), 此处若吞掉大写字母会导致目录对不上而"下载成功安装失败"
+        $name = preg_replace('/[^A-Za-z0-9_\-]/', '', (string)$name);
         if ($name === '') return null;
         $dir = $type === 'theme' ? 'themes' : 'plugins';
         $file = YF_ROOT . '/' . $dir . '/' . $name . '/' . $name . '.json';

@@ -33,8 +33,16 @@ class Market
         if ($res === false) return [];
         $json = json_decode($res, true);
         $items = (is_array($json) && isset($json['data']['items']) && is_array($json['data']['items'])) ? $json['data']['items'] : [];
-        setting_set('market_cache', json_encode(['items' => $items, 'expire_at' => now() + 600]));
-        return $items;
+        // 接口异常返回空列表时不覆盖好缓存(保留旧数据到自然过期), 只有取到内容才刷新
+        if ($items) {
+            setting_set('market_cache', json_encode(['items' => $items, 'expire_at' => now() + 600]));
+            return $items;
+        }
+        if ($cache) {
+            $arr = json_decode($cache, true);
+            if (is_array($arr) && isset($arr['items']) && is_array($arr['items'])) return $arr['items'];
+        }
+        return [];
     }
 
     /** 合并后的应用列表 type: payment|theme */
@@ -143,7 +151,10 @@ class Market
                 throw new Exception('应用包包含非法路径条目, 已拒绝安装');
             }
         }
-        $zip->extractTo($toDir);
+        if (!$zip->extractTo($toDir)) {
+            $zip->close();
+            throw new Exception('解压失败, 请检查目录写权限后重试');
+        }
         $zip->close();
     }
 

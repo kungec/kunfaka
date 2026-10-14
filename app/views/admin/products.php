@@ -147,7 +147,27 @@ th.p-chk,td.p-chk{width:34px;text-align:center}
         <?php if (!$list): ?><tr><td colspan="12"><div style="text-align:center;padding:34px 0;color:var(--muted)"><div style="margin-bottom:6px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9aa1b5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v9"/></svg></div>暂无商品, 点击右上角「添加商品」创建</div></td></tr><?php endif; ?>
         </tbody>
     </table>
-    <div style="font-size:12px;color:var(--muted);padding:10px 2px 0">共 <?= count($list) ?> 条</div>
+    <?php
+        // 分页条: 保留当前筛选(cat/name/status)
+        $keep = [];
+        foreach (['cat', 'name', 'status'] as $pk) {
+            $pv = isset($_GET[$pk]) ? (string)$_GET[$pk] : '';
+            if ($pv !== '') $keep[$pk] = $pv;
+        }
+        $prodLink = function ($i) use ($keep) {
+            $p = $keep;
+            $p['page'] = $i;
+            return au('products', $p);
+        };
+    ?>
+    <div style="font-size:12px;color:var(--muted);padding:10px 2px 0">共 <?= (int)$ptotal ?> 条 · 第 <?= (int)$page ?>/<?= (int)$pages ?> 页</div>
+    <?php if ($pages > 1): ?>
+        <div class="pager" style="padding:8px 2px 0">
+            <?php for ($pi = 1; $pi <= $pages; $pi++): ?>
+                <a class="<?= $pi === $page ? 'on' : '' ?>" href="<?= e($prodLink($pi)) ?>" style="<?= $pi === $page ? 'font-weight:700' : 'color:var(--muted)' ?>;margin-right:6px"><?= $pi ?></a>
+            <?php endfor; ?>
+        </div>
+    <?php endif; ?>
 </div>
 
 <!-- 添加/编辑抽屉 -->

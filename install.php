@@ -34,7 +34,8 @@ if ($blocked || $installed) {
         . '<p><a href="index.php" style="color:#6366f1">返回首页</a></p></div>');
 }
 
-$step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
+$step = isset($_GET["step"]) ? (int)$_GET["step"] : 1;
+if (!in_array($step, [1, 2, 3, 4], true)) $step = 1; // 非法step回退环境检测, 不落入"安装完成"兜底页
 $error = '';
 
 $envItems = [
