@@ -4,7 +4,7 @@
 
 **支付成功, 卡密秒到 —— 7×24 无人值守的全自动发卡平台**
 
-无需挂机 · 无需客服 · 无需编程, 宝塔 3 分钟部署, Windows/IIS 同样开箱即用
+无需挂机 · 无需客服 · 无需编程, 坤面板 3 分钟部署, Windows/IIS 同样开箱即用
 
 ![PHP](https://img.shields.io/badge/PHP-7.4%20~%208.3-777bb4)
 ![MySQL](https://img.shields.io/badge/MySQL-5.6%2B-4479a1)
@@ -90,19 +90,33 @@
 
 ## 🚀 快速开始
 
-### 宝塔面板(Linux 推荐)
+### 坤面板 KunPanel(Linux 推荐)
 
-1. **建站**: 宝塔 → 网站 → 添加站点(PHP 7.4+), 创建 MySQL 数据库
-2. **上传**: 发行包解压到站点根目录, 访问域名进入安装向导
-3. **收藏后台入口**: 安装完成页展示随机入口(形如 `admin_x7k9q2.php`), **只显示一次**
-4. **安全收尾**: 删除 `install.php`, Nginx 加 `location ^~ /data/ { deny all; }`
-5. **配置计划任务**(必配): 宝塔 → 计划任务, 每 1 分钟执行:
+与坤发卡同团队的开源服务器面板(Go 单二进制, 自带 **WAF 防火墙 / Let's Encrypt 证书 / 计划任务 / MySQL 管理**), 与宝塔同类但更轻量安全。
+
+1. **安装坤面板**(全新服务器一条命令):
 
 ```bash
-php /www/wwwroot/你的站点目录/cron.php
+curl -fsSL https://raw.githubusercontent.com/kungec/kunpanel/main/scripts/install.sh | bash
+```
+
+安装完成会输出**随机面板端口 / 安全入口 / 管理员密码**, 务必保存(忘了可 `cat /opt/kunpanel/data/initial_password.txt`)。
+
+2. **装运行环境**: 面板 → 应用商店 → 一键安装 **PHP(7.4+)** 与 **MySQL**
+3. **建站**: 网站 → 添加 **PHP 站点**, 绑定你的域名; 数据库页面 → 创建 MySQL 库(记下账号密码)
+4. **上传**: 发行包解压到站点根目录, 访问域名进入安装向导, 照抄数据库信息完成安装
+5. **收藏后台入口**: 安装完成页展示随机入口(形如 `admin_x7k9q2.php`), **只显示一次**
+6. **安全收尾**: 删除 `install.php`; 建议申请 **Let's Encrypt 证书**(站点设置内一键, 自动续期)
+
+7. **配置计划任务**(必配): 面板 → 计划任务 → Shell 脚本, 每 1 分钟执行:
+
+```bash
+php /你的站点根目录/cron.php
 ```
 
 > cron 负责: 未支付订单超时关闭 + 加密币到账轮询。买家支付页也会触发, cron 实时性更佳。
+>
+> **WAF 提示**: 坤面板站点自带 WAF(CC 防御/注入检测)。如遇安装向导或**支付回调被误拦**, 在站点 WAF 设置中将支付回调路径加入白名单即可, 不影响其他防护。
 
 ### Docker
 
@@ -169,7 +183,7 @@ docker compose up -d --build
 
 <details>
 <summary><b>页面空白 / 报错</b></summary>
-PHP ≥ 7.4, 宝塔站点 PHP 版本选择正确; 查看 PHP 错误日志定位。
+PHP ≥ 7.4, 面板中站点 PHP 版本选择正确; 查看 PHP 错误日志定位。
 </details>
 
 <details>
