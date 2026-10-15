@@ -271,6 +271,9 @@
                         <option value="0" <?= setting('captcha_open', '1') !== '1' ? 'selected' : '' ?>>关闭</option>
                     </select>
                 </div>
+                <?php if (setting('captcha_open', '1') === '1' && !function_exists('imagecreatetruecolor')): ?>
+                    <div style="color:#b91c1c;font-size:12px;margin-top:6px;font-weight:600">⚠ GD扩展未启用: 图形验证码不可用, 系统已自动停用人机验证。请在php.ini启用GD(Windows PHP7.4为 extension=php_gd2.dll)并重启Web服务</div>
+                <?php endif; ?>
             </div>
             <div id="ts-fields" style="display:<?= $vm === 'turnstile' ? 'block' : 'none' ?>">
                 <div class="form-row">

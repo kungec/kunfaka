@@ -56,7 +56,7 @@ class BuyController
         csrf_check();
         // 防恶意刷单: 人机验证(极验/Turnstile/图形验证码按配置自动匹配) + 同IP下单频控兜底
         if (!Captcha::verify('order', $_POST)) {
-            View::theme('error', ['msg' => '人机验证未通过, 请返回上一步刷新后重试', 'pageTitle' => '验证失败']);
+            View::theme('error', ['msg' => Captcha::$lastFail === 'no-code' ? '验证码已过期, 请刷新页面后重新输入' : '验证码不正确, 请重新输入', 'pageTitle' => '验证失败']);
             return;
         }
         $ipLimit = (int)setting('order_ip_limit', '30');

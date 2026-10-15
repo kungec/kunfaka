@@ -12,6 +12,9 @@
  */
 class Captcha
 {
+    /** 最近一次校验失败原因: no-code(会话中无验证码=图片未加载/会话丢失/超时) | mismatch(输入不符) | remote(远程校验未过) */
+    public static $lastFail = '';
+
     /** 当前验证模式: geetest | turnstile | captcha | off */
     public static function mode()
     {
@@ -19,9 +22,24 @@ class Captcha
         if ($mode === '') $mode = setting('turnstile_open') === '1' ? 'turnstile' : 'captcha'; // 兼容v1.1
         if ($mode === 'turnstile' && setting('turnstile_site_key') && setting('turnstile_secret_key')) return 'turnstile';
         if ($mode === 'geetest' && setting('geetest_id') && setting('geetest_key')) return 'geetest';
-        // 所选模式缺少密钥时降级为图形验证码, 避免锁死登录
-        if (setting('captcha_open', '1') === '1') return 'captcha';
+        // 图形验证码依赖GD扩展: Windows下php_gd2.dll常漏启用且加载失败是静默的, 缺GD时图片生成Fatal、
+        // 验证码永远对不上(下单/登录被100%拦死)。此处自动降级为停用(fail-open)保业务可用, 并每日记一条日志提醒管理员
+        if (setting('captcha_open', '1') === '1') {
+            if (function_exists('imagecreatetruecolor')) return 'captcha';
+            self::notifyGdMissing();
+            return 'off';
+        }
         return 'off';
+    }
+
+    /** GD缺失提醒: 每天最多记一次日志, 防刷爆日志表 */
+    protected static function notifyGdMissing()
+    {
+        try {
+            if (setting('gd_missing_notice', '') === date('Y-m-d')) return;
+            setting_set('gd_missing_notice', date('Y-m-d'));
+            add_log('system', '图形验证码已开启但GD扩展未启用, 人机验证已自动停用(下单/登录不受阻); 请在php.ini启用GD(Windows PHP7.4为 extension=php_gd2.dll)并重启IIS/Apache');
+        } catch (Throwable $t) {}
     }
 
     /** 渲染验证控件HTML */
@@ -108,23 +126,32 @@ class Captcha
         return $js;
     }
 
-    /** 校验(校验后一次性失效) */
+    /** 校验(校验后一次性失效); 失败原因写入 $lastFail 供调用方给出精确提示 */
     public static function verify($scope, $req)
     {
+        self::$lastFail = '';
         $mode = self::mode();
         if ($mode === 'turnstile') {
             $token = trim(arr_get($req, 'cf-turnstile-response'));
-            if ($token === '') return false;
-            return self::turnstileCheck($token);
+            if ($token === '') { self::$lastFail = 'no-code'; return false; }
+            $ok = self::turnstileCheck($token);
+            if (!$ok) self::$lastFail = 'remote';
+            return $ok;
         }
         if ($mode === 'geetest') {
-            return self::geetestCheck($req);
+            $ok = self::geetestCheck($req);
+            if (!$ok) self::$lastFail = 'remote';
+            return $ok;
         }
         if ($mode === 'off') return true;
         $code = isset($_SESSION['captcha_' . $scope]) ? $_SESSION['captcha_' . $scope] : '';
         unset($_SESSION['captcha_' . $scope]);
         $input = strtoupper(trim(arr_get($req, 'captcha')));
-        return $code !== '' && hash_equals(strtoupper($code), $input);
+        // 会话中无验证码: 验证码图片未加载(典型=GD缺失) / 会话丢失(IIS的session.save_path不可写) / 页面停留过期
+        if ($code === '') { self::$lastFail = 'no-code'; return false; }
+        $ok = hash_equals(strtoupper($code), $input);
+        if (!$ok) self::$lastFail = 'mismatch';
+        return $ok;
     }
 
     /** Cloudflare siteverify 服务端二次校验 */
@@ -214,6 +241,12 @@ class Captcha
     /** 输出图形验证码PNG(GD), 并写入session */
     public static function image($scope)
     {
+        // GD缺失兜底: mode()已自动停用图形验证, 正常不会走到这里; 输出1x1透明PNG而非Fatal裂图
+        if (!function_exists('imagecreatetruecolor')) {
+            header('Content-Type: image/png');
+            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+            exit;
+        }
         $code = '';
         $pool = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         for ($i = 0; $i < 4; $i++) $code .= $pool[random_int(0, strlen($pool) - 1)];

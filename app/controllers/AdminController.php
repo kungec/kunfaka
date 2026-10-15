@@ -64,7 +64,7 @@ class AdminController
             if (empty($_SESSION['_csrf']) || !hash_equals($_SESSION['_csrf'], arr_get($_POST, '_csrf'))) {
                 $error = '页面已过期, 请重试';
             } elseif (!Captcha::verify('admin', $_POST)) {
-                $error = '人机验证未通过, 请重试';
+                $error = Captcha::$lastFail === 'no-code' ? '验证码已过期, 请刷新页面后重新输入' : '验证码不正确, 请重新输入';
             } else {
                 $lock = Security::loginLocked('admin', $user, client_ip());
                 if ($lock['locked']) {

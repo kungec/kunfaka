@@ -45,6 +45,7 @@ $envItems = [
     ['curl 扩展', extension_loaded('curl'), '支付插件与市场必需'],
     ['zip 扩展', extension_loaded('zip'), '应用商店在线安装必需'],
     ['bcmath 扩展', extension_loaded('bcmath'), 'USDT金额计算必需'],
+    ['GD 扩展', extension_loaded('gd'), '图形验证码与图片缩略图必需(Windows PHP7.4为php_gd2.dll), 缺失时下单/登录验证码会被拦截'],
     ['data目录可写', is_writable(YF_DATA), '保存配置文件必需'],
     ['admin.php可重命名', is_writable(__DIR__), '生成随机后台入口必需'],
 ];

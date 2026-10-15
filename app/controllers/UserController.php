@@ -18,7 +18,7 @@ class UserController
             $account = trim(arr_get($_POST, 'username'));
             $pass = arr_get($_POST, 'password');
             if (!Captcha::verify('user', $_POST)) {
-                $error = '人机验证未通过, 请重试';
+                $error = Captcha::$lastFail === 'no-code' ? '验证码已过期, 请刷新页面后重新输入' : '验证码不正确, 请重新输入';
             } elseif ($account === '' || $pass === '') {
                 $error = '请填写账号和密码';
             } else {
@@ -65,7 +65,7 @@ class UserController
             $ip = client_ip();
 
             do {
-                if (!Captcha::verify('user', $_POST)) { $error = '人机验证未通过, 请重试'; break; }
+                if (!Captcha::verify('user', $_POST)) { $error = Captcha::$lastFail === 'no-code' ? '验证码已过期, 请刷新页面后重新输入' : '验证码不正确, 请重新输入'; break; }
                 $reg = Security::regBlocked($ip);
                 if ($reg['blocked']) {
                     $error = '该IP注册过于频繁(每24小时最多' . Security::REG_LIMIT . '次), 请 ' . (int)ceil($reg['left'] / 3600) . ' 小时后再试';

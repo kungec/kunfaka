@@ -115,6 +115,7 @@ schtasks /create /tn "kunfaka_cron" /tr "\"C:\php74\php.exe\" \"C:\inetpub\wwwro
 | 启动报 PHP Startup 扩展加载错误 | ini 里写了与 PHP 版本不匹配的扩展 DLL——7.4 删掉 php_zip/php_bcmath 行（内置），GD 用 php_gd2.dll |
 | 应用商店在线安装失败 | 确认 `php -m` 列表中含 zip（7.4 内置；缺失多为 PHP 版本/线程安全不匹配） |
 | 验证码图片不显示 | 确认 `php -m` 列表中含 gd（7.4 启用 php_gd2.dll） |
+| **下单/登录总提示"验证码不正确或已过期"** | 两条最常见原因: ① GD 未启用——`php -m` 查 gd，缺失则在 php.ini 加 `extension=php_gd2.dll` 并重启 IIS（此时验证码图片本身是裂图）；② 验证码图片正常但每次都错——IIS 应用池身份写不了 PHP 会话目录，在 php.ini 设 `session.save_path = "C:\Windows\Temp"` 并给 IIS_IUSRS 授修改权限后重启。v2.43.7 起 GD 缺失会自动停用人机验证保业务可用，并在系统设置页与系统日志中提示 |
 | 发信失败 | 确认 `php_openssl.dll` 已启用（SMTP SSL/TLS） |
 
 ---
