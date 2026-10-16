@@ -127,8 +127,6 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `created_at` int unsigned NOT NULL DEFAULT 0,
   `paid_at` int unsigned NOT NULL DEFAULT 0,
   `expired_at` int unsigned NOT NULL DEFAULT 0,
-  `discount` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT '优惠券抵扣金额',
-  `coupon_code` varchar(50) NOT NULL DEFAULT '' COMMENT '使用的优惠券码',
   UNIQUE KEY `uk_sn` (`sn`),
   KEY `idx_user` (`user_id`),
   KEY `idx_status_amount` (`status`,`pay_plugin`,`expected_amount`),
