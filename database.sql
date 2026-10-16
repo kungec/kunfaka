@@ -121,6 +121,8 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `txid` varchar(100) NOT NULL DEFAULT '' COMMENT '链上交易哈希',
   `status` tinyint NOT NULL DEFAULT 0 COMMENT '0待支付 1已完成 2已过期 3待处理',
   `cards_content` text NULL COMMENT '发货内容',
+  `discount` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT '优惠券抵扣金额',
+  `coupon_code` varchar(50) NOT NULL DEFAULT '' COMMENT '使用的优惠券码',
   `ip` varchar(45) NOT NULL DEFAULT '',
   `created_at` int unsigned NOT NULL DEFAULT 0,
   `paid_at` int unsigned NOT NULL DEFAULT 0,

@@ -8,7 +8,8 @@ class Upgrade
 {
     public static function run(PDO $pdo)
     {
-        $log = function ($m) { echo "[upgrade] $m\n"; };
+        // 日志仅CLI输出: Web上下文(安装向导/自动更新)中echo会污染响应与跳转头
+        $log = function ($m) { if (PHP_SAPI === 'cli') echo "[upgrade] $m\n"; };
         $isSqlite = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite';
 
         if (!$isSqlite) {

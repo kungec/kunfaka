@@ -90,6 +90,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->exec($stmt);
         }
 
+        // 自愈兜底: 建表后跑一遍幂等升级器, 兜住database.sql与代码字段的任何漂移
+        // (补列/补索引/补表/配置种子, 全部幂等; 日志仅CLI输出不污染安装跳转)
+        require_once __DIR__ . '/app/lib/Upgrade.php';
+        try { Upgrade::run($pdo); } catch (Throwable $t) {}
+
         // 管理员账号(仅当无账号时创建; 首个管理员为超级管理员)
         $cnt = $pdo->query('SELECT COUNT(*) FROM admin_users')->fetchColumn();
         if ((int)$cnt === 0) {
