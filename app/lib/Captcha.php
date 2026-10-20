@@ -62,7 +62,7 @@ class Captcha
             . '</div>';
     }
 
-    /** 极验v4 内联按钮模式: 页面直接渲染「点击按钮开始验证」, 一键通过后自动提交表单 */
+    /** 极验v4 内联按钮模式: 页面直接渲染「点击按钮开始验证」, 一键通过后自动提交表单; onError自动重试一次(瞬时网络抖动可自愈) */
     protected static function renderGeetest($scope)
     {
         static $gtjsLoaded = false;
@@ -86,40 +86,50 @@ class Captcha
         box.setAttribute("data-init", "1");
         var form = box.closest("form");
         if (!form) return;
-        initGeetest4({
-            captchaId: "' . $id . '",
-            product: "popup",
-            language: "zho",
-            timeout: ' . ($timeout * 1000) . '
-        }, function (captcha) {
-            captcha.onSuccess(function () {
-                var r = captcha.getValidate();
-                if (!r) return;
-                form.querySelectorAll(".geetest-field").forEach(function (el) { el.remove(); });
-                function mkField(n, v) {
-                    var i = document.createElement("input");
-                    i.type = "hidden"; i.name = n; i.value = v; i.className = "geetest-field";
-                    form.appendChild(i);
-                }
-                mkField("captcha_lot_number", r.lot_number);
-                mkField("captcha_output", r.captcha_output);
-                mkField("captcha_pass_token", r.pass_token);
-                mkField("captcha_gen_time", r.gen_time);
-                // 前置校验必填项: 缺失时不自动提交(验证字段保留, 用户补填后可再次提交)
-                var bad = null;
-                form.querySelectorAll("[required]").forEach(function (el) {
-                    if (!bad && (el.value === undefined || String(el.value).trim() === "")) bad = el;
+        function mkField(n, v) {
+            var i = document.createElement("input");
+            i.type = "hidden"; i.name = n; i.value = v; i.className = "geetest-field";
+            form.appendChild(i);
+        }
+        function initCaptcha() {
+            initGeetest4({
+                captchaId: "' . $id . '",
+                product: "popup",
+                language: "zho",
+                timeout: ' . ($timeout * 1000) . '
+            }, function (captcha) {
+                captcha.onSuccess(function () {
+                    var r = captcha.getValidate();
+                    if (!r) return;
+                    form.querySelectorAll(".geetest-field").forEach(function (el) { el.remove(); });
+                    mkField("captcha_lot_number", r.lot_number);
+                    mkField("captcha_output", r.captcha_output);
+                    mkField("captcha_pass_token", r.pass_token);
+                    mkField("captcha_gen_time", r.gen_time);
+                    // 前置校验必填项: 缺失时不自动提交(验证字段保留, 用户补填后可再次提交)
+                    var bad = null;
+                    form.querySelectorAll("[required]").forEach(function (el) {
+                        if (!bad && (el.value === undefined || String(el.value).trim() === "")) bad = el;
+                    });
+                    if (bad) {
+                        try { if (bad.reportValidity) bad.reportValidity(); else bad.focus(); } catch (e) {}
+                        return;
+                    }
+                    form.submit();
+                }).onError(function () {
+                    // 自动重试一次: 瞬时网络抖动(皮肤/静态资源加载失败)多数可自愈; 再失败才提示用户
+                    if (box.getAttribute("data-retried") !== "1") {
+                        box.setAttribute("data-retried", "1");
+                        box.innerHTML = "";
+                        setTimeout(initCaptcha, 800);
+                        return;
+                    }
+                    alert("验证组件加载失败, 请刷新页面重试(若您正在使用代理/VPN, 建议关闭后重试)");
                 });
-                if (bad) {
-                    try { if (bad.reportValidity) bad.reportValidity(); else bad.focus(); } catch (e) {}
-                    return;
-                }
-                form.submit();
-            }).onError(function () {
-                alert("验证组件加载失败, 请刷新页面重试");
+                captcha.appendTo(box);
             });
-            captcha.appendTo(box);
-        });
+        }
+        initCaptcha();
     });
 })();
 </script>';
