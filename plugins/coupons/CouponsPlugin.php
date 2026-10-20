@@ -20,26 +20,21 @@ class CouponsPlugin
     {
     }
 
-    /** 购买页优惠码输入框(票券式组件, 变量级联适配全部主题亮/暗模式) */
+    /** 购买页优惠码输入框(极简一行式: 内嵌图标+主题输入框同视觉语言, 变量级联适配全部主题亮/暗模式) */
     public function renderInput(array $ctx)
     {
         $code = e(trim((string)(isset($_POST['coupon']) ? $_POST['coupon'] : '')));
-        $css = '.cpn-wrap{margin:4px 0 14px}
-.cpn-ticket{--cpn-accent:var(--accent,var(--primary,#4f46e5));--cpn-soft:var(--accent-soft,var(--primary-soft,rgba(79,70,229,.08)));--cpn-ring:var(--accent-ring,var(--primary-soft,rgba(79,70,229,.2)));--cpn-line:var(--border,var(--line,rgba(0,0,0,.12)));--cpn-hole:var(--card-solid,var(--card,#fff));--cpn-sw:92px;position:relative;display:flex;align-items:stretch;background:var(--card-2,var(--card,#fff));border:1px solid var(--cpn-line);border-radius:12px;transition:border-color .18s ease,box-shadow .18s ease}
-.cpn-ticket:focus-within{border-color:var(--cpn-accent);box-shadow:0 0 0 3px var(--cpn-ring)}
-.cpn-ticket::before,.cpn-ticket::after{content:"";position:absolute;left:calc(var(--cpn-sw) - 7px + 1px);width:13px;height:13px;border-radius:50%;background:var(--cpn-hole);border:1px solid var(--cpn-line);pointer-events:none}
-.cpn-ticket::before{top:-7px}.cpn-ticket::after{bottom:-7px}
-.cpn-side{flex:none;width:var(--cpn-sw);box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:11px 4px;color:var(--cpn-accent);border-right:1px dashed var(--cpn-line)}
-.cpn-side b{font-size:12.5px;font-weight:600;color:var(--text,#1d1d1f);line-height:1.3}
-.cpn-side i{font-style:normal;font-size:11px;color:var(--muted,#6e6e73);line-height:1}
-.cpn-main{flex:1;display:flex;min-width:0}
-.cpn-main input{flex:1;min-width:0;border:0;outline:0;background:transparent;padding:13px 14px;font-size:14px;font-family:inherit;color:var(--text,#1d1d1f);box-shadow:none}
-.cpn-main input::placeholder{color:var(--muted,#6e6e73)}
-@media (max-width:480px){.cpn-ticket{--cpn-sw:58px}.cpn-side b,.cpn-side i{display:none}}';
+        $css = '.cpn-wrap{margin:2px 0 14px}
+.cpn-field{--cpn-accent:var(--accent,var(--primary,#4f46e5));--cpn-ring:var(--accent-ring,var(--primary-soft,rgba(79,70,229,.2)));--cpn-line:var(--border,var(--line,rgba(0,0,0,.12)));display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;background:var(--card-2,var(--card,#fff));border:1.5px solid var(--cpn-line);border-radius:11px;transition:border-color .18s ease,box-shadow .18s ease}
+.cpn-field:focus-within{border-color:var(--cpn-accent);box-shadow:0 0 0 3px var(--cpn-ring);background:var(--card-solid,var(--card,#fff))}
+.cpn-field .cpn-ic{display:flex;color:var(--muted,#6e6e73);flex:none;transition:color .18s ease}
+.cpn-field:focus-within .cpn-ic{color:var(--cpn-accent)}
+.cpn-field input{flex:1;min-width:0;border:0;outline:0;background:transparent;padding:0;font-size:14px;font-family:inherit;color:var(--text,#1d1d1f);box-shadow:none}
+.cpn-field input::placeholder{color:var(--muted,#6e6e73)}';
         return '<div class="cpn-wrap"><style>' . $css . '</style>'
-            . '<div class="cpn-ticket">'
-            . '<div class="cpn-side">' . ico('ticket', 17) . '<b>优惠码</b><i>选填</i></div>'
-            . '<div class="cpn-main"><input type="text" name="coupon" value="' . $code . '" maxlength="50" placeholder="输入优惠码, 结账时自动抵扣" aria-label="优惠码" autocomplete="off"></div>'
+            . '<div class="cpn-field">'
+            . '<span class="cpn-ic">' . ico('ticket', 17) . '</span>'
+            . '<input type="text" name="coupon" value="' . $code . '" maxlength="50" placeholder="输入优惠码(选填), 结账时自动抵扣" aria-label="优惠码" autocomplete="off">'
             . '</div></div>';
     }
 

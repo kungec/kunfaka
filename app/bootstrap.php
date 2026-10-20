@@ -23,7 +23,8 @@ if (!headers_sent()) {
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('X-XSS-Protection: 1; mode=block');
     // CSP纵深: 即使未来某处漏了输出转义, 也把脚本来源限制到本站与人机验证域名(inline保留以兼容现有内联脚本)
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.geetest.com https://*.geetest.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src 'self' https://api.geetest.com https://*.geetest.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; base-uri 'self'");
+    // style-src须含geetest(极验皮肤CSS), frame-src须含geetest(极验popup验证弹窗iframe)
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.geetest.com https://*.geetest.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://static.geetest.com https://*.geetest.com; img-src * data:; connect-src 'self' https://api.geetest.com https://*.geetest.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://*.geetest.com; base-uri 'self'");
     // 动态页面禁缓存: 防止套CDN时收银台/二维码/支付结果页被边缘缓存
     header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
     header('Pragma: no-cache');
